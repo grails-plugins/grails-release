@@ -25,10 +25,10 @@ artifact = groovy.xml.NamespaceBuilder.newInstance(ant, 'antlib:org.apache.maven
 packageApp()
 
 plugin = pluginManager?.allPlugins?.find { it.basePlugin }
-pom = "${grailsSettings.projectTargetDir}/pom.xml"
+pomFileLocation = "${grailsSettings.projectTargetDir}/pom.xml"
 basePom = new File( "${basedir}/pom.xml" )
 if(basePom.exists())
-	pom = basePom.absolutePath
+	pomFileLocation = basePom.absolutePath
 
 
 
@@ -44,7 +44,7 @@ else {
 }
 
 if(!basePom.exists()) {
-	new File(pom).withWriter { w ->
+	new File(pomFileLocation).withWriter { w ->
 		xml = new groovy.xml.MarkupBuilder(w)
 
 		xml.project {
@@ -120,15 +120,15 @@ private installOrDeploy(File file, ext, boolean deploy, repos = [:]) {
 	if(deploy) {
 		parseArguments()
 	}
-	ant.checksum file:pom, algorithm:"sha1", todir:projectTargetDir
+	ant.checksum file:pomFileLocation, algorithm:"sha1", todir:projectTargetDir
 	ant.checksum file:file, algorithm:"sha1", todir:projectTargetDir		
     artifact."${ deploy ? 'deploy' : 'install' }"(file: file) {
 		if(ext == 'zip') {
-			attach file:"${basedir}/plugin.xml",type:"plugin.xml"
+			attach file:"${basedir}/plugin.xml",type:"xml", classifier:"plugin"
 		}			
         attach file:"${projectTargetDir}/pom.xml.sha1",type:"pom.sha1"
         attach file:"${projectTargetDir}/${file.name}.sha1",type:"${ext}.sha1"
-        pom(file: pom)
+        pom(file: pomFileLocation)
 		if(repos.remote) {
 			def repo = repos.remote
 			if(repo.configurer) {
@@ -183,7 +183,7 @@ target(mavenDeploy:"Deploys the plugin to a Maven repository") {
 	} 		
 	
 	artifact.'install-provider'(artifactId:protocol, version:"1.0-beta-2")
-	ant.checksum file:pom, algorithm:"sha1", todir:projectTargetDir
+	ant.checksum file:pomFileLocation, algorithm:"sha1", todir:projectTargetDir
 	
 	def deployFile = plugin ? new File(pluginZip) : grailsSettings.projectWarFile
 	def ext = plugin ? "zip" : "war"	
