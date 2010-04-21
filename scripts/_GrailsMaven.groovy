@@ -171,7 +171,7 @@ target(mavenDeploy:"Deploys the plugin to a Maven repository") {
 	def protocol = protocols.http
 	def repo = argsMap.repository ? distInfo.remoteRepos[argsMap.repository] : null		
 	if(argsMap.protocol) {
-		protocol = argsMap.protocols[argsMap.protocol]
+		protocol = protocols[argsMap.protocol]
 	}
 	else if(repo) {
 		def url = repo?.args?.url			
