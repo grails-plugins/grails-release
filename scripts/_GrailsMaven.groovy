@@ -16,6 +16,7 @@
 
 import grails.util.*
 import org.codehaus.groovy.grails.plugins.*
+import org.apache.ivy.util.ChecksumHelper
 
 
 includeTargets << grailsScript("_GrailsPackage")	
@@ -116,18 +117,23 @@ target(mavenInstall:"Installs a plugin or application into your local Maven cach
 	installOrDeploy(deployFile, ext, false)
 }
 
+private generateChecksum(File file) {
+	def checksum = new File("${file.parentFile.absolutePath}/${file.name}.sha1")
+	checksum.write ChecksumHelper.computeAsString(file, "sha1")	
+	return checksum
+}
 private installOrDeploy(File file, ext, boolean deploy, repos = [:]) {
 	if(deploy) {
 		parseArguments()
 	}
-	ant.checksum file:pomFileLocation, algorithm:"sha1", todir:projectTargetDir
-	ant.checksum file:file, algorithm:"sha1", todir:projectTargetDir		
+
+	def pomCheck = generateChecksum(new File(pomFileLocation))
+	def fileCheck = generateChecksum(file)
+
     artifact."${ deploy ? 'deploy' : 'install' }"(file: file) {
 		if(ext == 'zip') {
 			attach file:"${basedir}/plugin.xml",type:"xml", classifier:"plugin"
 		}			
-        attach file:"${projectTargetDir}/pom.xml.sha1",type:"pom.sha1"
-        attach file:"${projectTargetDir}/${file.name}.sha1",type:"${ext}.sha1"
         pom(file: pomFileLocation)
 		if(repos.remote) {
 			def repo = repos.remote
@@ -183,11 +189,10 @@ target(mavenDeploy:"Deploys the plugin to a Maven repository") {
 	} 		
 	
 	artifact.'install-provider'(artifactId:protocol, version:"1.0-beta-2")
-	ant.checksum file:pomFileLocation, algorithm:"sha1", todir:projectTargetDir
+	
 	
 	def deployFile = plugin ? new File(pluginZip) : grailsSettings.projectWarFile
 	def ext = plugin ? "zip" : "war"	
-	ant.checksum file:deployFile, algorithm:"sha1", todir:projectTargetDir		
 	try {
 		installOrDeploy(deployFile, ext, true, [remote:repo, local:distInfo.local])
 	}
