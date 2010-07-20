@@ -24,7 +24,8 @@ grails.project.dependency.resolution = {
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
 
-        build 'org.apache.maven:maven-ant-tasks:2.1.0'
+        build "org.apache.maven:maven-ant-tasks:2.1.0"
+        test  "org.gmock:gmock:0.8.0"
     }
 
 }
