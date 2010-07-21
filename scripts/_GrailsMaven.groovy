@@ -21,18 +21,18 @@ import org.apache.ivy.util.ChecksumHelper
 
 includeTargets << grailsScript("_GrailsPackage")	
 
+// Open source licences.
+globalLicenses = Collections.unmodifiableMap([
+		APACHE: [ name: "Apache License 2.0", url: "http://www.apache.org/licenses/LICENSE-2.0.txt" ],
+		GPL2: [ name: "GNU General Public License 2", url: "http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt"],
+		GPL3: [ name: "GNU General Public License 3", url: "http://www.gnu.org/licenses/gpl.txt"] ])
+
 artifact = groovy.xml.NamespaceBuilder.newInstance(ant, 'antlib:org.apache.maven.artifact.ant')
 
 target(init: "Initialisation for maven deploy/install") {
 	depends(packageApp)
 
 	plugin = pluginManager?.allPlugins?.find { it.basePlugin }
-	pomFileLocation = "${grailsSettings.projectTargetDir}/pom.xml"
-	basePom = new File( "${basedir}/pom.xml" )
-	if(basePom.exists())
-		pomFileLocation = basePom.absolutePath
-
-
 
 	if(!plugin) {
 		includeTargets << grailsScript("_GrailsWar")	
@@ -42,77 +42,113 @@ target(init: "Initialisation for maven deploy/install") {
 		includeTargets << grailsScript("_GrailsPluginDev")	
 		packagePlugin()
 		plugin = pluginManager?.allPlugins?.find { it.basePlugin }
-		pluginInstance = plugin.pluginClass.newInstance()	
 	}
 
-	if(!basePom.exists()) {
-		new File(pomFileLocation).withWriter { w ->
-			xml = new groovy.xml.MarkupBuilder(w)
+	generatePom()
+}
 
-			xml.project {
-				modelVersion "4.0.0"
-				if(plugin) {
-					def group = "org.grails.plugins"
-					if(pluginInstance.hasProperty('group') && pluginInstance.group) {
-						group = pluginInstance.group
-					}
-					else if(pluginInstance.hasProperty('groupId') && pluginInstance.groupId) {
-						group = pluginInstance.groupId
-					}
+target(generatePom: "Generates a pom.xml file for the current project unless './pom.xml' exists.") {
+	depends(packageApp)
 
-					groupId group
-					artifactId plugin.fileSystemShortName 
-					packaging "zip"
-					version plugin.version
-					name plugin.fileSystemShortName					
+	pomFileLocation = "${grailsSettings.projectTargetDir}/pom.xml"
+	basePom = new File("${basedir}/pom.xml")
+
+	if (basePom.exists()) {
+		pomFileLocation = basePom.absolutePath
+		println "Skipping POM generation because 'pom.xml' exists in the root of the project."
+		return 1
+	}
+
+	def plugin = pluginManager?.allPlugins?.find { it.basePlugin }
+	def pluginInstance = plugin.pluginClass.newInstance()
+
+	new File(pomFileLocation).withWriter { w ->
+		def xml = new groovy.xml.MarkupBuilder(w)
+
+		xml.project(xmlns: "http://maven.apache.org/POM/4.0.0", 
+				'xmlns:xsi': "http://www.w3.org/2001/XMLSchema-instance", 
+				'xsi:schemaLocation': "http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd") {
+			modelVersion "4.0.0"
+			if(plugin) {
+				def group = "org.grails.plugins"
+				if (getOptionalProperty(pluginInstance, 'group')) {
+					group = pluginInstance.group
 				}
-				else {
-					groupId buildConfig.grails.project.groupId ?: (config?.grails?.project?.groupId ?: grailsAppName)
-					artifactId grailsAppName
-					packaging "war"
-					version grailsAppVersion
-					name grailsAppName				
+				else if(getOptionalProperty(pluginInstance, 'groupId')) {
+					group = pluginInstance.groupId
 				}
-					
-					
-				if(plugin && plugin.dependencyNames) {
-					dependencies {					
-						corePlugins = pluginManager.allPlugins.findAll { it.pluginClass.name.startsWith("org.codehaus.groovy.grails.plugins") }*.name	
-						
-						for(dep in pluginInstance.dependsOn) {
-							String depName = dep.key
-							if(!corePlugins.contains(dep.key)) {
-								// Note: specifying group in dependsOn is a Grails 1.3 feature
-								// 1.2 users don't have this capability
-								def depGroup = "org.grails.plugins"
-								if(depName.contains(":")) {
-									def i = depName.split(":")
-									depGroup = i[0]
-									depName = i[1]
-								}
-								String depVersion = dep.value
-								def upper = GrailsPluginUtils.getUpperVersion(depVersion)
-								def lower = GrailsPluginUtils.getLowerVersion(depVersion)
-								if(upper == lower) depVersion = upper
-								else {
-									upper = upper == '*' ? '' : upper
-									lower = lower == '*' ? '' : lower
-									
-									depVersion = "[$upper,$lower]"
-								}
-								
-								dependency {
-									groupId depGroup
-									artifactId depName
-									version depVersion
-								}							
+
+				groupId group
+				artifactId plugin.fileSystemShortName 
+				packaging "zip"
+				version plugin.version
+
+				// I think description() and url() resolve against the AntBuilder
+				// by default, so we have to call them explicitly on the MarkupBuilder.
+				if (getOptionalProperty(pluginInstance, "title")) name pluginInstance.title
+				if (getOptionalProperty(pluginInstance, "description")) delegate.description pluginInstance.description
+				if (getOptionalProperty(pluginInstance, "documentation")) delegate.url pluginInstance.documentation
+				if (getOptionalProperty(pluginInstance, "license")) {
+					def l = globalLicenses[pluginInstance.license]
+					if (l) {
+						licenses {
+							license {
+								name l.name
+								delegate.url l.url
 							}
-						}					
+						}
+					}
+					else {
+						event("StatusUpdate", [ "Unknown license: ${pluginInstance.license}" ])
 					}
 				}
 			}
+			else {
+				groupId buildConfig.grails.project.groupId ?: (buildConfig?.grails?.project?.groupId ?: grailsAppName)
+				artifactId grailsAppName
+				packaging "war"
+				version grailsAppVersion
+				name grailsAppName				
+			}
+				
+				
+			if(plugin && plugin.dependencyNames) {
+				dependencies {					
+					corePlugins = pluginManager.allPlugins.findAll { it.pluginClass.name.startsWith("org.codehaus.groovy.grails.plugins") }*.name	
+					
+					for(dep in pluginInstance.dependsOn) {
+						String depName = dep.key
+						if(!corePlugins.contains(dep.key)) {
+							// Note: specifying group in dependsOn is a Grails 1.3 feature
+							// 1.2 users don't have this capability
+							def depGroup = "org.grails.plugins"
+							if(depName.contains(":")) {
+								def i = depName.split(":")
+								depGroup = i[0]
+								depName = i[1]
+							}
+							String depVersion = dep.value
+							def upper = GrailsPluginUtils.getUpperVersion(depVersion)
+							def lower = GrailsPluginUtils.getLowerVersion(depVersion)
+							if(upper == lower) depVersion = upper
+							else {
+								upper = upper == '*' ? '' : upper
+								lower = lower == '*' ? '' : lower
+								
+								depVersion = "[$lower,$upper]"
+							}
+							
+							dependency {
+								groupId depGroup
+								artifactId depName
+								version depVersion
+							}							
+						}
+					}					
+				}
+			}
 		}
-	}	
+	}
 }
 
 
@@ -164,6 +200,11 @@ private installOrDeploy(File file, ext, boolean deploy, repos = [:]) {
     }	
 }
 
+
+private getOptionalProperty(obj, prop) {
+	return obj.hasProperty(prop) ? obj."$prop" : null
+}
+
 target(mavenDeploy:"Deploys the plugin to a Maven repository") {
 	depends(init)
 	def protocols = [ 	http: "wagon-http",
@@ -213,8 +254,6 @@ target(mavenDeploy:"Deploys the plugin to a Maven repository") {
 		println "Have you specified a configured repository to deploy to (--repository argument) or specified distributionManagement in your POM?"
 	}
 }
-
-
 
 class DistributionManagementInfo {
 	Map remoteRepos = [:]

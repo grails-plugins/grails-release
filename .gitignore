@@ -1,0 +1,5 @@
+.settings/
+plugin.xml
+pom.xml
+target
+web-app/WEB-INF/classes

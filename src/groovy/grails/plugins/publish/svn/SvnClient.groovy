@@ -19,6 +19,12 @@ import org.tmatesoft.svn.core.wc.SVNUpdateClient
 import org.tmatesoft.svn.core.wc.SVNWCClient
 import org.tmatesoft.svn.core.wc.SVNWCUtil
 
+/**
+ * Abstraction layer for doing Subversion work using the SVNKit library.
+ * The SVNKit classes make unit testing difficult, so it makes sense to
+ * consolidate and isolate their usage in this one class. It also simplifies
+ * working with Subversion.
+ */
 class SvnClient {
     private repoUrl
     private authManager

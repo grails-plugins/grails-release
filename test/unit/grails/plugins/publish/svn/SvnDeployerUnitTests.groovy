@@ -9,16 +9,23 @@ import org.tmatesoft.svn.core.SVNErrorMessage
 @WithGMock
 class SvnDeployerUnitTests extends GroovyTestCase {
     def baseDir
+    def pluginXmlFile
+    def pomFile
     def pluginListFile
 
     void setUp() {
         baseDir = new File("target/tmp")
         baseDir.mkdirs()
+        pluginXmlFile = new File("plugin.xml")
+        pomFile = new File("pom.xml")
         pluginListFile = new File(baseDir, "plugin-list.xml")
     }
 
     void tearDown() {
         baseDir.deleteDir()
+        pluginXmlFile.delete()
+        pomFile.delete()
+        pluginListFile.delete()
     }
 
     void testDeployPlugin() {
@@ -29,10 +36,7 @@ class SvnDeployerUnitTests extends GroovyTestCase {
         def expectedMd5Sum = DigestUtils.md5Hex(zipContent.bytes)
         def expectedSha1Sum = DigestUtils.shaHex(zipContent.bytes)
 
-        def pluginXmlFile = new File(baseDir, "plugin.xml")
         pluginXmlFile.text = "<plugin></plugin>"
-
-        def pomFile = new File(baseDir, "pom.xml")
         pomFile.text = """\
 <project>
   <modelVersion>4.0.0</modelVersion>
@@ -48,8 +52,8 @@ class SvnDeployerUnitTests extends GroovyTestCase {
         def wcDir = new File(".")
         def expectedFiles = [
                 new File(wcDir, zipFile.name),
-                new File(wcDir, "plugin.xml"),
-                new File(wcDir, "pom.xml"),
+                new File(wcDir, "pdf-generator-1.1.2-plugin.xml"),
+                new File(wcDir, "pdf-generator-1.1.2.pom"),
                 new File(wcDir, "${zipFile.name}.sha1"),
                 new File(wcDir, "${zipFile.name}.md5") ]
 
@@ -77,12 +81,19 @@ class SvnDeployerUnitTests extends GroovyTestCase {
         mockUpdatePluginList(mockSvnClient, false)
 
         play {
-            def deployer = new SvnDeployer(mockSvnClient, baseDir, pluginListFile, System.out, null)
-            deployer.deployPlugin(zipFile, pluginXmlFile, pomFile)
+            try {
+                def deployer = new SvnDeployer(mockSvnClient, baseDir, pluginListFile, System.out, null)
+                deployer.deployPlugin(zipFile, pluginXmlFile, pomFile)
 
-            // Check that the checksums are as expected.
-            assertEquals expectedSha1Sum, expectedFiles[3].text
-            assertEquals expectedMd5Sum, expectedFiles[4].text
+                // Check that the checksums are as expected.
+                assertEquals expectedSha1Sum, expectedFiles[3].text
+                assertEquals expectedMd5Sum, expectedFiles[4].text
+            }
+            finally {
+                // Clean up the files that are created in the current
+                // working directory.
+                expectedFiles*.delete()
+            }
         }
     }
 
@@ -94,10 +105,7 @@ class SvnDeployerUnitTests extends GroovyTestCase {
         def expectedMd5Sum = DigestUtils.md5Hex(zipContent.bytes)
         def expectedSha1Sum = DigestUtils.shaHex(zipContent.bytes)
 
-        def pluginXmlFile = new File(baseDir, "plugin.xml")
         pluginXmlFile.text = "<plugin></plugin>"
-
-        def pomFile = new File(baseDir, "pom.xml")
         pomFile.text = """\
 <project>
   <modelVersion>4.0.0</modelVersion>
@@ -108,15 +116,13 @@ class SvnDeployerUnitTests extends GroovyTestCase {
 </project>
 """
 
-        def pluginListFile = new File(baseDir, "plugin-list.xml")
-
         // These are the files that should be added to the Subversion
         // repository if they're not already there.
         def wcDir = new File(baseDir, "publish-wc")
         def expectedFiles = [
                 new File(wcDir, zipFile.name),
-                new File(wcDir, "plugin.xml"),
-                new File(wcDir, "pom.xml"),
+                new File(wcDir, "pdf-generator-0.5-SNAPSHOT-plugin.xml"),
+                new File(wcDir, "pdf-generator-0.5-SNAPSHOT.pom"),
                 new File(wcDir, "${zipFile.name}.sha1"),
                 new File(wcDir, "${zipFile.name}.md5") ]
 
@@ -152,10 +158,7 @@ class SvnDeployerUnitTests extends GroovyTestCase {
         def expectedMd5Sum = DigestUtils.md5Hex(zipContent.bytes)
         def expectedSha1Sum = DigestUtils.shaHex(zipContent.bytes)
 
-        def pluginXmlFile = new File(baseDir, "plugin.xml")
         pluginXmlFile.text = "<plugin></plugin>"
-
-        def pomFile = new File(baseDir, "pom.xml")
         pomFile.text = """\
 <project>
   <modelVersion>4.0.0</modelVersion>
@@ -166,15 +169,13 @@ class SvnDeployerUnitTests extends GroovyTestCase {
 </project>
 """
 
-        def pluginListFile = new File(baseDir, "plugin-list.xml")
-
         // These are the files that should be added to the Subversion
         // repository if they're not already there.
         def wcDir = new File(baseDir, "publish-wc")
         def expectedFiles = [
                 new File(wcDir, zipFile.name),
-                new File(wcDir, "plugin.xml"),
-                new File(wcDir, "pom.xml"),
+                new File(wcDir, "pdf-generator-1.1.2-plugin.xml"),
+                new File(wcDir, "pdf-generator-1.1.2.pom"),
                 new File(wcDir, "${zipFile.name}.sha1"),
                 new File(wcDir, "${zipFile.name}.md5") ]
 
@@ -218,9 +219,6 @@ class SvnDeployerUnitTests extends GroovyTestCase {
     void testDeployPluginPackageDoesNotExist() {
         def zipContent = "Hello world"
         def zipFile = new File(baseDir, "grails-pdf-generator-0.5-SNAPSHOT.zip")
-        def pluginXmlFile = new File(baseDir, "plugin.xml")
-        def pomFile = new File(baseDir, "pom.xml")
-
         def pluginListFile = new File(baseDir, "plugin-list.xml")
 
         def wcDir = new File(baseDir, "publish-wc")
@@ -240,11 +238,6 @@ class SvnDeployerUnitTests extends GroovyTestCase {
         def zipFile = new File(baseDir, "grails-pdf-generator-0.5-SNAPSHOT.zip")
         zipFile.text = zipContent
 
-        def pluginXmlFile = new File(baseDir, "plugin.xml")
-        def pomFile = new File(baseDir, "pom.xml")
-
-        def pluginListFile = new File(baseDir, "plugin-list.xml")
-
         def wcDir = new File(baseDir, "publish-wc")
         def mockSvnClient = mock()
 
@@ -261,13 +254,7 @@ class SvnDeployerUnitTests extends GroovyTestCase {
         def zipContent = "Hello world"
         def zipFile = new File(baseDir, "grails-pdf-generator-0.5-SNAPSHOT.zip")
         zipFile.text = zipContent
-
-        def pluginXmlFile = new File(baseDir, "plugin.xml")
         pluginXmlFile.text = "<plugin></plugin>"
-
-        def pomFile = new File(baseDir, "pom.xml")
-
-        def pluginListFile = new File(baseDir, "plugin-list.xml")
 
         def wcDir = new File(baseDir, "publish-wc")
         def mockSvnClient = mock()

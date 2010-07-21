@@ -1,6 +1,7 @@
-grails.project.class.dir = "target/classes"
-grails.project.test.class.dir = "target/test-classes"
-grails.project.test.reports.dir	= "target/test-reports"
+grails.plugin.location.publish = "../../.."
+grails.project.work.dir = "target"
+
+//grails.project.war.file = "target/${appName}-${appVersion}.war"
 grails.project.dependency.resolution = {
     // inherit Grails' default dependencies
     inherits( "global" ) {
@@ -14,8 +15,8 @@ grails.project.dependency.resolution = {
 
         // uncomment the below to enable remote dependency resolution
         // from public Maven repositories
-        mavenLocal()
-        mavenCentral()
+        //mavenLocal()
+        //mavenCentral()
         //mavenRepo "http://snapshots.repository.codehaus.org"
         //mavenRepo "http://repository.codehaus.org"
         //mavenRepo "http://download.java.net/maven/2/"
@@ -24,11 +25,7 @@ grails.project.dependency.resolution = {
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
 
-        build "org.apache.maven:maven-ant-tasks:2.1.0"
-        compile "org.tmatesoft.svnkit:svnkit:1.3.3", {
-            excludes "jna", "trilead-ssh2", "sqljet"
-        }
-        test  "org.gmock:gmock:0.8.0"
+        // runtime 'mysql:mysql-connector-java:5.1.5'
     }
 
 }

@@ -4,10 +4,17 @@ import grails.plugins.publish.PluginDeployer
 
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.io.FileUtils
+import org.apache.commons.io.FilenameUtils
 import org.codehaus.groovy.grails.plugins.publishing.DefaultPluginPublisher
 import org.springframework.core.io.FileSystemResource
 import org.tmatesoft.svn.core.SVNAuthenticationException
 
+/**
+ * Implementation of {@link PluginDeployer} that deploys plugin packages
+ * to a Subversion repository using the layout convention mandated by
+ * Grails. All the Subversion interaction is delegated to the {@link
+ * SvnClient} bean.
+ */
 class SvnDeployer implements PluginDeployer {
     def svnClient
     def workDir
@@ -24,7 +31,21 @@ class SvnDeployer implements PluginDeployer {
     }
 
     /**
-     * 
+     * Does all the work involved in deploying the given plugin package
+     * to a Grails-compatible Subversion repository (configured at object
+     * instantiation). This involves checking out the trunk of the
+     * repository to a temporary directory (unless the current directory
+     * is already a Subversion working copy for that URL), adding the
+     * plugin package, XML plugin descriptor, and POM, and finally
+     * committing the changes to the repository. It then creates the
+     * relevant tags.
+     * @param pluginPackage The location of the packaged plugin, i.e.
+     * the zip file.
+     * @param pluginXmlFile The location of the XML plugin descriptor.
+     * @param pomFile The location of the POM (pom.xml).
+     * @param makeLatest Whether to make this the latest release or not.
+     * If <code>true</code>, the method replaces the existing LATEST_RELEASE
+     * tag with one pointing to the recently deployed version. 
      */
     void deployPlugin(File pluginPackage, File pluginXmlFile, File pomFile, boolean makeLatest = true) {
         // Extract information from the POM.
@@ -80,7 +101,13 @@ class SvnDeployer implements PluginDeployer {
 
         // Copy the plugin package, plugin descriptor, and POM files to
         // the working copy so that we can commit them.
-        def destFiles = [ new File(wc, pluginPackage.name), new File(wc, pluginXmlFile.name), new File(wc, pomFile.name), sha1File, md5File ]
+        def baseName = FilenameUtils.getBaseName(pluginPackage.name) - "grails-"
+        def destFiles = [ 
+                new File(wc, pluginPackage.name),
+                new File(wc, "${baseName}-plugin.xml"),
+                new File(wc, "${baseName}.pom"),
+                sha1File,
+                md5File ]
         copyIfNotSame(pluginPackage, destFiles[0])
         copyIfNotSame(pluginXmlFile, destFiles[1])
         copyIfNotSame(pomFile, destFiles[2])
@@ -116,9 +143,13 @@ class SvnDeployer implements PluginDeployer {
 
         // Support for legacy Grails clients: update the master plugin list
         // in the Subversion repository.
-        updatePluginList(pluginName, !makeLatest)
+        updatePluginList(pluginName, makeLatest)
     }
 
+    /**
+     * Deletes the contents of the given directory, but leaves the
+     * directory itself in place.
+     */
     protected final cleanLocalWorkingCopy(localWorkingCopy) {
         if (localWorkingCopy.exists()) {
             localWorkingCopy.deleteDir()
@@ -126,7 +157,14 @@ class SvnDeployer implements PluginDeployer {
         localWorkingCopy.mkdirs()
     }
 
-    protected final updatePluginList(pluginName, skipLatest) {
+    /**
+     * Does the work necessary to update the master plugin list with the
+     * details of the current release of the plugin.
+     * @param pluginName The name of the plugin we're deploying.
+     * @param makeLatest Whether this plugin release will be marked as
+     * the latest.
+     */
+    protected final updatePluginList(pluginName, makeLatest) {
         pluginListFile.delete()
 
         // Get newest version of plugin list
@@ -135,7 +173,7 @@ class SvnDeployer implements PluginDeployer {
 
         def remoteRevision = handleAuthentication { svnClient.latestRevision }
         def publisher = new DefaultPluginPublisher(remoteRevision.toString(), svnClient.repoUrl.toString())
-        def updatedList = publisher.publishRelease(pluginName, new FileSystemResource(pluginListFile), !skipLatest)
+        def updatedList = publisher.publishRelease(pluginName, new FileSystemResource(pluginListFile), makeLatest)
         pluginListFile.withWriter("UTF-8") { w ->
             publisher.writePluginList(updatedList, w)
         }
@@ -166,6 +204,10 @@ class SvnDeployer implements PluginDeployer {
         handleAuthentication { svnClient.commit(wc, "Updating plugin list for plugin '$pluginName'.") }
     }
 
+    /**
+     * Copies the source file to the destination file unless the two
+     * locations are the same.
+     */
     protected copyIfNotSame(srcFile, destFile) {
         if (srcFile.canonicalFile != destFile.canonicalFile) {
             FileUtils.copyFile(srcFile, destFile)
