@@ -44,11 +44,17 @@ class GeneratePomTests extends AbstractCliTestCase {
         assertEquals "http://grails.org/plugin/dummy", pom.url.text()
         assertEquals "Apache License 2.0", pom.licenses.license[0].name.text()
         assertEquals "http://www.apache.org/licenses/LICENSE-2.0.txt", pom.licenses.license[0].url.text()
-  /*
-  <organization>...</organization>
-  <developers>...</developers>
-  <contributors>...</contributors>
-  */
-        
+        assertEquals "SpringSource", pom.organization.name.text()
+        assertEquals "http://www.springsource.org/", pom.organization.url.text()
+        assertEquals 3, pom.developers.developer.size()
+        assertEquals "Jane Doe", pom.developers.developer[0].name.text()
+        assertEquals "jdoe@springsource.org", pom.developers.developer[0].email.text()
+        assertEquals "Peter Ledbrook", pom.developers.developer[1].name.text()
+        assertEquals "pledbrook@somewhere.net", pom.developers.developer[1].email.text()
+        assertEquals "Graeme Rocher", pom.developers.developer[2].name.text()
+        assertEquals "grocher@somewhere.net", pom.developers.developer[2].email.text()
+        assertEquals "JIRA", pom.issueManagement.system.text()
+        assertEquals "http://jira.codehaus.org/browse/GRAILSPLUGINS", pom.issueManagement.url.text()
+        assertEquals "http://svn.grails-plugins.codehaus.org/browse/grails-plugins/", pom.scm.url.text()
     }
 }

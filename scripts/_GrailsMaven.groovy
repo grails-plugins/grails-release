@@ -22,10 +22,10 @@ import org.apache.ivy.util.ChecksumHelper
 includeTargets << grailsScript("_GrailsPackage")	
 
 // Open source licences.
-globalLicenses = Collections.unmodifiableMap([
+globalLicenses = [
 		APACHE: [ name: "Apache License 2.0", url: "http://www.apache.org/licenses/LICENSE-2.0.txt" ],
 		GPL2: [ name: "GNU General Public License 2", url: "http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt"],
-		GPL3: [ name: "GNU General Public License 3", url: "http://www.gnu.org/licenses/gpl.txt"] ])
+		GPL3: [ name: "GNU General Public License 3", url: "http://www.gnu.org/licenses/gpl.txt"] ]
 
 artifact = groovy.xml.NamespaceBuilder.newInstance(ant, 'antlib:org.apache.maven.artifact.ant')
 
@@ -100,6 +100,57 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
 					}
 					else {
 						event("StatusUpdate", [ "Unknown license: ${pluginInstance.license}" ])
+					}
+				}
+				if (getOptionalProperty(pluginInstance, "organization")) {
+					organization {
+						name pluginInstance.organization.name
+						delegate.url pluginInstance.organization.url
+					}
+				}
+
+				// Handle the developers
+				def devs = []
+				if (getOptionalProperty(pluginInstance, "author")) {
+					def author = [ name: pluginInstance.author ]
+					if (getOptionalProperty(pluginInstance, "authorEmail")) {
+						author["email"] = pluginInstance.authorEmail
+					}
+
+					devs << author
+				}
+				if (getOptionalProperty(pluginInstance, "developers")) {
+					devs += pluginInstance.developers
+				}
+
+				if (devs) {
+					developers {
+						for (d in devs) {
+							developer {
+								name d.name
+								email d.email
+							}
+						}
+					}
+				}
+
+				// Handle the issue tracker
+				if (getOptionalProperty(pluginInstance, "issueManagement")) {
+					def trackerInfo = pluginInstance.issueManagement
+					issueManagement {
+						if (trackerInfo.system) system trackerInfo.system
+						if (trackerInfo.url) delegate.url trackerInfo.url
+					}
+				}
+
+				// Source control
+				if (getOptionalProperty(pluginInstance, "scm")) {
+					def scmInfo = pluginInstance.scm
+					scm {
+						if (scmInfo.connection) connection scmInfo.connection
+						if (scmInfo.developerConnection) developerConnection scmInfo.developerConnection
+						if (scmInfo.tag) tag scmInfo.tag
+						if (scmInfo.url) delegate.url scmInfo.url
 					}
 				}
 			}

@@ -78,11 +78,11 @@ class GeneratePomTests extends AbstractCliTestCase {
         assertEquals "Legacy plugin for testing.", pom.description.text()
         assertEquals "http://grails.org/plugin/legacy", pom.url.text()
         assertEquals 0, pom.licenses.size()
-  /*
-  <organization>...</organization>
-  <developers>...</developers>
-  <contributors>...</contributors>
-  */
-        
+        assertEquals 0, pom.organization.size()
+        assertEquals 1, pom.developers.developer.size()
+        assertEquals "Dilbert", pom.developers.developer[0].name.text()
+        assertEquals "dilbert@somewhere.net", pom.developers.developer[0].email.text()
+        assertEquals 0, pom.issueManagement.size()
+        assertEquals 0, pom.scm.size()
     }
 }

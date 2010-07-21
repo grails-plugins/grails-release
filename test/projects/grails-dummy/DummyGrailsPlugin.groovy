@@ -11,8 +11,8 @@ class DummyGrailsPlugin {
     ]
 
     // TODO Fill in these fields
-    def author = "Your name"
-    def authorEmail = ""
+    def author = "Jane Doe"
+    def authorEmail = "jdoe@springsource.org"
     def title = "Dummy plugin"
     def description = "A dummy plugin. Only used for testing."
     def groupId = "org.example.grails"
@@ -21,6 +21,12 @@ class DummyGrailsPlugin {
     def documentation = "http://grails.org/plugin/dummy"
 
     def license = "APACHE"
+    def organization = [ name: "SpringSource", url: "http://www.springsource.org/" ]
+    def developers = [
+            [ name: "Peter Ledbrook", email: "pledbrook@somewhere.net" ],
+            [ name: "Graeme Rocher", email: "grocher@somewhere.net" ] ]
+    def issueManagement = [ system: "JIRA", url: "http://jira.codehaus.org/browse/GRAILSPLUGINS" ]
+    def scm = [ url: "http://svn.grails-plugins.codehaus.org/browse/grails-plugins/" ]
 
     def doWithWebDescriptor = { xml ->
         // TODO Implement additions to web.xml (optional), this event occurs before 
