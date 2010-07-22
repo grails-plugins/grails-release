@@ -180,8 +180,8 @@ class SvnDeployerUnitTests extends GroovyTestCase {
                 new File(wcDir, "${zipFile.name}.md5") ]
 
         def askUser = mock()
-        askUser.call("Enter your Subversion username:").returns("dilbert")
-        askUser.call("Enter your Subversion password:").returns("password")
+        askUser.call("Enter your Subversion username: ").returns("dilbert")
+        askUser.call("Enter your Subversion password: ").returns("password")
 
         // The current directory is not a working copy for the repository.
         def mockSvnClient = mock()
@@ -213,6 +213,56 @@ class SvnDeployerUnitTests extends GroovyTestCase {
         play {
             def deployer = new SvnDeployer(mockSvnClient, baseDir, pluginListFile, System.out, askUser)
             deployer.deployPlugin(zipFile, pluginXmlFile, pomFile)
+        }
+    }
+
+    void testDeployPluginUnauthorisedUser() {
+        def zipContent = "Hello world"
+        def zipFile = new File(baseDir, "grails-pdf-generator-1.1.2.zip")
+        zipFile.text = zipContent
+
+        def expectedMd5Sum = DigestUtils.md5Hex(zipContent.bytes)
+        def expectedSha1Sum = DigestUtils.shaHex(zipContent.bytes)
+
+        pluginXmlFile.text = "<plugin></plugin>"
+        pomFile.text = """\
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.example</groupId>
+  <artifactId>pdf-generator</artifactId>
+  <version>1.1.2</version>
+  <packaging>zip</packaging>
+</project>
+"""
+
+        // These are the files that should be added to the Subversion
+        // repository if they're not already there.
+        def wcDir = new File(baseDir, "publish-wc")
+        def expectedFiles = [
+                new File(wcDir, zipFile.name),
+                new File(wcDir, "pdf-generator-1.1.2-plugin.xml"),
+                new File(wcDir, "pdf-generator-1.1.2.pom"),
+                new File(wcDir, "${zipFile.name}.sha1"),
+                new File(wcDir, "${zipFile.name}.md5") ]
+
+        def askUser = mock()
+        askUser.call("Enter your Subversion username: ").returns("dilbert").times(3)
+        askUser.call("Enter your Subversion password: ").returns("password").times(3)
+
+        // The current directory is not a working copy for the repository.
+        def mockSvnClient = mock()
+        mockSvnClient.isWorkingCopyForRepository(new File("."), "grails-pdf-generator/trunk").returns(false)
+        
+        // The plugin is not already in the repository.
+        mockSvnClient.pathExists("grails-pdf-generator/trunk").raises(
+                new SVNAuthenticationException(SVNErrorMessage.create(SVNErrorCode.AUTHN_CREDS_UNAVAILABLE))).times(4)
+        mockSvnClient.setCredentials("dilbert", "password").times(3)
+
+        play {
+            def deployer = new SvnDeployer(mockSvnClient, baseDir, pluginListFile, System.out, askUser)
+            shouldFail(SVNAuthenticationException) {
+                deployer.deployPlugin(zipFile, pluginXmlFile, pomFile)
+            }
         }
     }
 

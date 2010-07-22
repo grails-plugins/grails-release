@@ -224,15 +224,19 @@ class SvnDeployer implements PluginDeployer {
      * in other words).
      * @param c The closure to execute within the try/catch.
      */
-    private handleAuthentication(c) {
+    private handleAuthentication(c, authCount = 0) {
         try {
             return c()
         }
         catch (SVNAuthenticationException ex) {
-            def username = askUser("Enter your Subversion username:")
-            def password = askUser("Enter your Subversion password:")
+            // Only allow three authentication attempts.
+            if (authCount == 3) throw ex
+            else if (authCount > 0) out.println "Authentication failed - please try again."
+
+            def username = askUser("Enter your Subversion username: ")
+            def password = askUser("Enter your Subversion password: ")
             svnClient.setCredentials(username, password)
-            return c()
+            return handleAuthentication(c, ++authCount)
         }
     }
 }

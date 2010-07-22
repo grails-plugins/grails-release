@@ -1,4 +1,5 @@
 import org.apache.commons.codec.digest.DigestUtils
+import org.codehaus.groovy.grails.cli.CommandLineHelper
 
 includeTargets << grailsScript("_GrailsPluginDev")
 includeTargets << new File(mavenPublisherPluginDir, "scripts/_GrailsMaven.groovy")
@@ -42,6 +43,9 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         deployer = classLoader.loadClass("grails.plugins.publish.print.DryRunDeployer").newInstance()
     }
     else if (type == "svn") {
+        // Helper class for getting user input from the command line.
+        def inputHelper = new CommandLineHelper()
+
         // Create a deployer for Subversion and...
         def svnClient = classLoader.loadClass("grails.plugins.publish.svn.SvnClient").newInstance(url)
         deployer = classLoader.loadClass("grails.plugins.publish.svn.SvnDeployer").newInstance(
@@ -51,9 +55,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
                 System.out) { msg ->
             // This closure is executed whenever the deployer needs to
             // ask for user input.
-            def prop = "ask.user.response." + DigestUtils.shaHex(msg.bytes)
-            ant.input(message: msg, addproperty: prop)
-            return ant.antProject.properties."$prop"
+            return inputHelper.userInput(msg)
         }
     }
     else if (type == "maven"){

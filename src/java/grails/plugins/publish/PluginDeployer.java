@@ -5,4 +5,3 @@ import java.io.File;
 public interface PluginDeployer {
     void deployPlugin(File pluginPackage, File pluginXmlFile, File pomFile);
 }
-
