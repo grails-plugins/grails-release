@@ -43,11 +43,8 @@ class SvnDeployer implements PluginDeployer {
      * the zip file.
      * @param pluginXmlFile The location of the XML plugin descriptor.
      * @param pomFile The location of the POM (pom.xml).
-     * @param makeLatest Whether to make this the latest release or not.
-     * If <code>true</code>, the method replaces the existing LATEST_RELEASE
-     * tag with one pointing to the recently deployed version. 
      */
-    void deployPlugin(File pluginPackage, File pluginXmlFile, File pomFile, boolean makeLatest = true) {
+    void deployPlugin(File pluginPackage, File pluginXmlFile, File pomFile) {
         // Extract information from the POM.
         def pom = new XmlSlurper().parseText(pomFile.text)
         def pluginName = pom.artifactId.text()
@@ -129,7 +126,9 @@ class SvnDeployer implements PluginDeployer {
                     "Tagging the ${pluginVersion} release of the '${pluginName}' plugin.")
         }
 
-        // Do we make this the latest release too?
+        // Do we make this the latest release too? Only if it's not a
+        // snapshot version.
+        def makeLatest = !pluginVersion.endsWith("-SNAPSHOT")
         if (makeLatest) {
             out.println "Tagging this release as the latest"
             handleAuthentication {
