@@ -128,7 +128,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
 						for (d in devs) {
 							developer {
 								name d.name
-								email d.email
+								if (d.email) email d.email
 							}
 						}
 					}
