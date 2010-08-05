@@ -1,4 +1,4 @@
-class SpockGrailsPlugin {
+class GebSpockGrailsPlugin {
     // the plugin version
     def version = "1.2"
     // the version or versions of Grails the plugin is designed for

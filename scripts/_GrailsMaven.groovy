@@ -191,7 +191,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
 							
 							dependency {
 								groupId depGroup
-								artifactId depName
+								artifactId GrailsNameUtils.getScriptName(depName)
 								version depVersion
 							}							
 						}
