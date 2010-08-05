@@ -191,7 +191,7 @@ class SvnDeployer implements PluginDeployer {
             }
         }
 
-        out.println "Committing updated plugin list to the repostiory"
+        out.println "Committing updated plugin list to the repository"
 
         // Check out the latest plugin list from the repository to a
         // temporary directory, then commit the modified plugin list
