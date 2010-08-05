@@ -1,32 +1,26 @@
-class DummyGrailsPlugin {
+class ShiroGrailsPlugin {
     // the plugin version
-    def version = "0.1"
+    def groupdId = "org.apache.shiro.grails"
+    def version = "1.1-SNAPSHOT"
     // the version or versions of Grails the plugin is designed for
-    def grailsVersion = "1.2.3 > *"
+    def grailsVersion = "1.3.3 > *"
     // the other plugins this plugin depends on
-    def dependsOn = [ debug: '1.0 > *', shiro: '1.1-SNAPSHOT', spock: '1.1 > 1.3' ]
+    def dependsOn = [:]
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
             "grails-app/views/error.gsp"
     ]
 
     // TODO Fill in these fields
-    def author = "Jane Doe"
-    def authorEmail = "jdoe@springsource.org"
-    def title = "Dummy plugin"
-    def description = "A dummy plugin. Only used for testing."
-    def groupId = "org.example.grails"
+    def author = "Your name"
+    def authorEmail = ""
+    def title = "Plugin summary/headline"
+    def description = '''\\
+Brief description of the plugin.
+'''
 
     // URL to the plugin's documentation
-    def documentation = "http://grails.org/plugin/dummy"
-
-    def license = "APACHE"
-    def organization = [ name: "SpringSource", url: "http://www.springsource.org/" ]
-    def developers = [
-            [ name: "Peter Ledbrook", email: "pledbrook@somewhere.net" ],
-            [ name: "Graeme Rocher", email: "grocher@somewhere.net" ] ]
-    def issueManagement = [ system: "JIRA", url: "http://jira.codehaus.org/browse/GRAILSPLUGINS" ]
-    def scm = [ url: "http://svn.grails-plugins.codehaus.org/browse/grails-plugins/" ]
+    def documentation = "http://grails.org/plugin/shiro"
 
     def doWithWebDescriptor = { xml ->
         // TODO Implement additions to web.xml (optional), this event occurs before 
