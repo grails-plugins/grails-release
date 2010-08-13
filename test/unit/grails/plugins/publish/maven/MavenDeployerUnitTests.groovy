@@ -28,7 +28,7 @@ class MavenDeployerUnitTests extends GroovyTestCase {
 
         play {
             def deployer = new MavenDeployer(mockAnt, repoDefn, "wagon-http")
-            deployer.deployPlugin(packageFile, pluginXmlFile, pomFile)
+            deployer.deployPlugin(packageFile, pluginXmlFile, pomFile, false)
             
             assertEquals pluginXmlFile, testDelegate.attachArgs.file
             assertEquals "xml", testDelegate.attachArgs.type
@@ -62,7 +62,7 @@ class MavenDeployerUnitTests extends GroovyTestCase {
 
         play {
             def deployer = new MavenDeployer(mockAnt, repoDefn, "wagon-http")
-            deployer.deployPlugin(packageFile, pluginXmlFile, pomFile)
+            deployer.deployPlugin(packageFile, pluginXmlFile, pomFile, true)
             
             assertEquals pluginXmlFile, testDelegate.attachArgs.file
             assertEquals "xml", testDelegate.attachArgs.type

@@ -85,7 +85,7 @@ The names of the properties and the keys used in the maps match the element name
 
 The other new command is
 
-    grails publish-plugin [--dry-run] [--repository=repoId] [--protocol=protocol]
+    grails publish-plugin [--dry-run] [--snapshot] [--repository=repoId] [--protocol=protocol]
 
 which is dedicated to publishing plugins. Although the arguments are very similar to the ones used by the
 `maven-deploy` command, `publish-plugin` will also deploy to Subversion repositories just like the existing
@@ -109,7 +109,11 @@ Note that in this case, any authentication credentials are included in the URL i
 Again, the credentials must be included in the URL. Also, you can specify a type of "maven" if you want to be
 explicit, but you don't have to since it's the default for this syntax.
 
+`--dry-run` will simply print out what files will be deployed. It won't actually perform the deployment.
+
+`--snapshot` forces the command to treat the plugin as a snapshot version. In other words, it will not be
+marked as the latest release. This currently only affects deployments to Subversion repositories. By default,
+plugins are treated as release versions unless their version number has a '-SNAPSHOT' suffix.
+
 One final note: `publish-plugin` does not automatically commit source code changes to a Subversion repository.
-It's the equivalent of `release-plugin --zipOnly`. Nor does it support the `--snapshot` option. The plugin
-release will only be made the latest in a Subversion plugin repository if the version number does _not_ end
-with '-SNAPSHOT'.
+It's the equivalent of `release-plugin --zipOnly`.

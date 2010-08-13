@@ -25,8 +25,11 @@ class MavenDeployer implements PluginDeployer {
      * @param pluginPackage The location of the plugin zip file.
      * @param pluginXmlFile The location of the XML plugin descriptor.
      * @param pomFile The location of the POM (pom.xml).
+     * @param isRelease Ignored by the Maven deployer, since Maven determines
+     * whether it's a release based on whether the artifact has a "-SNAPSHOT"
+     * extension or not.
      */
-    void deployPlugin(File pluginPackage, File pluginXmlFile, File pomFile) {
+    void deployPlugin(File pluginPackage, File pluginXmlFile, File pomFile, boolean isRelease) {
         mavenTasks.'install-provider'(artifactId: protocol, version: "1.0-beta-2")
         mavenTasks.deploy(file: pluginPackage) {
             attach file: pluginXmlFile, type:"xml", classifier: "plugin"

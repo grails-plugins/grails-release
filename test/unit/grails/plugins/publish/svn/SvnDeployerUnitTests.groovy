@@ -83,7 +83,7 @@ class SvnDeployerUnitTests extends GroovyTestCase {
         play {
             try {
                 def deployer = new SvnDeployer(mockSvnClient, baseDir, pluginListFile, System.out, null)
-                deployer.deployPlugin(zipFile, pluginXmlFile, pomFile)
+                deployer.deployPlugin(zipFile, pluginXmlFile, pomFile, true)
 
                 // Check that the checksums are as expected.
                 assertEquals expectedSha1Sum, expectedFiles[3].text
@@ -146,7 +146,7 @@ class SvnDeployerUnitTests extends GroovyTestCase {
 
         play {
             def deployer = new SvnDeployer(mockSvnClient, baseDir, pluginListFile, System.out, null)
-            deployer.deployPlugin(zipFile, pluginXmlFile, pomFile)
+            deployer.deployPlugin(zipFile, pluginXmlFile, pomFile, false)
         }
     }
 
@@ -212,7 +212,7 @@ class SvnDeployerUnitTests extends GroovyTestCase {
 
         play {
             def deployer = new SvnDeployer(mockSvnClient, baseDir, pluginListFile, System.out, askUser)
-            deployer.deployPlugin(zipFile, pluginXmlFile, pomFile)
+            deployer.deployPlugin(zipFile, pluginXmlFile, pomFile, true)
         }
     }
 
@@ -261,7 +261,7 @@ class SvnDeployerUnitTests extends GroovyTestCase {
         play {
             def deployer = new SvnDeployer(mockSvnClient, baseDir, pluginListFile, System.out, askUser)
             shouldFail(SVNAuthenticationException) {
-                deployer.deployPlugin(zipFile, pluginXmlFile, pomFile)
+                deployer.deployPlugin(zipFile, pluginXmlFile, pomFile, true)
             }
         }
     }
@@ -278,7 +278,7 @@ class SvnDeployerUnitTests extends GroovyTestCase {
             def deployer = new SvnDeployer(mockSvnClient, baseDir, pluginListFile, System.out, null)
 
             shouldFail(FileNotFoundException) {
-                deployer.deployPlugin(zipFile, pluginXmlFile, pomFile)
+                deployer.deployPlugin(zipFile, pluginXmlFile, pomFile, false)
             }
         }
     }
@@ -295,7 +295,7 @@ class SvnDeployerUnitTests extends GroovyTestCase {
             def deployer = new SvnDeployer(mockSvnClient, baseDir, pluginListFile, System.out, null)
 
             shouldFail(FileNotFoundException) {
-                deployer.deployPlugin(zipFile, pluginXmlFile, pomFile)
+                deployer.deployPlugin(zipFile, pluginXmlFile, pomFile, false)
             }
         }
     }
@@ -313,7 +313,7 @@ class SvnDeployerUnitTests extends GroovyTestCase {
             def deployer = new SvnDeployer(mockSvnClient, baseDir, pluginListFile, System.out, null)
 
             shouldFail(FileNotFoundException) {
-                deployer.deployPlugin(zipFile, pluginXmlFile, pomFile)
+                deployer.deployPlugin(zipFile, pluginXmlFile, pomFile, false)
             }
         }
     }

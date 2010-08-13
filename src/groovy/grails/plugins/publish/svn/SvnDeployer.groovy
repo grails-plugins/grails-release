@@ -43,8 +43,10 @@ class SvnDeployer implements PluginDeployer {
      * the zip file.
      * @param pluginXmlFile The location of the XML plugin descriptor.
      * @param pomFile The location of the POM (pom.xml).
+     * @param isRelease If this is <code>true</code>, the plugin is
+     * tagged as the latest release.
      */
-    void deployPlugin(File pluginPackage, File pluginXmlFile, File pomFile) {
+    void deployPlugin(File pluginPackage, File pluginXmlFile, File pomFile, boolean isRelease) {
         // Extract information from the POM.
         def pom = new XmlSlurper().parseText(pomFile.text)
         def pluginName = pom.artifactId.text()
@@ -128,8 +130,7 @@ class SvnDeployer implements PluginDeployer {
 
         // Do we make this the latest release too? Only if it's not a
         // snapshot version.
-        def makeLatest = !pluginVersion.endsWith("-SNAPSHOT")
-        if (makeLatest) {
+        if (isRelease) {
             out.println "Tagging this release as the latest"
             handleAuthentication {
                 svnClient.tag(
@@ -142,7 +143,7 @@ class SvnDeployer implements PluginDeployer {
 
         // Support for legacy Grails clients: update the master plugin list
         // in the Subversion repository.
-        updatePluginList(pluginName, makeLatest)
+        updatePluginList(pluginName, isRelease)
     }
 
     /**

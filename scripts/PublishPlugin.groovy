@@ -98,7 +98,11 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         exit(1)
     }
     
-    deployer.deployPlugin(new File(pluginZip), new File("plugin.xml"), new File(pomFileLocation))
+    // 'plugin' comes from the packagePlugin target.
+    def isRelease = !plugin.version.endsWith("-SNAPSHOT")
+    if (argsMap["snapshot"]) isRelease = false
+    
+    deployer.deployPlugin(new File(pluginZip), new File("plugin.xml"), new File(pomFileLocation), isRelease)
 }
 
 target(processDefinitions: "Reads the repository definition configuration.") {

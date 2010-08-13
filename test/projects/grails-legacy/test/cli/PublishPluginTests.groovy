@@ -154,6 +154,7 @@ class PublishPluginTests extends AbstractCliTestCase {
         assertTrue "Command not publishing correct package.", output.contains("Deploying the plugin package ${packageFile.path}")
         assertTrue "Command not publishing XML plugin descriptor.", output.contains("with plugin descriptor ${pdFile.path}")
         assertTrue "Command not publishing POM.", output.contains("and POM file ${pom.path}")
+        assertTrue "Command is publishing a release version when it shouldn't be.", output.contains("This is not a release version")
 
         // Make sure that those files exist.
         assertTrue "Plugin package does not exist.", packageFile.exists()
