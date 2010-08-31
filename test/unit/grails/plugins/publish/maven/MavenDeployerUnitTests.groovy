@@ -44,7 +44,7 @@ class MavenDeployerUnitTests extends GroovyTestCase {
         def pluginXmlFile = new File("plugin.xml")
         def pomFile = new File("target/pom.xml")
         
-        def repoDefn = [ args: [ id: "remote1", url: "http://rimu:8081/artifactory/" ], configurer: "test" ]
+        def repoDefn = [ args: [ id: "remote1", url: "http://rimu:8081/artifactory/", type: "maven" ], configurer: "test" ]
         def testDelegate = new DeployTestDelegate()
 
         def mockAnt = mock()
@@ -68,7 +68,9 @@ class MavenDeployerUnitTests extends GroovyTestCase {
             assertEquals "xml", testDelegate.attachArgs.type
             assertEquals "plugin", testDelegate.attachArgs.classifier
             assertEquals pomFile, testDelegate.pomFile
-            assertEquals repoDefn["args"], testDelegate.repoArgs
+            assertEquals repoDefn["args"]["id"], testDelegate.repoArgs["id"]
+            assertEquals repoDefn["args"]["url"], testDelegate.repoArgs["url"]
+            assertNull testDelegate.repoArgs["type"]
             assertEquals repoDefn["configurer"], testDelegate.repoConfigurer
         }
     }
