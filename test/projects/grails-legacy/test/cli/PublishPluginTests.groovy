@@ -57,6 +57,11 @@ class PublishPluginTests extends AbstractCliTestCase {
         basePom.text = """\
 <?xml version="1.0" ?>
 <project>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.springsource</groupId>
+    <artifactId>my-plugin</artifactId>
+    <version>0.3-SNAPSHOT</version>
+    <packaging>grails-plugin</packaging>
 </project>
 """
 
