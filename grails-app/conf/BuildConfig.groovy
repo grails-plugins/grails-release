@@ -25,15 +25,16 @@ grails.project.dependency.resolution = {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
 
         build "org.apache.maven:maven-ant-tasks:2.1.0",
-			  "org.codehaus.groovy.modules.http-builder:http-builder:0.5.0", {
-			excludes "commons-logging", "xml-apis"
-		}
+              "org.codehaus.groovy.modules.http-builder:http-builder:0.5.0", {
+            excludes "commons-logging", "xml-apis"
+        }
         compile "org.tmatesoft.svnkit:svnkit:1.3.3", {
             excludes "jna", "trilead-ssh2", "sqljet"
         }
         test  "org.gmock:gmock:0.8.0", {
-			export = false
-		}
+            export = false
+        }
     }
+}
 
 }

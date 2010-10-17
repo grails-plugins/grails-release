@@ -85,7 +85,7 @@ The names of the properties and the keys used in the maps match the element name
 
 The other new command is
 
-    grails publish-plugin [--dry-run] [--snapshot] [--repository=repoId] [--protocol=protocol]
+    grails publish-plugin [--dry-run] [--snapshot] [--repository=repoId] [--protocol=protocol] [--portal=portal]
 
 which is dedicated to publishing plugins. Although the arguments are very similar to the ones used by the
 `maven-deploy` command, `publish-plugin` will also deploy to Subversion repositories just like the existing
@@ -109,11 +109,26 @@ Note that in this case, any authentication credentials are included in the URL i
 Again, the credentials must be included in the URL. Also, you can specify a type of "maven" if you want to be
 explicit, but you don't have to since it's the default for this syntax.
 
+The plugin can notify any portal of the plugin release, although it defaults to the main portal on grails.org. You can define alternative portals using a similar syntax to remote repositories:
+
+    grails.project.dependency.distribution = {
+        portal id: "beta", url: "http://beta.grails.org/plugin/"
+    }
+
 `--dry-run` will simply print out what files will be deployed. It won't actually perform the deployment.
 
 `--snapshot` forces the command to treat the plugin as a snapshot version. In other words, it will not be
 marked as the latest release. This currently only affects deployments to Subversion repositories. By default,
 plugins are treated as release versions unless their version number has a '-SNAPSHOT' suffix.
+
+`--repository` specifies which Subversion or Maven-compatible repository the plugin should be deployed to. A remote
+repository must first be defined with that ID in BuildConfig.groovy.
+
+`--protocol` specifies the protocol to use when deploying the plugin to a Maven-compatible repository. Can be one of
+'http', 'scp', 'scpexe', 'ftp', or 'webdav'. The default is 'http'.
+
+`--portal` specifies the ID of the portal to notify. For this to work, a portal must be configured for that ID
+in BuildConfig.groovy.
 
 One final note: `publish-plugin` does not automatically commit source code changes to a Subversion repository.
 It's the equivalent of `release-plugin --zipOnly`.
