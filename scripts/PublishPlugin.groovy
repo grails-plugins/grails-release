@@ -1,14 +1,41 @@
+import groovyx.net.http.HTTPBuilder
 import org.apache.commons.codec.digest.DigestUtils
 import org.codehaus.groovy.grails.cli.CommandLineHelper
 
+import static groovyx.net.http.Method.PUT
+import static groovyx.net.http.ContentType.JSON
+
 includeTargets << grailsScript("_GrailsPluginDev")
 includeTargets << new File(mavenPublisherPluginDir, "scripts/_GrailsMaven.groovy")
+
+USAGE = """
+    publish-plugin [--repository=REPO] [--protocol=PROTOCOL] [--portal=PORTAL] [--dry-run] [--snapshot]
+
+where
+    REPO     = The name of a configured repository to deploy the plugin to. Can be
+               a Subversion repository or a Maven-compatible one.
+               (default: Grails Central Plugin Repository).
+
+    PROTOCOL = The protocol to use when deploying to a Maven-compatible repository.
+               Can be one of 'http', 'scp', 'scpexe', 'ftp', or 'webdav'.
+               (default: 'http').
+	           
+    PORTAL   = The portal to inform of the plugin's release.
+               (default: Grails Plugin Portal).
+	           
+    --dry-run  = Shows you what will happen when you publish the plugin, but doesn't
+                 actually publish it.
+	           
+    --snapshot = Force this release to be a snapshot version, i.e. it isn't automatically
+                 made the latest available release.
+"""
 
 target(default: "Publishes a plugin to either a Subversion or Maven repository.") {
     depends(parseArguments, processDefinitions, packagePlugin, generatePom)
 
     // Use the Grails Central Plugin repository as the default.
     def repoName = argsMap["repository"]
+    def portalName = argsMap["portal"]
     def type = "svn"
     def url = "https://svn.codehaus.org/grails-plugins"
     if (repoName) {
@@ -19,6 +46,11 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         if (repoDefn) {
             type = repoDefn.args["type"] ?: "maven"
             url = repoDefn.args["url"]
+
+            // If the repository defines a portal, then we should use that
+            // ahead of the public Grails plugin portal (but not in preference
+            // to one declared in the command arguments).
+            if (!portalName) portalName = repoDefn.args["portal"]
         }
         else {
             type = "svn"
@@ -71,6 +103,8 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         def protocol = protocols.http
         
         def repoDefn = distributionInfo.remoteRepos[repoName]
+        repoDefn.args.remove "portal"
+
         if (argsMap["protocol"]) {
             protocol = protocols[argsMap["protocol"]]
         }
@@ -98,11 +132,61 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         exit(1)
     }
     
-    // 'plugin' comes from the packagePlugin target.
-    def isRelease = !plugin.version.endsWith("-SNAPSHOT")
+    // Read the plugin information from the POM.
+    def pluginInfo = new XmlSlurper().parse(new File(pomFileLocation))
+    def isRelease = !pluginInfo.version.text().endsWith("-SNAPSHOT")
     if (argsMap["snapshot"]) isRelease = false
     
     deployer.deployPlugin(new File(pluginZip), new File("plugin.xml"), new File(pomFileLocation), isRelease)
+
+    // Ping the plugin portal with the details of this release.
+    if (!argsMap["dry-run"]) {
+        // What's the URL of the portal to ping? The explicit 'portal' argument
+        // takes precedence, then the portal configured for the current repository,
+        // and finally the public Grails plugin portal.
+        def portalUrl = "http://grails.org/plugin/${pluginInfo.artifactId.text()}"
+        if (portalName) {
+            // Pick the configured portal with the given name, assuming one
+            // exists with that name.
+            portalUrl = distributionInfo.portals[portalName]
+
+            if (!portalUrl) {
+                println "No portal defined with ID '${portalName}'"
+                println "Plugin has been published, but the plugin portal has not been notified."
+                exit 1
+            }
+
+            // Add the plugin name to the URL.
+            if (!portalUrl.endsWith('/')) portalUrl += '/'
+            portalUrl += pluginInfo.artifactId.text()
+        }
+
+        // Now that we have a URL, simply send a PUT request with the appropriate
+        // JSON content.
+        println "Notifiying plugin portal '${portalUrl}' of release..."
+        def inputHelper = new CommandLineHelper()
+        def username = inputHelper.userInput("Username for portal (leave empty if authentication not required):")
+        def password = inputHelper.userInput("Password for portal (leave empty if authentication not required):")
+
+        def http = new HTTPBuilder(portalUrl)
+        http.auth.basic username, password
+        http.request(PUT, JSON) { req ->
+            body = [
+                name : pluginInfo.artifactId.text(),
+                version : pluginInfo.version.text(),
+                group : pluginInfo.groupId.text(),
+                url : url
+            ]
+            
+            response.success = { resp ->
+                println "Notification successful"
+            }
+
+            response.failure = { resp, reader ->
+                println reader.text
+            }
+        }
+    }
 }
 
 target(processDefinitions: "Reads the repository definition configuration.") {
@@ -122,6 +206,7 @@ target(processDefinitions: "Reads the repository definition configuration.") {
 }
 
 class DistributionManagementInfo {
+    Map portals = [:]
     Map remoteRepos = [:]
     String local
 
@@ -131,5 +216,9 @@ class DistributionManagementInfo {
         if (!args?.id) throw new Exception("Remote repository misconfigured: Please specify a repository 'id'. Eg. remoteRepository(id:'myRepo')")
         if (!args?.url) throw new Exception("Remote repository misconfigured: Please specify a repository 'url'. Eg. remoteRepository(url:'http://..')")
         remoteRepos[args.id] = new Expando(args: args, configurer: c)
+    }
+
+    void portal(Map args) {
+        portals[args.id] = args.url
     }
 }
