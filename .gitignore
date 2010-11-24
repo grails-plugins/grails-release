@@ -1,4 +1,5 @@
 .settings/
+grails-maven-publisher*.zip
 plugin.xml
 pom.xml
 target
