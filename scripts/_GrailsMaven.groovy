@@ -59,8 +59,10 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
 		return 1
 	}
 
+	// Get hold of the plugin instance for this plugin if it's a plugin
+	// project. If it isn't, then these variables will be null.
 	def plugin = pluginManager?.allPlugins?.find { it.basePlugin }
-	def pluginInstance = plugin.pluginClass.newInstance()
+	def pluginInstance = plugin?.pluginClass?.newInstance()
 
 	new File(pomFileLocation).withWriter { w ->
 		def xml = new groovy.xml.MarkupBuilder(w)
@@ -155,7 +157,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
 				}
 			}
 			else {
-				groupId buildConfig.grails.project.groupId ?: (buildConfig?.grails?.project?.groupId ?: grailsAppName)
+				groupId buildConfig.grails.project.groupId ?: (config?.grails?.project?.groupId ?: grailsAppName)
 				artifactId grailsAppName
 				packaging "war"
 				version grailsAppVersion
