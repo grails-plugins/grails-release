@@ -34,23 +34,26 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
     depends(parseArguments, processDefinitions, packagePlugin, generatePom)
 
     // Use the Grails Central Plugin repository as the default.
+    def repoClass = classLoader.loadClass("grails.plugins.publish.Repository")
+    def repo = repoClass.grailsCentral
+
     def repoName = argsMap["repository"]
-    def portalName = argsMap["portal"]
     def type = "svn"
-    def url = "https://svn.codehaus.org/grails-plugins"
+
     if (repoName) {
         // First look for the repository definition for this name. This
         // could either be from the newer Maven-based definitions or the
         // legacy Subversion-based ones.
         def repoDefn = distributionInfo.remoteRepos[repoName]
+        def defaultPortal = null
+        def url
         if (repoDefn) {
             type = repoDefn.args["type"] ?: "maven"
             url = repoDefn.args["url"]
 
             // If the repository defines a portal, then we should use that
-            // ahead of the public Grails plugin portal (but not in preference
-            // to one declared in the command arguments).
-            if (!portalName) portalName = repoDefn.args["portal"]
+            // ahead of the public Grails plugin portal.
+            defaultPortal = repoDefn.args["portal"]
         }
         else {
             type = "svn"
@@ -59,6 +62,10 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         
         // Check that the repository is defined.
         if (url) {
+            repo = repoClass.newInstance(
+                    repoName,
+                    new URI(url),
+                    defaultPortal ? new URI(distributionInfo.portals[defaultPortal]) : null)
             println "Publishing to ${type == 'svn' ? 'Subversion' : 'Maven'} repository '$repoName'"
         }
         else {
@@ -79,11 +86,11 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         def inputHelper = new CommandLineHelper()
 
         // Create a deployer for Subversion and...
-        def svnClient = classLoader.loadClass("grails.plugins.publish.svn.SvnClient").newInstance(url)
+        def svnClient = classLoader.loadClass("grails.plugins.publish.svn.SvnClient").newInstance(repo.uri.toString())
         deployer = classLoader.loadClass("grails.plugins.publish.svn.SvnDeployer").newInstance(
                 svnClient,
                 grailsSettings.projectWorkDir,
-                new File(grailsSettings.grailsWorkDir, "plugins-list-${repoName}.xml"),
+                repo.name,
                 System.out) { msg ->
             // This closure is executed whenever the deployer needs to
             // ask for user input.
@@ -108,20 +115,18 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         if (argsMap["protocol"]) {
             protocol = protocols[argsMap["protocol"]]
         }
-        else if (url) {
-            def i = url.indexOf('://')
-            if (i == -1) {
-                println "Invalid URL for repository '$repoName': $url"
+        else if (repo.uri) {
+            if (!repo.uri.scheme) {
+                println "Invalid URL for repository '${repo.name}': ${repo.uri}"
                 exit(1)
                 return 1
             }
             
-            def urlProt = url[0..<i]
-            if (protocols[urlProt]) {
-                protocol = protocols[urlProt]
+            if (protocols[repo.uri.scheme]) {
+                protocol = protocols[repo.uri.scheme]
             }
             else {
-                println "WARNING: unknown protocol '$urlProt' for repository '$repoName'"
+                println "WARNING: unknown protocol '${repo.uri.scheme}' for repository '${repo.name}'"
             }
         }
         
@@ -144,7 +149,8 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         // What's the URL of the portal to ping? The explicit 'portal' argument
         // takes precedence, then the portal configured for the current repository,
         // and finally the public Grails plugin portal.
-        def portalUrl = "http://grails.org/plugin/${pluginInfo.artifactId.text()}"
+        def portalUrl = repo.defaultPortal
+        def portalName = argsMap["portal"]
         if (portalName) {
             // Pick the configured portal with the given name, assuming one
             // exists with that name.
@@ -156,14 +162,20 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
                 exit 1
             }
 
-            // Add the plugin name to the URL.
-            if (!portalUrl.endsWith('/')) portalUrl += '/'
-            portalUrl += pluginInfo.artifactId.text()
+            portalUrl = new URI(portalUrl)
         }
+        else if (repoName) {
+            // We don't ping the grails.org portal if a repository has been specified
+            // but that repository has no default portal configured.
+            return
+        }
+
+        // Add the plugin name to the URL.
+        portalUrl = portalUrl.resolve(pluginInfo.artifactId.text())
 
         // Now that we have a URL, simply send a PUT request with the appropriate
         // JSON content.
-        println "Notifiying plugin portal '${portalUrl}' of release..."
+        println "Notifying plugin portal '${portalUrl}' of release..."
         def inputHelper = new CommandLineHelper()
         def username = inputHelper.userInput("Username for portal (leave empty if authentication not required):")
         def password = inputHelper.userInput("Password for portal (leave empty if authentication not required):")
@@ -175,7 +187,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
                 name : pluginInfo.artifactId.text(),
                 version : pluginInfo.version.text(),
                 group : pluginInfo.groupId.text(),
-                url : url
+                url : repo.uri
             ]
             
             response.success = { resp ->

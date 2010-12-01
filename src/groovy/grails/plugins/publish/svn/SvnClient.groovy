@@ -102,6 +102,7 @@ class SvnClient {
      * Subversion repository.
      * @param wc (File) The working copy directory.
      * @param msg The commit message to use.
+     * @return SVNCommitInfo if the commit was successful
      */
     def commit(wc, msg) {
         def commitClient = new SVNCommitClient(authManager, null)
@@ -109,7 +110,20 @@ class SvnClient {
         // The following line can't be inlined because that breaks GMock
         // 0.8.0 in the unit tests.
         def dirs = [ wc.canonicalFile ] as File[]
-        commitClient.doCommit(dirs, false, msg, true, true)
+        return commitClient.doCommit(dirs, false, msg, true, true)
+    }
+
+    /**
+     * Imports a local file path (either a file or a directory) into the
+     * repository under the given path.
+     * @param file (File) The file or directory to import.
+     * @param targetPath The path in the repository to import into.
+     * @param msg The commit message to use for the import.
+     * @return SVNCommitInfo if the commit was successful
+     */
+    def importIntoRepo(file, targetPath, msg) {
+        def importClient = new SVNCommitClient(authManager, null)
+        return importClient.doImport(file, targetPath, msg, true)
     }
 
     /**

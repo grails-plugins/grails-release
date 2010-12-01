@@ -20,12 +20,12 @@ class SvnDeployer implements PluginDeployer {
     def workDir
     def askUser
     def out
-    def pluginListFile
+    def repoName
 
-    SvnDeployer(svnClient, workDir, pluginListFile, out, askUser) {
+    SvnDeployer(svnClient, workDir, repoName, out, askUser) {
         this.svnClient = svnClient
         this.workDir = workDir
-        this.pluginListFile = pluginListFile
+        this.repoName = repoName
         this.out = out
         this.askUser = askUser
     }
@@ -143,7 +143,7 @@ class SvnDeployer implements PluginDeployer {
 
         // Support for legacy Grails clients: update the master plugin list
         // in the Subversion repository.
-        updatePluginList(pluginName, isRelease)
+        updatePluginList(pluginName, pluginVersion, isRelease)
     }
 
     /**
@@ -161,47 +161,19 @@ class SvnDeployer implements PluginDeployer {
      * Does the work necessary to update the master plugin list with the
      * details of the current release of the plugin.
      * @param pluginName The name of the plugin we're deploying.
+     * @param pluginVersion The version of the plugin we're deploying.
      * @param makeLatest Whether this plugin release will be marked as
      * the latest.
      */
-    protected final updatePluginList(pluginName, makeLatest) {
-        pluginListFile.delete()
+    protected final updatePluginList(pluginName, pluginVersion, makeLatest) {
+        def pluginList = new MasterPluginList(svnClient, repoName, new File(workDir, ".plugin-meta"), out, false)
 
-        // Get newest version of plugin list
-        out.println "Generating new plugin list"
-        handleAuthentication { svnClient.fetchFile(".plugin-meta/plugins-list.xml", pluginListFile) }
-
-        def remoteRevision = handleAuthentication { svnClient.latestRevision }
-        def publisher = new DefaultPluginPublisher(remoteRevision.toString(), svnClient.repoUrl.toString())
-        def updatedList = publisher.publishRelease(pluginName, new FileSystemResource(pluginListFile), makeLatest)
-        pluginListFile.withWriter("UTF-8") { w ->
-            publisher.writePluginList(updatedList, w)
-        }
-
-        // Prepare the temporary working copy directory for the plugin
-        // master list.
-        def wc = new File(workDir, "publish-wc")
-        cleanLocalWorkingCopy(wc)
-
-        def remotePath = ".plugin-meta"
         handleAuthentication {
-            if (!svnClient.pathExists(remotePath)) {
-                // Path does not exist, so create it now.
-                out.println "Creating path '$remotePath' in the repository"
-                svnClient.createPath(remotePath, "Adding $remotePath to the repository.")
-            }
+            pluginList.update(
+                    pluginName,
+                    !makeLatest,
+                    "Updating master plugin list for release ${pluginVersion} of plugin ${pluginName}")
         }
-
-        out.println "Committing updated plugin list to the repository"
-
-        // Check out the latest plugin list from the repository to a
-        // temporary directory, then commit the modified plugin list
-        // from there.
-        def wcPluginList = new File(wc, "plugins-list.xml")
-        handleAuthentication { svnClient.checkOut(wc, remotePath) }
-        handleAuthentication { svnClient.addFilesToSvn([ wcPluginList ]) }
-        copyIfNotSame(pluginListFile, wcPluginList)
-        handleAuthentication { svnClient.commit(wc, "Updating plugin list for plugin '$pluginName'.") }
     }
 
     /**
