@@ -9,7 +9,7 @@ includeTargets << grailsScript("_GrailsPluginDev")
 includeTargets << new File(mavenPublisherPluginDir, "scripts/_GrailsMaven.groovy")
 
 USAGE = """
-    publish-plugin [--repository=REPO] [--protocol=PROTOCOL] [--portal=PORTAL] [--dry-run] [--snapshot]
+    publish-plugin [--repository=REPO] [--protocol=PROTOCOL] [--portal=PORTAL] [--dryRun] [--snapshot] [--pingOnly]
 
 where
     REPO     = The name of a configured repository to deploy the plugin to. Can be
@@ -23,11 +23,16 @@ where
     PORTAL   = The portal to inform of the plugin's release.
                (default: Grails Plugin Portal).
 	           
-    --dry-run  = Shows you what will happen when you publish the plugin, but doesn't
+    --dryRun   = Shows you what will happen when you publish the plugin, but doesn't
                  actually publish it.
 	           
     --snapshot = Force this release to be a snapshot version, i.e. it isn't automatically
                  made the latest available release.
+
+    --pingOnly = Don't publish/deploy the plugin, only send a notification to the
+                 plugin portal. This is useful if portal notification failed during a
+                 previous attempt to publish the plugin. Mutually exclusive with the
+                 --dryRun option.
 """
 
 target(default: "Publishes a plugin to either a Subversion or Maven repository.") {
@@ -78,7 +83,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
     }
 
     def deployer
-    if (argsMap["dry-run"]) {
+    if (argsMap["dryRun"]) {
         deployer = classLoader.loadClass("grails.plugins.publish.print.DryRunDeployer").newInstance()
     }
     else if (type == "svn") {
@@ -142,10 +147,12 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
     def isRelease = !pluginInfo.version.text().endsWith("-SNAPSHOT")
     if (argsMap["snapshot"]) isRelease = false
     
-    deployer.deployPlugin(new File(pluginZip), new File("plugin.xml"), new File(pomFileLocation), isRelease)
+    if (!argsMap["pingOnly"]) {
+        deployer.deployPlugin(new File(pluginZip), new File("plugin.xml"), new File(pomFileLocation), isRelease)
+    }
 
     // Ping the plugin portal with the details of this release.
-    if (!argsMap["dry-run"]) {
+    if (!argsMap["dryRun"]) {
         // What's the URL of the portal to ping? The explicit 'portal' argument
         // takes precedence, then the portal configured for the current repository,
         // and finally the public Grails plugin portal.
@@ -167,6 +174,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         else if (repoName) {
             // We don't ping the grails.org portal if a repository has been specified
             // but that repository has no default portal configured.
+            println "No default portal defined for repository '${repoName}' - skipping portal notification"
             return
         }
 
@@ -205,7 +213,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
 target(processDefinitions: "Reads the repository definition configuration.") {
     distributionInfo = new DistributionManagementInfo()
     if (grailsSettings.config.grails.project.dependency.distribution instanceof Closure) {
-        def callable = grailsSettings.config.grails.project.dependency.distribution
+        def callable = grailsSettings.config.grails.project.dependency.distribution?.clone()
         callable.delegate = distributionInfo
         callable.resolveStrategy = Closure.DELEGATE_FIRST
         try {
