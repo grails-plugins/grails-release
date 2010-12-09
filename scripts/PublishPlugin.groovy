@@ -82,6 +82,12 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         println "Publishing to Grails Central"
     }
 
+    // Handle old name for dry run option. Should be removed for 1.0 release.
+    if (argsMap["dry-run"]) {
+        println "WARN: The '--dry-run' option has been deprecated in favour of '--dryRun' for consistency with the release-plugin command."
+        argsMap["dryRun"] = true
+    }
+
     def deployer
     if (argsMap["dryRun"]) {
         deployer = classLoader.loadClass("grails.plugins.publish.print.DryRunDeployer").newInstance()
