@@ -9,9 +9,9 @@ class MavenPublisherGrailsPlugin {
 
     def author = "Graeme Rocher"
     def authorEmail = "grocher@vmware.com"
-    def title = "A plugin that allows you to publish and/or resolve Grails application and plugins to Maven repositories without needing to use Maven directly"
-    def description = '''\\
-Brief description of the plugin.
+    def title = "Maven Publisher"
+    def description = '''\
+A plugin that allows you to publish Grails applications and plugins to Maven repositories without needing to use Maven directly.
 '''
 
     def documentation = "http://grails.org/plugin/maven-publisher"
