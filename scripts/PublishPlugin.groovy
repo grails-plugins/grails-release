@@ -187,15 +187,16 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
                 name : pluginInfo.artifactId.text(),
                 version : pluginInfo.version.text(),
                 group : pluginInfo.groupId.text(),
-                url : repo.uri
+                isSnapshot : !isRelease,
+                url : repo.uri.toString()
             ]
             
             response.success = { resp ->
                 println "Notification successful"
             }
 
-            response.failure = { resp, reader ->
-                println reader.text
+            response.failure = { resp, json ->
+                println "Notification failed - status ${resp.status} - ${json.message}"
             }
         }
     }
