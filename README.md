@@ -130,7 +130,7 @@ repository must first be defined with that ID in BuildConfig.groovy.
 `--portal` specifies the ID of the portal to notify. For this to work, a portal must be configured for that ID
 in BuildConfig.groovy.
 
- --pingOnly (version 1.7.3+) forces the command to only notify the configured portal - the plugin is _not_
+`--pingOnly` (version 1.7.3+) forces the command to only notify the configured portal - the plugin is _not_
 published to a repository.
 
 One final note: `publish-plugin` does not automatically commit source code changes to a Subversion repository.
