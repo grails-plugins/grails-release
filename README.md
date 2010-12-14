@@ -85,7 +85,7 @@ The names of the properties and the keys used in the maps match the element name
 
 The other new command is
 
-    grails publish-plugin [--dry-run] [--snapshot] [--repository=repoId] [--protocol=protocol] [--portal=portal]
+    grails publish-plugin [--dry-run] [--snapshot] [--repository=repoId] [--protocol=protocol] [--portal=portal] [--pingOnly]
 
 which is dedicated to publishing plugins. Although the arguments are very similar to the ones used by the
 `maven-deploy` command, `publish-plugin` will also deploy to Subversion repositories just like the existing
@@ -129,6 +129,9 @@ repository must first be defined with that ID in BuildConfig.groovy.
 
 `--portal` specifies the ID of the portal to notify. For this to work, a portal must be configured for that ID
 in BuildConfig.groovy.
+
+ --pingOnly (version 1.7.3+) forces the command to only notify the configured portal - the plugin is _not_
+published to a repository.
 
 One final note: `publish-plugin` does not automatically commit source code changes to a Subversion repository.
 It's the equivalent of `release-plugin --zipOnly`.
