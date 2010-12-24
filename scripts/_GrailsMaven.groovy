@@ -195,6 +195,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
 								groupId depGroup
 								artifactId GrailsNameUtils.getScriptName(depName)
 								version depVersion
+								type "zip"
 							}							
 						}
 					}					
