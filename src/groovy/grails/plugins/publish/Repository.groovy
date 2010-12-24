@@ -18,7 +18,7 @@ class Repository {
 	static final Repository grailsCentral = new Repository(
 			"grailsCentral",
 			new URI("https://svn.codehaus.org/grails-plugins"),
-			new URI("http://grails.org/plugin"))
+			new URI("http://grails.org/plugin/"))
 
 	Repository(String name, URI publishUri, URI portalUri) {
 		this.name = name

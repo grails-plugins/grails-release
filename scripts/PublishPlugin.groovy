@@ -184,7 +184,9 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
             return
         }
 
-        // Add the plugin name to the URL.
+        // Add the plugin name to the URL, making sure first that the base portal URI
+        // ends with '/'. Otherwise the resolve won't do what we want.
+        if (!portalUrl.path.endsWith("/")) portalUrl = new URI(portalUrl.toString() + "/")
         portalUrl = portalUrl.resolve(pluginInfo.artifactId.text())
 
         // Now that we have a URL, simply send a PUT request with the appropriate
