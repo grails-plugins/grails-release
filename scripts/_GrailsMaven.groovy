@@ -18,6 +18,8 @@ import grails.util.*
 import org.codehaus.groovy.grails.plugins.*
 import org.apache.ivy.util.ChecksumHelper
 
+scriptScope = grails.util.BuildScope.WAR
+scriptEnv = "production"
 
 includeTargets << grailsScript("_GrailsPackage")	
 
