@@ -105,11 +105,21 @@ class SvnDeployer implements PluginDeployer {
                 new File(wc, pluginPackage.name),
                 new File(wc, "${baseName}-plugin.xml"),
                 new File(wc, "${baseName}.pom"),
+                new File(wc, "plugin.xml"),               // Required for backwards compatibility
                 sha1File,
                 md5File ]
         copyIfNotSame(pluginPackage, destFiles[0])
         copyIfNotSame(pluginXmlFile, destFiles[1])
         copyIfNotSame(pomFile, destFiles[2])
+
+        // <basename>-plugin.xml is the reference file containing extra plugin
+        // metadata, but we also need to commit a 'plugin.xml' file for backwards
+        // compatibility with both the plugin synchronisation script on grails.org
+        // and the release-plugin command when it rebuilds the master plugin list
+        // from the repository.
+        copyIfNotSame(pluginXmlFile, destFiles[3])
+
+        // Add these files so that they can be committed to the remote repository.
         handleAuthentication { svnClient.addFilesToSvn(destFiles) }
 
         // Commit the changes.

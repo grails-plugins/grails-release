@@ -54,6 +54,7 @@ class SvnDeployerUnitTests extends GroovyTestCase {
                 new File(wcDir, zipFile.name),
                 new File(wcDir, "pdf-generator-1.1.2-plugin.xml"),
                 new File(wcDir, "pdf-generator-1.1.2.pom"),
+                new File(wcDir, "plugin.xml"),
                 new File(wcDir, "${zipFile.name}.sha1"),
                 new File(wcDir, "${zipFile.name}.md5") ]
 
@@ -86,8 +87,8 @@ class SvnDeployerUnitTests extends GroovyTestCase {
                 deployer.deployPlugin(zipFile, pluginXmlFile, pomFile, true)
 
                 // Check that the checksums are as expected.
-                assertEquals expectedSha1Sum, expectedFiles[3].text
-                assertEquals expectedMd5Sum, expectedFiles[4].text
+                assertEquals expectedSha1Sum, expectedFiles[4].text
+                assertEquals expectedMd5Sum, expectedFiles[5].text
             }
             finally {
                 // Clean up the files that are created in the current
@@ -123,6 +124,7 @@ class SvnDeployerUnitTests extends GroovyTestCase {
                 new File(wcDir, zipFile.name),
                 new File(wcDir, "pdf-generator-0.5-SNAPSHOT-plugin.xml"),
                 new File(wcDir, "pdf-generator-0.5-SNAPSHOT.pom"),
+                new File(wcDir, "plugin.xml"),
                 new File(wcDir, "${zipFile.name}.sha1"),
                 new File(wcDir, "${zipFile.name}.md5") ]
 
@@ -176,6 +178,7 @@ class SvnDeployerUnitTests extends GroovyTestCase {
                 new File(wcDir, zipFile.name),
                 new File(wcDir, "pdf-generator-1.1.2-plugin.xml"),
                 new File(wcDir, "pdf-generator-1.1.2.pom"),
+                new File(wcDir, "plugin.xml"),
                 new File(wcDir, "${zipFile.name}.sha1"),
                 new File(wcDir, "${zipFile.name}.md5") ]
 
@@ -242,6 +245,7 @@ class SvnDeployerUnitTests extends GroovyTestCase {
                 new File(wcDir, zipFile.name),
                 new File(wcDir, "pdf-generator-1.1.2-plugin.xml"),
                 new File(wcDir, "pdf-generator-1.1.2.pom"),
+                new File(wcDir, "plugin.xml"),
                 new File(wcDir, "${zipFile.name}.sha1"),
                 new File(wcDir, "${zipFile.name}.md5") ]
 
