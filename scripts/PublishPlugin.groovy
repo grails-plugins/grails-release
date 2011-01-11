@@ -98,10 +98,18 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
 
         // Create a deployer for Subversion and...
         def svnClient = classLoader.loadClass("grails.plugins.publish.svn.SvnClient").newInstance(repo.uri.toString())
+        def masterPluginList = classLoader.loadClass("grails.plugins.publish.svn.MasterPluginList").newInstance(
+                svnClient,
+                repo.name,
+                new File(grailsSettings.projectWorkDir, ".plugin-meta"),
+                System.out,
+                false)
+
         deployer = classLoader.loadClass("grails.plugins.publish.svn.SvnDeployer").newInstance(
                 svnClient,
                 grailsSettings.projectWorkDir,
                 repo.name,
+                masterPluginList,
                 System.out) { msg ->
             // This closure is executed whenever the deployer needs to
             // ask for user input.

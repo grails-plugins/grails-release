@@ -21,11 +21,13 @@ class SvnDeployer implements PluginDeployer {
     def askUser
     def out
     def repoName
+    def masterPluginList
 
-    SvnDeployer(svnClient, workDir, repoName, out, askUser) {
+    SvnDeployer(svnClient, workDir, repoName, masterPluginList, out, askUser) {
         this.svnClient = svnClient
         this.workDir = workDir
         this.repoName = repoName
+        this.masterPluginList = masterPluginList
         this.out = out
         this.askUser = askUser
     }
@@ -176,10 +178,8 @@ class SvnDeployer implements PluginDeployer {
      * the latest.
      */
     protected final updatePluginList(pluginName, pluginVersion, makeLatest) {
-        def pluginList = new MasterPluginList(svnClient, repoName, new File(workDir, ".plugin-meta"), out, false)
-
         handleAuthentication {
-            pluginList.update(
+            masterPluginList.update(
                     pluginName,
                     !makeLatest,
                     "Updating master plugin list for release ${pluginVersion} of plugin ${pluginName}")

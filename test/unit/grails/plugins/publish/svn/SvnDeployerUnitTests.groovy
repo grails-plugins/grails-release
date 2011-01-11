@@ -79,11 +79,15 @@ class SvnDeployerUnitTests extends GroovyTestCase {
                 "LATEST_RELEASE",
                 "Making version 1.1.2 of the 'pdf-generator' plugin the latest.")
 
-        mockUpdatePluginList(mockSvnClient, false)
+        def mockMasterPluginList = mock()
+        mockMasterPluginList.update(
+                "pdf-generator",
+                false,
+                "Updating master plugin list for release 1.1.2 of plugin pdf-generator")
 
         play {
             try {
-                def deployer = new SvnDeployer(mockSvnClient, baseDir, pluginListFile, System.out, null)
+                def deployer = new SvnDeployer(mockSvnClient, baseDir, "mySvn", mockMasterPluginList, System.out, null)
                 deployer.deployPlugin(zipFile, pluginXmlFile, pomFile, true)
 
                 // Check that the checksums are as expected.
@@ -144,10 +148,14 @@ class SvnDeployerUnitTests extends GroovyTestCase {
                 "RELEASE_0_5-SNAPSHOT",
                 "Tagging the 0.5-SNAPSHOT release of the 'pdf-generator' plugin.")
 
-        mockUpdatePluginList(mockSvnClient, true)
+        def mockMasterPluginList = mock()
+        mockMasterPluginList.update(
+                "pdf-generator",
+                true,
+                "Updating master plugin list for release 0.5-SNAPSHOT of plugin pdf-generator")
 
         play {
-            def deployer = new SvnDeployer(mockSvnClient, baseDir, pluginListFile, System.out, null)
+            def deployer = new SvnDeployer(mockSvnClient, baseDir, pluginListFile, mockMasterPluginList, System.out, null)
             deployer.deployPlugin(zipFile, pluginXmlFile, pomFile, false)
         }
     }
@@ -211,10 +219,14 @@ class SvnDeployerUnitTests extends GroovyTestCase {
                 "LATEST_RELEASE",
                 "Making version 1.1.2 of the 'pdf-generator' plugin the latest.")
 
-        mockUpdatePluginList(mockSvnClient, true)
+        def mockMasterPluginList = mock()
+        mockMasterPluginList.update(
+                "pdf-generator",
+                false,
+                "Updating master plugin list for release 1.1.2 of plugin pdf-generator")
 
         play {
-            def deployer = new SvnDeployer(mockSvnClient, baseDir, pluginListFile, System.out, askUser)
+            def deployer = new SvnDeployer(mockSvnClient, baseDir, pluginListFile, mockMasterPluginList, System.out, askUser)
             deployer.deployPlugin(zipFile, pluginXmlFile, pomFile, true)
         }
     }
@@ -262,8 +274,10 @@ class SvnDeployerUnitTests extends GroovyTestCase {
                 new SVNAuthenticationException(SVNErrorMessage.create(SVNErrorCode.AUTHN_CREDS_UNAVAILABLE))).times(4)
         mockSvnClient.setCredentials("dilbert", "password").times(3)
 
+        def mockMasterPluginList = mock()
+
         play {
-            def deployer = new SvnDeployer(mockSvnClient, baseDir, pluginListFile, System.out, askUser)
+            def deployer = new SvnDeployer(mockSvnClient, baseDir, pluginListFile, mockMasterPluginList, System.out, askUser)
             shouldFail(SVNAuthenticationException) {
                 deployer.deployPlugin(zipFile, pluginXmlFile, pomFile, true)
             }
@@ -278,8 +292,10 @@ class SvnDeployerUnitTests extends GroovyTestCase {
         def wcDir = new File(baseDir, "publish-wc")
         def mockSvnClient = mock()
 
+        def mockMasterPluginList = mock()
+
         play {
-            def deployer = new SvnDeployer(mockSvnClient, baseDir, pluginListFile, System.out, null)
+            def deployer = new SvnDeployer(mockSvnClient, baseDir, pluginListFile, mockMasterPluginList, System.out, null)
 
             shouldFail(FileNotFoundException) {
                 deployer.deployPlugin(zipFile, pluginXmlFile, pomFile, false)
@@ -295,8 +311,10 @@ class SvnDeployerUnitTests extends GroovyTestCase {
         def wcDir = new File(baseDir, "publish-wc")
         def mockSvnClient = mock()
 
+        def mockMasterPluginList = mock()
+
         play {
-            def deployer = new SvnDeployer(mockSvnClient, baseDir, pluginListFile, System.out, null)
+            def deployer = new SvnDeployer(mockSvnClient, baseDir, pluginListFile, mockMasterPluginList, System.out, null)
 
             shouldFail(FileNotFoundException) {
                 deployer.deployPlugin(zipFile, pluginXmlFile, pomFile, false)
@@ -313,30 +331,14 @@ class SvnDeployerUnitTests extends GroovyTestCase {
         def wcDir = new File(baseDir, "publish-wc")
         def mockSvnClient = mock()
 
+        def mockMasterPluginList = mock()
+
         play {
-            def deployer = new SvnDeployer(mockSvnClient, baseDir, pluginListFile, System.out, null)
+            def deployer = new SvnDeployer(mockSvnClient, baseDir, pluginListFile, mockMasterPluginList, System.out, null)
 
             shouldFail(FileNotFoundException) {
                 deployer.deployPlugin(zipFile, pluginXmlFile, pomFile, false)
             }
         }
-    }
-
-    private mockUpdatePluginList(mockSvnClient, pluginMetaExists) {
-        def wcDir = new File(baseDir, "publish-wc")
-        mockSvnClient.fetchFile(".plugin-meta/plugins-list.xml", pluginListFile)
-        mockSvnClient.latestRevision.returns(1203)
-        mockSvnClient.repoUrl.returns("http://svn.codehaus.org/grails-plugins")
-
-        if (pluginMetaExists) {
-            mockSvnClient.pathExists(".plugin-meta").returns(true)
-        }
-        else {
-            mockSvnClient.pathExists(".plugin-meta").returns(false)
-            mockSvnClient.createPath(".plugin-meta", "Adding .plugin-meta to the repository.")
-        }
-        mockSvnClient.checkOut(wcDir, ".plugin-meta")
-        mockSvnClient.addFilesToSvn([ new File(wcDir, "plugins-list.xml") ])
-        mockSvnClient.commit(wcDir, "Updating plugin list for plugin 'pdf-generator'.")
     }
 }
