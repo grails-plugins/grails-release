@@ -23,7 +23,7 @@ class GeneratePomTests extends AbstractCliTestCase {
         assertEquals "4.0.0", pom.modelVersion.text()
         assertEquals "org.grails.plugins", pom.groupId.text()
         assertEquals "phantom", pom.artifactId.text()
-        assertEquals "0.1", pom.version.text()
+        assertEquals "0.3", pom.version.text()
         assertEquals "zip", pom.packaging.text()
 
         assertEquals "", pom.dependencies.text()
