@@ -205,6 +205,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
 			}
 		}
 	}
+	println "POM generated: ${pomFileLocation}"
 }
 
 
