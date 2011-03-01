@@ -14,5 +14,11 @@ class MavenPublisherGrailsPlugin {
 A plugin that allows you to publish Grails applications and plugins to Maven repositories without needing to use Maven directly.
 '''
 
-    def documentation = "http://grails.org/plugin/maven-publisher"
+    def license = "APACHE"
+    def organization = [ name: "SpringSource", url: "http://www.springsource.org/" ]
+    def developers = [ [ name: "Peter Ledbrook", email: "pledbrook@vmware.com" ] ]
+    def issueManagement = [ system: "JIRA", url: "http://jira.codehaus.org/browse/GRAILSPLUGINS" ]
+    def scm = [ url: "https://github.com/grails-plugins/grails-maven-publisher-plugin" ]
+
+    def documentation = "http://github.com/grails-plugins/grails-maven-publisher-plugin"
 }
