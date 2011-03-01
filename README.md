@@ -135,3 +135,40 @@ published to a repository.
 
 One final note: `publish-plugin` does not automatically commit source code changes to a Subversion repository.
 It's the equivalent of `release-plugin --zipOnly`.
+
+New to 0.8
+----------
+
+It's now possible to configure repositories and portals using standard config syntax by adding entries under `grails.project.repos.<repoId>`. For example to configure a repository with the ID 'myRepo', simply add the setting
+
+    grails.project.repos.myRepo.url = "http://maven.my-company.com:8081/repo"
+
+It's not just the URL you can set either. It's possible to specify the type of the repository ("maven" or "svn"), the default portal to notify, and the credentials to use when connecting:
+
+    grails.project.repos.myRepo.url = "http://maven.my-company.com:8081/repo"
+    grails.project.repos.myRepo.type = "maven"
+    grails.project.repos.myRepo.portal = "companyLocal"
+    grails.project.repos.myRepo.username = "admin"
+    grails.project.repos.myRepo.password = "password"
+
+The big advantage of this approach is that you can selectively override parts of the configuration (such as the portal) and also put credentials in your local $HOME/.grails/settings.groovy file. So no more typing the username and password every time you publish a plugin!
+
+You can even specify credentials for the Grails Central Plugin Repository:
+
+    grails.project.repos.grailsCentral.username = "..."
+    grails.project.repos.grailsCentral.password = "..."
+
+In other words, there is an implicit repository called 'grailsCentral' that you can configure. Of course, this means you cannot define your own 'grailsCentral' repository.
+
+A similar syntax allows you to configure portals, except in this case the root config element is `grails.project.portal.<portalId>`. Again, you can specify the URL of the portal and the credentials required to access it:
+
+    grails.project.portal.myPortal.url = "http://plugin-portal.my-company.com/plugin/"
+    grails.project.portal.myPortal.username = "admin"
+    grails.project.portal.myPortal.password = "password"
+
+If you want to configure your credentials for the grails.org plugin portal, you can do that too:
+
+    grails.project.portal.grailsCentral.username = "..."
+    grails.project.portal.grailsCentral.password = "..."
+
+As you can see, the ID of the grails.org portal is 'grailsCentral', just like for the Grails Central Plugin Repository. You can use this ID when specifying the default portal for a repository.
