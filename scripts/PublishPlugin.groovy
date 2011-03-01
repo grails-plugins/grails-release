@@ -1,4 +1,5 @@
 import groovyx.net.http.HTTPBuilder
+
 import org.apache.commons.codec.digest.DigestUtils
 import org.codehaus.groovy.grails.cli.CommandLineHelper
 
@@ -36,11 +37,15 @@ where
 """
 
 target(default: "Publishes a plugin to either a Subversion or Maven repository.") {
-    depends(parseArguments, processDefinitions, packagePlugin, generatePom)
+    depends(parseArguments, packagePlugin, processDefinitions, generatePom)
 
     // Use the Grails Central Plugin repository as the default.
     def repoClass = classLoader.loadClass("grails.plugins.publish.Repository")
     def repo = repoClass.grailsCentral
+
+    // Add the Grails Central portal to the distribution info under the
+    // ID 'grailsCentral'.
+    distributionInfo.portals["grailsCentral"] = repoClass.grailsCentral.defaultPortal.toString()
 
     def repoName = argsMap["repository"]
     def type = "svn"
@@ -61,16 +66,18 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
             defaultPortal = repoDefn.args["portal"]
         }
         else {
+            // Handle legacy Subversion repository definitions.
             type = "svn"
             url = grailsSettings.config.grails.plugin.repos.distribution."$repoName"
         }
         
         // Check that the repository is defined.
         if (url) {
+            defaultPortal = defaultPortal ? distributionInfo.portals[defaultPortal] : null
             repo = repoClass.newInstance(
                     repoName,
                     new URI(url),
-                    defaultPortal ? new URI(distributionInfo.portals[defaultPortal]) : null)
+                    defaultPortal ? new URI(defaultPortal) : null)
             println "Publishing to ${type == 'svn' ? 'Subversion' : 'Maven'} repository '$repoName'"
         }
         else {
@@ -90,14 +97,37 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
 
     def deployer
     if (argsMap["dryRun"]) {
+        def retval = processAuthConfig(repo) { username, password ->
+            if (username) {
+                println "Using configured username and password from grails.project.repos.${repo.name}"
+            }
+        }
+
+        if (retval) return retval
+
         deployer = classLoader.loadClass("grails.plugins.publish.print.DryRunDeployer").newInstance()
     }
     else if (type == "svn") {
         // Helper class for getting user input from the command line.
         def inputHelper = new CommandLineHelper()
 
+        // If the username and password are declared in the standard configuration,
+        // grails.project.repos.<repo>.username/password, then pick them out now
+        // and add them to the repository URI.
+        def uri = repo.uri
+        def retval = processAuthConfig(repo) { username, password ->
+            if (uri.userInfo) {
+                println "WARN: username and password defined in config and in repository URI - using the credentials from the URI."
+            }
+            else {
+                uri = new URI(uri.scheme, "$username:$password", uri.host, uri.port, uri.path, uri.query, uri.fragment)
+            }
+        }
+
+        if (retval) return retval
+
         // Create a deployer for Subversion and...
-        def svnClient = classLoader.loadClass("grails.plugins.publish.svn.SvnClient").newInstance(repo.uri.toString())
+        def svnClient = classLoader.loadClass("grails.plugins.publish.svn.SvnClient").newInstance(uri.toString())
         def masterPluginList = classLoader.loadClass("grails.plugins.publish.svn.MasterPluginList").newInstance(
                 svnClient,
                 repo.name,
@@ -130,6 +160,20 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         
         def repoDefn = distributionInfo.remoteRepos[repoName]
         repoDefn.args.remove "portal"
+
+        // Add a configurer to the repository definition if the username and password
+        // have been defined.
+        def retval = processAuthConfig(repo) { username, password ->
+            if (projectConfig.repos."${repo.name}".custom) {
+                println "WARN: username and password defined in config as well as a 'custom' entry - ignoring the provided username and password."
+            }
+            else {
+                println "Using configured username and password from grails.project.repos.${repo.name}"
+                repoDefn.configurer = { authentication username: username, password: password }
+            }
+        }
+
+        if (retval) return retval
 
         if (argsMap["protocol"]) {
             protocol = protocols[argsMap["protocol"]]
@@ -165,41 +209,41 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         deployer.deployPlugin(new File(pluginZip), new File("plugin.xml"), new File(pomFileLocation), isRelease)
     }
 
-    // Ping the plugin portal with the details of this release.
+    // What's the URL of the portal to ping? The explicit 'portal' argument
+    // takes precedence, then the portal configured for the current repository,
+    // and finally the public Grails plugin portal.
+    def portalUrl = repo.defaultPortal
+    def portalName = argsMap["portal"]
+    if (portalName) {
+        // Pick the configured portal with the given name, assuming one
+        // exists with that name.
+        portalUrl = distributionInfo.portals[portalName]
+
+        if (!portalUrl) {
+            println "No portal defined with ID '${portalName}'"
+            println "Plugin has been published, but the plugin portal has not been notified."
+            exit 1
+        }
+
+        portalUrl = new URI(portalUrl)
+    }
+    else if (!portalUrl && repoName) {
+        // We don't ping the grails.org portal if a repository has been specified
+        // but that repository has no default portal configured.
+        println "No default portal defined for repository '${repoName}' - skipping portal notification"
+        return
+    }
+
+    // Add the plugin name to the URL, making sure first that the base portal URI
+    // ends with '/'. Otherwise the resolve won't do what we want.
+    if (!portalUrl.path.endsWith("/")) portalUrl = new URI(portalUrl.toString() + "/")
+    portalUrl = portalUrl.resolve(pluginInfo.artifactId.text())
+
+    // Now that we have a URL, simply send a PUT request with the appropriate
+    // JSON content.
+    println "Notifying plugin portal '${portalUrl}' of release..."
+
     if (!argsMap["dryRun"]) {
-        // What's the URL of the portal to ping? The explicit 'portal' argument
-        // takes precedence, then the portal configured for the current repository,
-        // and finally the public Grails plugin portal.
-        def portalUrl = repo.defaultPortal
-        def portalName = argsMap["portal"]
-        if (portalName) {
-            // Pick the configured portal with the given name, assuming one
-            // exists with that name.
-            portalUrl = distributionInfo.portals[portalName]
-
-            if (!portalUrl) {
-                println "No portal defined with ID '${portalName}'"
-                println "Plugin has been published, but the plugin portal has not been notified."
-                exit 1
-            }
-
-            portalUrl = new URI(portalUrl)
-        }
-        else if (repoName) {
-            // We don't ping the grails.org portal if a repository has been specified
-            // but that repository has no default portal configured.
-            println "No default portal defined for repository '${repoName}' - skipping portal notification"
-            return
-        }
-
-        // Add the plugin name to the URL, making sure first that the base portal URI
-        // ends with '/'. Otherwise the resolve won't do what we want.
-        if (!portalUrl.path.endsWith("/")) portalUrl = new URI(portalUrl.toString() + "/")
-        portalUrl = portalUrl.resolve(pluginInfo.artifactId.text())
-
-        // Now that we have a URL, simply send a PUT request with the appropriate
-        // JSON content.
-        println "Notifying plugin portal '${portalUrl}' of release..."
         def inputHelper = new CommandLineHelper()
         def username = inputHelper.userInput("Username for portal (leave empty if authentication not required):")
         def password = inputHelper.userInput("Password for portal (leave empty if authentication not required):")
@@ -227,8 +271,11 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
 }
 
 target(processDefinitions: "Reads the repository definition configuration.") {
-    distributionInfo = new DistributionManagementInfo()
-    if (grailsSettings.config.grails.project.dependency.distribution instanceof Closure) {
+    def projectConfig = grailsSettings.config.grails.project
+    distributionInfo = classLoader.loadClass("grails.plugins.publish.DistributionManagementInfo").newInstance()
+
+    if (projectConfig.dependency.distribution instanceof Closure) {
+        // Deal with the DSL form of configuration, which is the old approach.
         def callable = grailsSettings.config.grails.project.dependency.distribution?.clone()
         callable.delegate = distributionInfo
         callable.resolveStrategy = Closure.DELEGATE_FIRST
@@ -240,22 +287,37 @@ target(processDefinitions: "Reads the repository definition configuration.") {
             exit 1
         }
     }
+    else if (projectConfig.repos || projectConfig.portal) {
+        // Handle standard configuration.
+        for (entry in projectConfig.portal) {
+            // Add this portal to the distribution info. The key is the portal ID
+            // while the value is the portal's URL.
+            distributionInfo.portals[entry.key] = entry.value
+        }
+
+        for (entry in projectConfig.repos) {
+            // Add this repository to the distribution info. The key is the repository
+            // ID while the value is a map containing the repository configuration.
+            def props = entry.value + [id: entry.key]
+            def c = props.remove("custom")
+            distributionInfo.remoteRepos[entry.key] = new Expando(args: props, configurer: c)
+        }
+    }
 }
 
-class DistributionManagementInfo {
-    Map portals = [:]
-    Map remoteRepos = [:]
-    String local
+private processAuthConfig(repo, c) {
+    // Get credentials for authentication if defined in the config.
+    def projectConfig = grailsSettings.config.grails.project
+    def username = projectConfig.repos."${repo.name}".username
+    def password = projectConfig.repos."${repo.name}".password
 
-    void localRepository(String s) { local = s }
-
-    void remoteRepository(Map args, Closure c = null) {
-        if (!args?.id) throw new Exception("Remote repository misconfigured: Please specify a repository 'id'. Eg. remoteRepository(id:'myRepo')")
-        if (!args?.url) throw new Exception("Remote repository misconfigured: Please specify a repository 'url'. Eg. remoteRepository(url:'http://..')")
-        remoteRepos[args.id] = new Expando(args: args, configurer: c)
+    // Check whether only one of the authentication parameters has been set. If
+    // so, exit with an error.
+    if (!username ^ !password) {
+        println "grails.project.repos.${repo.name}.username and .password must both be defined or neither."
+        return 1
     }
 
-    void portal(Map args) {
-        portals[args.id] = args.url
-    }
+    c(username, password)
+    return 0
 }

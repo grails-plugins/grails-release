@@ -269,7 +269,7 @@ target(mavenDeploy:"Deploys the plugin to a Maven repository") {
 						ftp: "wagon-ftp",
 						webdav: "wagon-webdav" ]
 	
-	def distInfo = new DistributionManagementInfo()
+    def distInfo = classLoader.loadClass("grails.plugins.publish.DistributionManagementInfo").newInstance()
 	if(grailsSettings.config.grails.project.dependency.distribution instanceof Closure) {
 		def callable = grailsSettings.config.grails.project.dependency.distribution
 		callable.delegate = distInfo
@@ -308,19 +308,5 @@ target(mavenDeploy:"Deploys the plugin to a Maven repository") {
 	catch(e) {
 		println "Error deploying artifact: ${e.message}"
 		println "Have you specified a configured repository to deploy to (--repository argument) or specified distributionManagement in your POM?"
-	}
-}
-
-class DistributionManagementInfo {
-	Map remoteRepos = [:]
-	String local
-	void localRepository(String s) { local = s }
-	void remoteRepository(Map args, Closure c = null) {
-		if(!args?.id) throw new Exception("Remote repository misconfigured: Please specify a repository 'id'. Eg. remoteRepository(id:'myRepo')")
-		if(!args?.url) throw new Exception("Remote repository misconfigured: Please specify a repository 'url'. Eg. remoteRepository(url:'http://..')")		
-		def e = new Expando()
-		e.args = args
-		e.configurer = c
-		remoteRepos[args.id] = e
 	}
 }
