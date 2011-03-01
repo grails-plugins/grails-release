@@ -245,8 +245,8 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
 
     if (!argsMap["dryRun"]) {
         def inputHelper = new CommandLineHelper()
-        def username = inputHelper.userInput("Username for portal (leave empty if authentication not required):")
-        def password = inputHelper.userInput("Password for portal (leave empty if authentication not required):")
+        def username = inputHelper.userInput("Username for portal (leave empty if authentication not required): ")
+        def password = inputHelper.userInput("Password for portal (leave empty if authentication not required): ")
 
         def http = new HTTPBuilder(portalUrl)
         http.auth.basic username, password
