@@ -173,13 +173,18 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
 
         // Add a configurer to the repository definition if the username and password
         // have been defined.
+        def projectConfig = grailsSettings.config.grails.project
         def retval = processAuthConfig(repo) { username, password ->
-            if (projectConfig.repos."${repo.name}".custom) {
-                println "WARN: username and password defined in config as well as a 'custom' entry - ignoring the provided username and password."
-            }
-            else {
-                println "Using configured username and password from grails.project.repos.${repo.name}"
-                repoDefn.configurer = { authentication username: username, password: password }
+            if (username) {
+                if (projectConfig.repos."${repo.name}".custom) {
+                    println "WARN: username and password defined in config as well as a 'custom' entry - ignoring the provided username and password."
+                }
+                else {
+                    println "Using configured username and password from grails.project.repos.${repo.name}"
+                    repoDefn.configurer = { authentication username: username, password: password }
+                    repoDefn.args.remove "username"
+                    repoDefn.args.remove "password"
+                }
             }
         }
 
