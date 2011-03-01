@@ -29,4 +29,4 @@ grails.project.dependency.resolution = {
     }
 }
 
-grails.project.portal.beta = "http://beta.grails.org/plugin/"
+grails.project.portal.beta.url = "http://beta.grails.org/plugin/"

@@ -5,22 +5,25 @@ package grails.plugins.publish
  * can be published to.
  */
 class Repository {
+	/** URL for 'grailsCentral' portal */
+	static final String GRAILS_CENTRAL_PORTAL_URL = "http://grails.org/plugin/"
+
+	/** The standard Grails Central repository. */
+	static final Repository grailsCentral = new Repository(
+			"grailsCentral",
+			new URI("https://svn.codehaus.org/grails-plugins"),
+			"grailsCentral")
+
 	/** The name of this repository. */
 	final String name
 
 	/** The root URI to publish to. */
 	final URI uri
 
-	/** The root location of the default portal to ping when publishing to this repository. */
-	final URI defaultPortal
+	/** The ID of the default portal to ping when publishing to this repository. */
+	final String defaultPortal
 
-	/** The standard Grails Central repository. */
-	static final Repository grailsCentral = new Repository(
-			"grailsCentral",
-			new URI("https://svn.codehaus.org/grails-plugins"),
-			new URI("http://grails.org/plugin/"))
-
-	Repository(String name, URI publishUri, URI portalUri) {
+	Repository(String name, URI publishUri, String portalUri) {
 		this.name = name
 		this.uri = publishUri
 		this.defaultPortal = portalUri

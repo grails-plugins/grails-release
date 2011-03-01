@@ -45,7 +45,18 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
 
     // Add the Grails Central portal to the distribution info under the
     // ID 'grailsCentral'.
-    distributionInfo.portals["grailsCentral"] = repoClass.grailsCentral.defaultPortal.toString()
+    def grailsCentralPortal = distributionInfo.portals["grailsCentral"]
+    if (!grailsCentralPortal) {
+        grailsCentralPortal = [ url: repoClass.GRAILS_CENTRAL_PORTAL_URL ]
+        distributionInfo.portals["grailsCentral"] = grailsCentralPortal
+    }
+    else {
+        if (grailsCentralPortal["url"]) {
+            println "WARN: You cannot change the URL for the 'grailsCentral' portal - ignoring the user-specified value"
+        }
+        grailsCentralPortal["url"] = repoClass.GRAILS_CENTRAL_PORTAL_URL
+    }
+        
 
     def repoName = argsMap["repository"]
     def type = "svn"
@@ -73,11 +84,10 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         
         // Check that the repository is defined.
         if (url) {
-            defaultPortal = defaultPortal ? distributionInfo.portals[defaultPortal] : null
             repo = repoClass.newInstance(
                     repoName,
                     new URI(url),
-                    defaultPortal ? new URI(defaultPortal) : null)
+                    defaultPortal ?: null)
             println "Publishing to ${type == 'svn' ? 'Subversion' : 'Maven'} repository '$repoName'"
         }
         else {
@@ -212,22 +222,20 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
     // What's the URL of the portal to ping? The explicit 'portal' argument
     // takes precedence, then the portal configured for the current repository,
     // and finally the public Grails plugin portal.
-    def portalUrl = repo.defaultPortal
-    def portalName = argsMap["portal"]
+    def portalName = argsMap["portal"] ?: repo.defaultPortal
+    def portalDefn = null
     if (portalName) {
         // Pick the configured portal with the given name, assuming one
         // exists with that name.
-        portalUrl = distributionInfo.portals[portalName]
+        portalDefn = distributionInfo.portals[portalName]
 
-        if (!portalUrl) {
+        if (!portalDefn.url) {
             println "No portal defined with ID '${portalName}'"
             println "Plugin has been published, but the plugin portal has not been notified."
             exit 1
         }
-
-        portalUrl = new URI(portalUrl)
     }
-    else if (!portalUrl && repoName) {
+    else {
         // We don't ping the grails.org portal if a repository has been specified
         // but that repository has no default portal configured.
         println "No default portal defined for repository '${repoName}' - skipping portal notification"
@@ -236,6 +244,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
 
     // Add the plugin name to the URL, making sure first that the base portal URI
     // ends with '/'. Otherwise the resolve won't do what we want.
+    def portalUrl = new URI(portalDefn.url)
     if (!portalUrl.path.endsWith("/")) portalUrl = new URI(portalUrl.toString() + "/")
     portalUrl = portalUrl.resolve(pluginInfo.artifactId.text())
 
@@ -244,9 +253,14 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
     println "Notifying plugin portal '${portalUrl}' of release..."
 
     if (!argsMap["dryRun"]) {
-        def inputHelper = new CommandLineHelper()
-        def username = inputHelper.userInput("Username for portal (leave empty if authentication not required): ")
-        def password = inputHelper.userInput("Password for portal (leave empty if authentication not required): ")
+        def username = portalDefn.username
+        def password = portalDefn.password
+
+        if (!username) {
+            def inputHelper = new CommandLineHelper()
+            username = inputHelper.userInput("Username for portal (leave empty if authentication not required): ")
+            password = inputHelper.userInput("Password for portal (leave empty if authentication not required): ")
+        }
 
         def http = new HTTPBuilder(portalUrl)
         http.auth.basic username, password

@@ -18,7 +18,14 @@ grails {
     project {
         work.dir = "target"
 
-        portal.'my-portal' = "http://beta.grails.org/plugin/"
+        portal.'my-portal'.url = "http://beta.grails.org/plugin/"
+        portal {
+            beta {
+                url = "http://beta.grails.org/plugin/"
+                username = "dil"
+                password = "pass"
+            }
+        }
 
         repos {
             maven1 {
