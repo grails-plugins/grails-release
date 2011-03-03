@@ -127,11 +127,13 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         def uri = repo.uri
         def svnClient = classLoader.loadClass("grails.plugins.publish.svn.SvnClient").newInstance(uri.toString())
         def retval = processAuthConfig(repo) { username, password ->
-            if (uri.userInfo) {
-                println "WARN: username and password defined in config and in repository URI - using the credentials from the URI."
-            }
-            else {
-                svnClient.setCredentials(username, password)
+            if (username) {
+                if (uri.userInfo) {
+                    println "WARN: username and password defined in config and in repository URI - using the credentials from the URI."
+                }
+                else {
+                    svnClient.setCredentials(username, password)
+                }
             }
         }
 
