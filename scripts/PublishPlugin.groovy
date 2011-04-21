@@ -284,8 +284,16 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
                 println "Notification successful"
             }
 
+            response.'401' = { resp ->
+                println "ERROR: Portal authentication failed. Are your username and password correct?"
+            }
+
+            response.'403' = { resp ->
+                println "ERROR: You do not have permission to update the plugin portal."
+            }
+
             response.failure = { resp, json ->
-                println "Notification failed - status ${resp.status} - ${json.message}"
+                println "ERROR: Notification failed - status ${resp.status} - ${json.message}"
             }
         }
     }
