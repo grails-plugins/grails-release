@@ -250,8 +250,8 @@ private installOrDeploy(File file, ext, boolean deploy, repos = [:]) {
                 remoteRepository(repo.args)
             }
         }
-        if(repos.local) {
-            localRepository(path:repos.local)
+        if(repos.localRepo) {
+            localRepository(path:repos.localRepo)
         }
 
     }    
@@ -304,7 +304,7 @@ target(mavenDeploy:"Deploys the plugin to a Maven repository") {
     def deployFile = plugin ? new File(pluginZip) : grailsSettings.projectWarFile
     def ext = plugin ? "zip" : "war"
     try {
-        installOrDeploy(deployFile, ext, true, [remote:repo, local:distInfo.local])
+        installOrDeploy(deployFile, ext, true, [remote:repo, local:distInfo.localRepo])
     }
     catch(e) {
         println "Error deploying artifact: ${e.message}"

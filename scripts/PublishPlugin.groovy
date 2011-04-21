@@ -320,7 +320,7 @@ target(processDefinitions: "Reads the repository definition configuration.") {
         // Handle standard configuration.
         for (entry in projectConfig.portal) {
             // Add this portal to the distribution info. The key is the portal ID
-            // while the value is the portal's URL.
+            // while the value is a map of options that must include 'url'.
             distributionInfo.portals[entry.key] = entry.value
         }
 

@@ -3,9 +3,9 @@ package grails.plugins.publish
 class DistributionManagementInfo {
     Map portals = [:]
     Map remoteRepos = [:]
-    String local
+    String localRepo
 
-    void localRepository(String s) { local = s }
+    void localRepository(String s) { localRepo = s }
 
     void remoteRepository(Map args, Closure c = null) {
         if (!args?.id) throw new Exception("Remote repository misconfigured: Please specify a repository 'id'. Eg. remoteRepository(id:'myRepo')")
@@ -14,6 +14,9 @@ class DistributionManagementInfo {
     }
 
     void portal(Map args) {
-        portals[args.id] = args.url
+        def options = new HashMap(args)
+        options.remove("id")
+
+        portals[args.id] = options
     }
 }
