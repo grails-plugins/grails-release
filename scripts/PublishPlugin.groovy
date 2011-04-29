@@ -165,7 +165,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         // grails.project.repos.<repo>.username/password, then pick them out now
         // and set them on the SvnClient instance.
         def uri = repo.uri
-        def svnClient = classLoader.loadClass("grails.plugins.publish.svn.SvnClient").newInstance(uri.toString())
+        def svnClient = classLoader.loadClass("grails.plugin.svn.SvnClient").newInstance(uri.toString())
         def retval = processAuthConfig(repo) { username, password ->
             if (username) {
                 if (uri.userInfo) {

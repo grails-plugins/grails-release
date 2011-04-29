@@ -1,6 +1,7 @@
 class ReleaseGrailsPlugin {
     def version = "1.0-SNAPSHOT"
-    def grailsVersion = "1.2 > *"
+    def grailsVersion = "1.1 > *"
+    def dependsOn = [svn: "1.0 > *"]
 
     def pluginExcludes = [
             "grails-app/views/error.gsp"
