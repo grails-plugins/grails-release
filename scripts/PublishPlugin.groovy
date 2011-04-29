@@ -7,7 +7,7 @@ import static groovyx.net.http.Method.PUT
 import static groovyx.net.http.ContentType.JSON
 
 includeTargets << grailsScript("_GrailsPluginDev")
-includeTargets << new File(mavenPublisherPluginDir, "scripts/_GrailsMaven.groovy")
+includeTargets << new File(releasePluginDir, "scripts/_GrailsMaven.groovy")
 
 USAGE = """
     publish-plugin [--repository=REPO] [--protocol=PROTOCOL] [--portal=PORTAL] [--dryRun] [--snapshot] [--pingOnly]
