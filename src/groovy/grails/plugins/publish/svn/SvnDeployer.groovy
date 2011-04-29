@@ -23,6 +23,21 @@ class SvnDeployer implements PluginDeployer {
     def repoName
     def masterPluginList
 
+    /**
+     * @param svnClient {@link SvnClient} instance to use for communicating with
+     * the remote SVN repository.
+     * @param workDir Location of a directory that this class can use for
+     * storing temporary files and directories.
+     * @param repoName The name of the repository to deploy the current
+     * project to.
+     * @param masterPluginList The {@link MasterPluginList} instance for
+     * interacting with the master plugin list.
+     * @param out An output stream to write text output to, typically
+     * the console.
+     * @param askUser A closure taking a string argument that requests
+     * input from the user and returns the response (the entered text
+     * in other words).
+     */
     SvnDeployer(svnClient, workDir, repoName, masterPluginList, out, askUser) {
         this.svnClient = svnClient
         this.workDir = workDir
@@ -202,9 +217,6 @@ class SvnDeployer implements PluginDeployer {
      * username and password, updates the Subversion credentials and
      * tries to execute the closure again. Any exception thrown at that
      * point will propagate out.
-     * @param askUser A closure taking a string argument that requests
-     * input from the user and returns the response (the entered text
-     * in other words).
      * @param c The closure to execute within the try/catch.
      */
     private handleAuthentication(c, authCount = 0) {

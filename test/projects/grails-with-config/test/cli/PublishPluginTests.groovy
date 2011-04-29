@@ -39,7 +39,7 @@ class PublishPluginTests extends AbstractCliTestCase {
     }
 
     void testWithMavenRepo() {
-        execute([ "publish-plugin", "--dryRun", "--repository=maven1" ])
+        execute([ "publish-plugin", "--dryRun", "--repository=maven1", "--noScm" ])
 
         assertEquals 0, waitForProcess()
         verifyHeader()
@@ -73,7 +73,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 </project>
 """
 
-        execute([ "publish-plugin", "--dryRun", "--repository=maven1" ])
+        execute([ "publish-plugin", "--dryRun", "--repository=maven1", "--scm" ])
 
         assertEquals 0, waitForProcess()
         verifyHeader()

@@ -21,7 +21,7 @@ class PublishPluginTests extends AbstractCliTestCase {
     }
 
     void testDefault() {
-        execute([ "publish-plugin", "--dry-run" ])
+        execute([ "publish-plugin", "--dryRun" ])
              
         assertEquals 0, waitForProcess()
         verifyHeader()
@@ -32,11 +32,13 @@ class PublishPluginTests extends AbstractCliTestCase {
         // Make sure it's publishing to Grails central.
         assertTrue "Command is not publishing to Grails central.", output.contains("Publishing to Grails Central")
 
+        assertTrue "SCM provider warning not displayed.", output.contains("WARN: No SCM provider installed.")
+
         verifyUploadFiles()
     }
 
-    void testExplicitySnapshot() {
-        execute([ "publish-plugin", "--dry-run", "--snapshot" ])
+    void testExplicitSnapshot() {
+        execute([ "publish-plugin", "--dryRun", "--snapshot", "--scm" ])
 
         assertEquals 0, waitForProcess()
         verifyHeader()
@@ -47,7 +49,26 @@ class PublishPluginTests extends AbstractCliTestCase {
         // Make sure it's publishing to Grails central.
         assertTrue "Command is not publishing to Grails central.", output.contains("Publishing to Grails Central")
 
+        assertTrue "SCM provider warning not displayed.", output.contains("WARN: No SCM provider installed.")
+
         verifyUploadFiles(false)
+    }
+
+    void testNoScm() {
+        execute([ "publish-plugin", "--dryRun", "--noScm" ])
+             
+        assertEquals 0, waitForProcess()
+        verifyHeader()
+
+        // Make sure that the script was found.
+        assertFalse "PublishPlugin script not found.", output.contains("Script not found:")
+
+        // Make sure it's publishing to Grails central.
+        assertTrue "Command is not publishing to Grails central.", output.contains("Publishing to Grails Central")
+
+        assertFalse "SCM provider warning displayed when it shouldn't have been.", output.contains("WARN: No SCM provider installed.")
+
+        verifyUploadFiles()
     }
 
     void verifyUploadFiles(isRelease = true) {

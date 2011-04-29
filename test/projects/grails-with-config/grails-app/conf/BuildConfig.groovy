@@ -14,6 +14,7 @@ grails.project.dependency.resolution = {
 }
 
 grails {
+    release.scm.enabled = false
     plugin.repos.distribution.myRepo = "svn+ssh://localhost:23445/svn"
     project {
         work.dir = "target"

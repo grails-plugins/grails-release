@@ -34,10 +34,50 @@ where
                  plugin portal. This is useful if portal notification failed during a
                  previous attempt to publish the plugin. Mutually exclusive with the
                  --dryRun option.
+
+    --binary   = Release as a binary plugin.
 """
+
+scmProvider = null
+scmHost = null
 
 target(default: "Publishes a plugin to either a Subversion or Maven repository.") {
     depends(parseArguments, packagePlugin, processDefinitions, generatePom)
+
+    // Read the plugin information from the POM.
+    pluginInfo = new XmlSlurper().parse(new File(pomFileLocation))
+    isRelease = !pluginInfo.version.text().endsWith("-SNAPSHOT")
+    if (argsMap["snapshot"]) isRelease = false
+
+    // Is source control management enabled for this run?
+    def scmEnabled = getPropertyValue("grails.release.scm.enabled", true)
+    scmEnabled = scmEnabled || argsMap["scm"]
+    if (argsMap["noScm"]) scmEnabled = false
+
+    if (scmEnabled) {
+        final inputHelper = new CommandLineHelper()
+        final interactive = new Expando(
+                out: System.out,
+                askUser: { msg ->
+                    // This closure is executed whenever the deployer needs to
+                    // ask for user input.
+                    return inputHelper.userInput(msg)
+                })
+
+        // Load any SCM provider that may be installed.
+        event "InitScm", [grailsSettings.baseDir, interactive]
+
+        if (!scmProvider) {
+            println "WARN: No SCM provider installed."
+        }
+    }
+
+    // If SCM is enabled and a provider available, make sure the plugin
+    // source is under source control and that the latest code is committed
+    // and tagged.
+    if (scmProvider) {
+        processScm scmProvider
+    }
 
     // Use the Grails Central Plugin repository as the default.
     def repoClass = classLoader.loadClass("grails.plugins.publish.Repository")
@@ -217,11 +257,6 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         exit(1)
     }
     
-    // Read the plugin information from the POM.
-    def pluginInfo = new XmlSlurper().parse(new File(pomFileLocation))
-    def isRelease = !pluginInfo.version.text().endsWith("-SNAPSHOT")
-    if (argsMap["snapshot"]) isRelease = false
-    
     if (!argsMap["pingOnly"]) {
         deployer.deployPlugin(new File(pluginZip), new File("plugin.xml"), new File(pomFileLocation), isRelease)
     }
@@ -349,4 +384,72 @@ private processAuthConfig(repo, c) {
 
     c(username, password)
     return 0
+}
+
+private processScm(scm) {
+    // 
+    def inputHelper = new CommandLineHelper()
+    if (!scm.managed) {
+        // The project isn't under source control, so import it into the user's
+        // preferred SCM system - unless the user explicitly doesn't want it added
+        // to source control.
+        def answer = inputHelper.userInput("Project is not under source control. Do you want to import it now? (Y,n) ")
+        if (answer?.equalsIgnoreCase("n")) {
+            return
+        }
+
+        scmImportProject(scm, inputHelper)
+    }
+    else {
+        // First check for any untracked files in the project. We don't want any
+        // files accidentally missed from the commit! If there are some, we won't
+        // allow a commit unless they are tracked or added to the project's ignores.
+        //
+        // TODO Allow the user to add each file to source control or ignores and
+        // then continue with the commit. The user should also have the option of
+        // cancelling without making any changes.
+        if (scm.unmanagedFiles) {
+            println "You have untracked files. Please add them to source control or the ignore list before publishing the plugin."
+            exit 1
+            return
+        }
+
+        // Is the current code up to date? If not, we shouldn't commit and release.
+        // TODO Support doing an update right here, right now.
+        if (!scm.upToDate()) {
+            println "Your local source is not up to date. Please update it before publishing the plugin."
+            exit 1
+            return
+        }
+
+        def version = pluginInfo.version.text()
+        def msg = inputHelper.userInput("Enter extra commit message text for this release (optional): ")
+        if (msg) msg = "\n\n" + msg
+
+        scm.commit "Releasing version ${version} of ${pluginInfo.artifactId.text()} plugin.${msg}"
+        if (isRelease) scm.tag "v${version}", "Tagging the ${version} version of the plugin source."
+        scm.synchronize()
+    }
+}
+
+private scmImportProject(scm, inputHelper) {
+    // Get a URL for the repository to import this project into. The developer may
+    // want to use the default Grails plugin source repository, which requires the
+    // Subversion plugin. Alternatively, it could be another host such as GitHub or
+    // Google Code. Finally, no URL may be given at all. This can make sense for
+    // distributed version control systems in which you have a local copy of the
+    // repository.
+    def hostUrl = null
+    if (!scmHost && pluginManager.hasGrailsPlugin("svn")) {
+        def answer = inputHelper.userInput("Would you like to add this plugin's source to the Grails plugin source repository? (Y,n) ")
+        if (answer?.equalsIgnoreCase("y")) {
+            hostUrl = "https://svn.codehaus.org/grails-plugins/grails-${pluginInfo.artifactId.text()}"
+        }
+    }
+
+    if (!hostUrl) {
+        hostUrl = inputHelper.userInput("Please enter the URL of the remote SCM repository: ")
+    }
+
+    scmProvider.importIntoRepo hostUrl, "Initial import of plugin source code for the release of version ${pluginInfo.version.text()}"
 }
