@@ -271,7 +271,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         // exists with that name.
         portalDefn = distributionInfo.portals[portalName]
 
-        if (!portalDefn.url) {
+        if (!portalDefn?.url) {
             println "No portal defined with ID '${portalName}'"
             println "Plugin has been published, but the plugin portal has not been notified."
             exit 1

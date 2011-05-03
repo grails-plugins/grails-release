@@ -34,16 +34,11 @@ artifact = groovy.xml.NamespaceBuilder.newInstance(ant, 'antlib:org.apache.maven
 target(init: "Initialisation for maven deploy/install") {
     depends(packageApp)
 
-    plugin = pluginManager?.allPlugins?.find { it.basePlugin }
+    isPlugin = pluginManager?.allPlugins?.any { it.basePlugin }
 
-    if(!plugin) {
+    if (!isPlugin) {
         includeTargets << grailsScript("_GrailsWar")
         war()
-    }
-    else {
-        includeTargets << grailsScript("_GrailsPluginDev")
-        packagePlugin()
-        plugin = pluginManager?.allPlugins?.find { it.basePlugin }
     }
 
     generatePom()
@@ -66,6 +61,16 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
     def plugin = pluginManager?.allPlugins?.find { it.basePlugin }
     def pluginInstance = plugin?.pluginClass?.newInstance()
 
+    if (plugin) {
+        includeTargets << grailsScript("_GrailsPluginDev")
+        packagePlugin()
+
+        // This script variable doesn't exist pre-Grails 1.4.
+        if (!binding.variables.containsKey("pluginInfo")) {
+            pluginInfo = pluginSettings.getPluginInfo(basedir)
+        }
+    }
+
     new File(pomFileLocation).withWriter { w ->
         def xml = new groovy.xml.MarkupBuilder(w)
 
@@ -73,18 +78,18 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                 'xmlns:xsi': "http://www.w3.org/2001/XMLSchema-instance", 
                 'xsi:schemaLocation': "http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd") {
             modelVersion "4.0.0"
-            if(plugin) {
+            if (plugin) {
                 def group = "org.grails.plugins"
                 if (getOptionalProperty(pluginInstance, 'group')) {
                     group = pluginInstance.group
                 }
-                else if(getOptionalProperty(pluginInstance, 'groupId')) {
+                else if (getOptionalProperty(pluginInstance, 'groupId')) {
                     group = pluginInstance.groupId
                 }
 
                 groupId group
                 artifactId plugin.fileSystemShortName 
-                packaging "zip"
+                packaging pluginInfo.packaging == "binary" ? "jar" : "zip"
                 version plugin.version
 
                 // I think description() and url() resolve against the AntBuilder
@@ -242,8 +247,8 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
 
 target(mavenInstall:"Installs a plugin or application into your local Maven cache") {
     depends(init)
-    def deployFile = plugin ? new File(pluginZip) : grailsSettings.projectWarFile
-    def ext = plugin ? "zip" : "war"
+    def deployFile = isPlugin ? new File(pluginZip) : grailsSettings.projectWarFile
+    def ext = isPlugin ? deployFile.name[-3..-1] : "war"
     installOrDeploy(deployFile, ext, false)
 }
 
@@ -262,7 +267,7 @@ private installOrDeploy(File file, ext, boolean deploy, repos = [:]) {
     def fileCheck = generateChecksum(file)
 
     artifact."${ deploy ? 'deploy' : 'install' }"(file: file) {
-        if(ext == 'zip') {
+        if (isPlugin) {
             attach file:"${basedir}/plugin.xml",type:"xml", classifier:"plugin"
         }
 
@@ -332,8 +337,8 @@ target(mavenDeploy:"Deploys the plugin to a Maven repository") {
     artifact.'install-provider'(artifactId:protocol, version:"1.0-beta-2")
     
     
-    def deployFile = plugin ? new File(pluginZip) : grailsSettings.projectWarFile
-    def ext = plugin ? "zip" : "war"
+    def deployFile = isPlugin ? new File(pluginZip) : grailsSettings.projectWarFile
+    def ext = isPlugin ? deployFile.name[-3..-1] : "war"
     try {
         installOrDeploy(deployFile, ext, true, [remote:repo, local:distInfo.localRepo])
     }
