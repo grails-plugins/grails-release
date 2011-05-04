@@ -1,0 +1,6 @@
+DefaultPackage
+grails.plugin.release.test
+grails.plugin.svn
+grails.plugins.publish
+grails.plugins.publish.maven
+org.example
