@@ -22,7 +22,8 @@ class PublishPluginTests extends AbstractCliTestCase {
 
     void testDefault() {
         execute([ "publish-plugin", "--dryRun" ])
-             
+        enterInput "n" 
+
         assertEquals 0, waitForProcess()
         verifyHeader()
 
@@ -31,14 +32,13 @@ class PublishPluginTests extends AbstractCliTestCase {
 
         // Make sure it's publishing to Grails central.
         assertTrue "Command is not publishing to Grails central.", output.contains("Publishing to Grails Central")
-
-        assertTrue "SCM provider warning not displayed.", output.contains("WARN: No SCM provider installed.")
 
         verifyUploadFiles()
     }
 
     void testExplicitSnapshot() {
         execute([ "publish-plugin", "--dryRun", "--snapshot", "--scm" ])
+        enterInput "n" 
 
         assertEquals 0, waitForProcess()
         verifyHeader()
@@ -48,8 +48,6 @@ class PublishPluginTests extends AbstractCliTestCase {
 
         // Make sure it's publishing to Grails central.
         assertTrue "Command is not publishing to Grails central.", output.contains("Publishing to Grails Central")
-
-        assertTrue "SCM provider warning not displayed.", output.contains("WARN: No SCM provider installed.")
 
         verifyUploadFiles(false)
     }
@@ -65,8 +63,6 @@ class PublishPluginTests extends AbstractCliTestCase {
 
         // Make sure it's publishing to Grails central.
         assertTrue "Command is not publishing to Grails central.", output.contains("Publishing to Grails Central")
-
-        assertFalse "SCM provider warning displayed when it shouldn't have been.", output.contains("WARN: No SCM provider installed.")
 
         verifyUploadFiles()
     }

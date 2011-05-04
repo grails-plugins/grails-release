@@ -22,6 +22,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 
     void testDefault() {
         execute([ "publish-plugin", "--dryRun" ])
+        enterInput "n"
              
         assertEquals 0, waitForProcess()
         verifyHeader()
@@ -40,6 +41,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 
     void testWithMavenRepo() {
         execute([ "publish-plugin", "--dryRun", "--repository=maven1", "--noScm" ])
+        enterInput "n"
 
         assertEquals 0, waitForProcess()
         verifyHeader()
@@ -74,6 +76,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 """
 
         execute([ "publish-plugin", "--dryRun", "--repository=maven1", "--scm" ])
+        enterInput "n"
 
         assertEquals 0, waitForProcess()
         verifyHeader()
@@ -95,6 +98,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 
     void testWithExplicitMavenRepo() {
         execute([ "publish-plugin", "--dryRun", "--repository=maven1-snapshots" ])
+        enterInput "n"
 
         assertEquals 0, waitForProcess()
         verifyHeader()
@@ -118,6 +122,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 
     void testWithSubversionRepo() {
         execute([ "publish-plugin", "--dryRun", "--repository=svn1" ])
+        enterInput "n"
 
         assertEquals 0, waitForProcess()
         verifyHeader()
@@ -139,6 +144,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 
     void testLegacySubversionConfig() {
         execute([ "publish-plugin", "--dryRun", "--repository=myRepo" ])
+        enterInput "n"
 
         assertEquals 0, waitForProcess()
         verifyHeader()
@@ -157,6 +163,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 
     void testUnknownRepository() {
         execute([ "publish-plugin", "--dryRun", "--repository=dummy" ])
+        enterInput "n"
 
         assertEquals 1, waitForProcess()
         verifyHeader()
@@ -174,6 +181,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 
     void testIncompleteCredentialsInConfig() {
         execute([ "publish-plugin", "--dryRun", "--repository=bad" ])
+        enterInput "n"
 
         assertEquals 1, waitForProcess()
         verifyHeader()

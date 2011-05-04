@@ -22,6 +22,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 
     void testDefault() {
         execute([ "publish-plugin", "--dry-run" ])
+        enterInput "n"
              
         assertEquals 0, waitForProcess()
         verifyHeader()
@@ -37,6 +38,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 
     void testWithMavenRepo() {
         execute([ "publish-plugin", "--dry-run", "--repository=maven1" ])
+        enterInput "n"
 
         assertEquals 0, waitForProcess()
         verifyHeader()
@@ -66,6 +68,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 """
 
         execute([ "publish-plugin", "--dry-run", "--repository=maven1" ])
+        enterInput "n"
 
         assertEquals 0, waitForProcess()
         verifyHeader()
@@ -84,6 +87,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 
     void testWithExplicitMavenRepo() {
         execute([ "publish-plugin", "--dry-run", "--repository=maven1-snapshots" ])
+        enterInput "n"
 
         assertEquals 0, waitForProcess()
         verifyHeader()
@@ -102,6 +106,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 
     void testWithSubversionRepo() {
         execute([ "publish-plugin", "--dry-run", "--repository=svn1" ])
+        enterInput "n"
 
         assertEquals 0, waitForProcess()
         verifyHeader()
@@ -120,6 +125,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 
     void testLegacySubversionConfig() {
         execute([ "publish-plugin", "--dry-run", "--repository=myRepo" ])
+        enterInput "n"
 
         assertEquals 0, waitForProcess()
         verifyHeader()
@@ -138,6 +144,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 
     void testUnknownRepository() {
         execute([ "publish-plugin", "--dry-run", "--repository=dummy" ])
+        enterInput "n"
 
         assertEquals 1, waitForProcess()
         verifyHeader()
