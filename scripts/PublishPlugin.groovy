@@ -10,7 +10,7 @@ includeTargets << grailsScript("_GrailsPluginDev")
 includeTargets << new File(releasePluginDir, "scripts/_GrailsMaven.groovy")
 
 USAGE = """
-    publish-plugin [--repository=REPO] [--protocol=PROTOCOL] [--portal=PORTAL] [--dryRun] [--snapshot] [--pingOnly]
+    publish-plugin [--repository=REPO] [--protocol=PROTOCOL] [--portal=PORTAL] [--dryRun] [--snapshot] [--scm] [--noScm] [--pingOnly]
 
 where
     REPO     = The name of a configured repository to deploy the plugin to. Can be
@@ -29,6 +29,10 @@ where
 	           
     --snapshot = Force this release to be a snapshot version, i.e. it isn't automatically
                  made the latest available release.
+
+    --scm      = Enables source control management for this release.
+
+    --noScm    = Disables source control management for this release.
 
     --pingOnly = Don't publish/deploy the plugin, only send a notification to the
                  plugin portal. This is useful if portal notification failed during a
@@ -147,7 +151,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
 
     def deployer
     if (argsMap["dryRun"]) {
-        def retval = processAuthConfig(repo) { username, password ->
+        def retval = processAuthConfig.call(repo.name) { username, password ->
             if (username) {
                 println "Using configured username and password from grails.project.repos.${repo.name}"
             }
@@ -166,7 +170,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         // and set them on the SvnClient instance.
         def uri = repo.uri
         def svnClient = classLoader.loadClass("grails.plugin.svn.SvnClient").newInstance(uri.toString())
-        def retval = processAuthConfig(repo) { username, password ->
+        def retval = processAuthConfig.call(repo.name) { username, password ->
             if (username) {
                 if (uri.userInfo) {
                     println "WARN: username and password defined in config and in repository URI - using the credentials from the URI."
@@ -216,7 +220,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         // Add a configurer to the repository definition if the username and password
         // have been defined.
         def projectConfig = grailsSettings.config.grails.project
-        def retval = processAuthConfig(repo) { username, password ->
+        def retval = processAuthConfig.call(repo.name) { username, password ->
             if (username) {
                 if (projectConfig.repos."${repo.name}".custom) {
                     println "WARN: username and password defined in config as well as a 'custom' entry - ignoring the provided username and password."
@@ -332,58 +336,6 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
             }
         }
     }
-}
-
-target(processDefinitions: "Reads the repository definition configuration.") {
-    def projectConfig = grailsSettings.config.grails.project
-    distributionInfo = classLoader.loadClass("grails.plugins.publish.DistributionManagementInfo").newInstance()
-
-    if (projectConfig.dependency.distribution instanceof Closure) {
-        // Deal with the DSL form of configuration, which is the old approach.
-        def callable = grailsSettings.config.grails.project.dependency.distribution?.clone()
-        callable.delegate = distributionInfo
-        callable.resolveStrategy = Closure.DELEGATE_FIRST
-        try {
-            callable.call()				
-        }
-        catch (e) {
-            println "Error reading dependency distribution settings: ${e.message}"
-            exit 1
-        }
-    }
-    else if (projectConfig.repos || projectConfig.portal) {
-        // Handle standard configuration.
-        for (entry in projectConfig.portal) {
-            // Add this portal to the distribution info. The key is the portal ID
-            // while the value is a map of options that must include 'url'.
-            distributionInfo.portals[entry.key] = entry.value
-        }
-
-        for (entry in projectConfig.repos) {
-            // Add this repository to the distribution info. The key is the repository
-            // ID while the value is a map containing the repository configuration.
-            def props = entry.value + [id: entry.key]
-            def c = props.remove("custom")
-            distributionInfo.remoteRepos[entry.key] = new Expando(args: props, configurer: c)
-        }
-    }
-}
-
-private processAuthConfig(repo, c) {
-    // Get credentials for authentication if defined in the config.
-    def projectConfig = grailsSettings.config.grails.project
-    def username = projectConfig.repos."${repo.name}".username
-    def password = projectConfig.repos."${repo.name}".password
-
-    // Check whether only one of the authentication parameters has been set. If
-    // so, exit with an error.
-    if (!username ^ !password) {
-        println "grails.project.repos.${repo.name}.username and .password must both be defined or neither."
-        return 1
-    }
-
-    c(username, password)
-    return 0
 }
 
 private processScm(scm) {

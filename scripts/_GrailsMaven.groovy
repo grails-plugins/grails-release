@@ -31,8 +31,69 @@ globalLicenses = [
 
 artifact = groovy.xml.NamespaceBuilder.newInstance(ant, 'antlib:org.apache.maven.artifact.ant')
 
+target(mavenInstall:"Installs a plugin or application into your local Maven cache") {
+    depends(init)
+    def deployFile = isPlugin ? new File(pluginZip) : grailsSettings.projectWarFile
+    def ext = isPlugin ? deployFile.name[-3..-1] : "war"
+    installOrDeploy(deployFile, ext, false, [local:distributionInfo.localRepo])
+}
+
+target(mavenDeploy:"Deploys the plugin to a Maven repository") {
+    depends(init)
+    def protocols = [     http: "wagon-http",
+                        scp:    "wagon-ssh",
+                        scpexe:    "wagon-ssh-external",
+                        ftp: "wagon-ftp",
+                        webdav: "wagon-webdav" ]
+    
+    def protocol = protocols.http
+    def repoName = argsMap.repository
+    def repo = repoName ? distributionInfo.remoteRepos[repoName] : null
+    if(argsMap.protocol) {
+        protocol = protocols[argsMap.protocol]
+    }
+    else if(repo) {
+        def url = repo?.args?.url
+        if(url) {
+            def i = url.indexOf('://')
+            def urlProt = url[0..i-1]
+            protocol = protocols[urlProt] ?: protocol
+        }
+    }
+
+    def retval = processAuthConfig.call(repoName) { username, password ->
+        if (username) {
+            def projectConfig = grailsSettings.config.grails.project
+            if (projectConfig.repos."${repoName}".custom) {
+                println "WARN: username and password defined in config as well as a 'custom' entry - ignoring the provided username and password."
+            }
+            else {
+                println "Using configured username and password from grails.project.repos.${repoName}"
+                repo.configurer = { authentication username: username, password: password }
+                repo.args.remove "username"
+                repo.args.remove "password"
+            }
+        }
+    }
+
+    if (retval) return retval
+    
+    artifact.'install-provider'(artifactId:protocol, version:"1.0-beta-2")
+    
+    
+    def deployFile = isPlugin ? new File(pluginZip) : grailsSettings.projectWarFile
+    def ext = isPlugin ? deployFile.name[-3..-1] : "war"
+    try {
+        installOrDeploy(deployFile, ext, true, [remote:repo, local:distributionInfo.localRepo])
+    }
+    catch(e) {
+        println "Error deploying artifact: ${e.message}"
+        println "Have you specified a configured repository to deploy to (--repository argument) or specified distributionManagement in your POM?"
+    }
+}
+
 target(init: "Initialisation for maven deploy/install") {
-    depends(packageApp)
+    depends(packageApp, processDefinitions)
 
     isPlugin = pluginManager?.allPlugins?.any { it.basePlugin }
 
@@ -42,6 +103,43 @@ target(init: "Initialisation for maven deploy/install") {
     }
 
     generatePom()
+}
+
+target(processDefinitions: "Reads the repository definition configuration.") {
+    def projectConfig = grailsSettings.config.grails.project
+    distributionInfo = classLoader.loadClass("grails.plugins.publish.DistributionManagementInfo").newInstance()
+
+    if (projectConfig.dependency.distribution instanceof Closure) {
+        // Deal with the DSL form of configuration, which is the old approach.
+        def callable = grailsSettings.config.grails.project.dependency.distribution?.clone()
+        callable.delegate = distributionInfo
+        callable.resolveStrategy = Closure.DELEGATE_FIRST
+        try {
+            callable.call()				
+        }
+        catch (e) {
+            println "Error reading dependency distribution settings: ${e.message}"
+            exit 1
+        }
+    }
+    else if (projectConfig.repos || projectConfig.portal) {
+        // Handle standard configuration.
+        for (entry in projectConfig.portal) {
+            // Add this portal to the distribution info. The key is the portal ID
+            // while the value is a map of options that must include 'url'.
+            distributionInfo.portals[entry.key] = entry.value
+        }
+
+        for (entry in projectConfig.repos) {
+            // Add this repository to the distribution info. The key is the repository
+            // ID while the value is a map containing the repository configuration.
+            def props = entry.value + [id: entry.key]
+            def c = props.remove("custom")
+            distributionInfo.remoteRepos[entry.key] = new Expando(args: props, configurer: c)
+        }
+
+        distributionInfo.localRepo = projectConfig.mavenCache ?: null
+    }
 }
 
 target(generatePom: "Generates a pom.xml file for the current project unless './pom.xml' exists.") {
@@ -244,19 +342,23 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
     println "POM generated: ${pomFileLocation}"
 }
 
+processAuthConfig = { repoName, c ->
+    // Get credentials for authentication if defined in the config.
+    def projectConfig = grailsSettings.config.grails.project
+    def username = projectConfig.repos."${repoName}".username
+    def password = projectConfig.repos."${repoName}".password
 
-target(mavenInstall:"Installs a plugin or application into your local Maven cache") {
-    depends(init)
-    def deployFile = isPlugin ? new File(pluginZip) : grailsSettings.projectWarFile
-    def ext = isPlugin ? deployFile.name[-3..-1] : "war"
-    installOrDeploy(deployFile, ext, false)
+    // Check whether only one of the authentication parameters has been set. If
+    // so, exit with an error.
+    if (!username ^ !password) {
+        println "grails.project.repos.${repoName}.username and .password must both be defined or neither."
+        return 1
+    }
+
+    c(username, password)
+    return 0
 }
 
-private generateChecksum(File file) {
-    def checksum = new File("${file.parentFile.absolutePath}/${file.name}.sha1")
-    checksum.write ChecksumHelper.computeAsString(file, "sha1")
-    return checksum
-}
 private installOrDeploy(File file, ext, boolean deploy, repos = [:]) {
     if (!deploy) {
             ant.checksum file:pomFileLocation, algorithm:"sha1", todir:projectTargetDir
@@ -286,64 +388,20 @@ private installOrDeploy(File file, ext, boolean deploy, repos = [:]) {
                 remoteRepository(repo.args)
             }
         }
-        if(repos.localRepo) {
-            localRepository(path:repos.localRepo)
+        if(repos.local) {
+            localRepository(path:repos.local)
         }
 
     }    
 }
 
+private generateChecksum(File file) {
+    def checksum = new File("${file.parentFile.absolutePath}/${file.name}.sha1")
+    checksum.write ChecksumHelper.computeAsString(file, "sha1")
+    return checksum
+}
+
 
 private getOptionalProperty(obj, prop) {
     return obj.hasProperty(prop) ? obj."$prop" : null
-}
-
-target(mavenDeploy:"Deploys the plugin to a Maven repository") {
-    depends(init)
-    def protocols = [     http: "wagon-http",
-                        scp:    "wagon-ssh",
-                        scpexe:    "wagon-ssh-external",
-                        ftp: "wagon-ftp",
-                        webdav: "wagon-webdav" ]
-    
-    def distInfo = classLoader.loadClass("grails.plugins.publish.DistributionManagementInfo").newInstance()
-    if(grailsSettings.config.grails.project.dependency.distribution instanceof Closure) {
-        def callable = grailsSettings.config.grails.project.dependency.distribution
-        callable.delegate = distInfo
-        callable.resolveStrategy = Closure.DELEGATE_FIRST
-        try {
-            callable.call()
-        }
-        catch(e) {
-            println "Error reading dependency distribution settings: ${e.message}"
-            exit 1
-        }
-
-    }
-    def protocol = protocols.http
-    def repo = argsMap.repository ? distInfo.remoteRepos[argsMap.repository] : null
-    if(argsMap.protocol) {
-        protocol = protocols[argsMap.protocol]
-    }
-    else if(repo) {
-        def url = repo?.args?.url
-        if(url) {
-            def i = url.indexOf('://')
-            def urlProt = url[0..i-1]
-            protocol = protocols[urlProt] ?: protocol
-        }
-    }
-    
-    artifact.'install-provider'(artifactId:protocol, version:"1.0-beta-2")
-    
-    
-    def deployFile = isPlugin ? new File(pluginZip) : grailsSettings.projectWarFile
-    def ext = isPlugin ? deployFile.name[-3..-1] : "war"
-    try {
-        installOrDeploy(deployFile, ext, true, [remote:repo, local:distInfo.localRepo])
-    }
-    catch(e) {
-        println "Error deploying artifact: ${e.message}"
-        println "Have you specified a configured repository to deploy to (--repository argument) or specified distributionManagement in your POM?"
-    }
 }
