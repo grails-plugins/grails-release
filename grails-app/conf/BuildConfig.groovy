@@ -11,9 +11,14 @@ grails.project.dependency.resolution = {
     repositories {        
         grailsPlugins()
         grailsHome()
+        grailsCentral()
 
         mavenLocal()
         mavenCentral()
+    }
+
+    plugins {
+        runtime ":svn:1.0.0.M1"
     }
 
     dependencies {
