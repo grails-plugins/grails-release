@@ -1,5 +1,5 @@
 ---
 layout: main
-title: My Grails Plugin
+title: Release Plugin
 ---
 
