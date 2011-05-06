@@ -290,10 +290,10 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                                 def lower = GrailsPluginUtils.getLowerVersion(depVersion)
                                 if(upper == lower) depVersion = upper
                                 else {
-                                    upper = upper == '*' ? '' : upper
-                                    lower = lower == '*' ? '' : lower
+                                    upper = upper == '*' ? ')' : upper + ']'
+                                    lower = lower == '*' ? '(' : '[' + lower
 
-                                    depVersion = "[$lower,$upper]"
+                                    depVersion = "$lower,$upper"
                                 }
 
                                 dependency {
