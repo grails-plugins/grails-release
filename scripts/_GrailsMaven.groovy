@@ -320,7 +320,11 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                         }
                     }
                     
-                    def pluginDeps = dependencyManager.getPluginDependencyDescriptors()
+					// Use the 1.4 method to get only non-transitive plugin deps if possible
+                    def pluginDeps = dependencyManager.hasProperty('declaredPluginDependencyDescriptors') ? 
+										dependencyManager.declaredPluginDependencyDescriptors : 
+										dependencyManager.getPluginDependencyDescriptors()
+										
                     def pluginsInstalledViaInstallPlugin = grails.util.Metadata.current.getInstalledPlugins()
                     for(dep in pluginDeps) {
                         def moduleId = dep.getDependencyRevisionId()                        
