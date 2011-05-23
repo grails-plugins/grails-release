@@ -30,11 +30,16 @@ class PublishPluginTests extends AbstractCliTestCase {
         // Make sure that the script was found.
         assertFalse "PublishPlugin script not found.", output.contains("Script not found:")
 
+        // Make sure SCM is not enabled.
+        assertFalse "SCM enabled when it shouldn't be.",
+                output.contains("Project is not under source control. Do you want to import it now?")
+
         // Make sure it's publishing to Grails central.
         assertTrue "Command is not publishing to Grails central.", output.contains("Publishing to Grails Central")
         
         // Make sure the main public plugin portal is notified.
-        assertTrue "Command is not notifying grailsCentral plugin portal.", output.contains("Notifying plugin portal 'http://grails.org/plugin/with-config' of release")
+        assertTrue "Command is not notifying grailsCentral plugin portal.",
+                output.contains("Notifying plugin portal 'http://grails.org/plugin/with-config' of release")
 
         verifyUploadFiles()
     }
@@ -48,6 +53,10 @@ class PublishPluginTests extends AbstractCliTestCase {
 
         // Make sure that the script was found.
         assertFalse "PublishPlugin script not found.", output.contains("Script not found:")
+
+        // Make sure SCM is not enabled.
+        assertFalse "SCM enabled when it shouldn't be.",
+                output.contains("Project is not under source control. Do you want to import it now?")
 
         // Make sure it's reporting the repository it's publishing to.
         assertTrue "Command is not reporting the correct repository.", output.contains("Publishing to Maven repository 'maven1'")
@@ -83,6 +92,10 @@ class PublishPluginTests extends AbstractCliTestCase {
 
         // Make sure that the script was found.
         assertFalse "PublishPlugin script not found.", output.contains("Script not found:")
+
+        // Make sure SCM is enabled.
+        assertTrue "SCM is not enabled.",
+                output.contains("Project is not under source control. Do you want to import it now?")
 
         // Make sure it's reporting the repository it's publishing to.
         assertTrue "Command is not reporting the correct repository.", output.contains("Publishing to Maven repository 'maven1'")
