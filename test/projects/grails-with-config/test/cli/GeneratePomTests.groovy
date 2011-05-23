@@ -35,8 +35,8 @@ class GeneratePomTests extends AbstractCliTestCase {
 </project>
 """
         
-        execute([ "generate-pom "])
-             
+        execute([ "generate-pom" ])
+
         assertEquals 1, waitForProcess()
         verifyHeader()
                               
