@@ -262,7 +262,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
     }
     
     if (!argsMap["pingOnly"]) {
-        deployer.deployPlugin(pluginZip, new File(basedir, "plugin.xml"), new File(pomFileLocation), isRelease)
+        deployer.deployPlugin(pluginZip as File, new File(basedir, "plugin.xml"), new File(pomFileLocation), isRelease)
     }
 
     // What's the URL of the portal to ping? The explicit 'portal' argument
