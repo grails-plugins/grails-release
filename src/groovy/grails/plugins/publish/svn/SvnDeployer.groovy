@@ -170,7 +170,7 @@ class SvnDeployer implements PluginDeployer {
 
         // Support for legacy Grails clients: update the master plugin list
         // in the Subversion repository.
-        updatePluginList(pluginName, pluginVersion, isRelease)
+        updatePluginList(pluginName, pluginXmlFile, pluginVersion, isRelease)
     }
 
     /**
@@ -188,14 +188,16 @@ class SvnDeployer implements PluginDeployer {
      * Does the work necessary to update the master plugin list with the
      * details of the current release of the plugin.
      * @param pluginName The name of the plugin we're deploying.
+     * @param pluginXmlFile The location of the plugin's XML descriptor.
      * @param pluginVersion The version of the plugin we're deploying.
      * @param makeLatest Whether this plugin release will be marked as
      * the latest.
      */
-    protected final updatePluginList(pluginName, pluginVersion, makeLatest) {
+    protected final updatePluginList(pluginName, pluginXmlFile, pluginVersion, makeLatest) {
         handleAuthentication {
             masterPluginList.update(
                     pluginName,
+                    pluginXmlFile,
                     !makeLatest,
                     "Updating master plugin list for release ${pluginVersion} of plugin ${pluginName}")
         }

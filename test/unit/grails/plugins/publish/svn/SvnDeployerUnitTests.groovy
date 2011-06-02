@@ -82,6 +82,86 @@ class SvnDeployerUnitTests extends GroovyTestCase {
         def mockMasterPluginList = mock()
         mockMasterPluginList.update(
                 "pdf-generator",
+                pluginXmlFile,
+                false,
+                "Updating master plugin list for release 1.1.2 of plugin pdf-generator")
+
+        play {
+            try {
+                def deployer = new SvnDeployer(mockSvnClient, baseDir, "mySvn", mockMasterPluginList, System.out, null)
+                deployer.deployPlugin(zipFile, pluginXmlFile, pomFile, true)
+
+                // Check that the checksums are as expected.
+                assertEquals expectedSha1Sum, expectedFiles[4].text
+                assertEquals expectedMd5Sum, expectedFiles[5].text
+            }
+            finally {
+                // Clean up the files that are created in the current
+                // working directory.
+                expectedFiles*.delete()
+            }
+        }
+    }
+
+    void testDeployPluginWithNonStandardPluginXmlLocation() {
+        // Pretend that the XML descriptor is located in the non-default location.
+        pluginXmlFile = new File("target", "plugin.xml")
+        pluginXmlFile.parentFile.mkdirs()
+        
+        def zipContent = "Hello world"
+        def zipFile = new File(baseDir, "grails-pdf-generator-1.1.2.zip")
+        zipFile.text = zipContent
+
+        def expectedMd5Sum = DigestUtils.md5Hex(zipContent.bytes)
+        def expectedSha1Sum = DigestUtils.shaHex(zipContent.bytes)
+
+        pluginXmlFile.text = "<plugin></plugin>"
+        pomFile.text = """\
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.example</groupId>
+  <artifactId>pdf-generator</artifactId>
+  <version>1.1.2</version>
+  <packaging>zip</packaging>
+</project>
+"""
+
+        // These are the files that should be added to the Subversion
+        // repository if they're not already there.
+        def wcDir = new File(".")
+        def expectedFiles = [
+                new File(wcDir, zipFile.name),
+                new File(wcDir, "pdf-generator-1.1.2-plugin.xml"),
+                new File(wcDir, "pdf-generator-1.1.2.pom"),
+                new File(wcDir, "plugin.xml"),
+                new File(wcDir, "${zipFile.name}.sha1"),
+                new File(wcDir, "${zipFile.name}.md5") ]
+
+        // The current directory is a working copy for the repository.
+        def mockSvnClient = mock()
+        mockSvnClient.isWorkingCopyForRepository(wcDir, "grails-pdf-generator/trunk").returns(true)
+
+        // No need to check out the trunk since the current directory
+        // already a checkout of trunk. Need to update the working copy
+        // though.
+        mockSvnClient.update(wcDir)
+        mockSvnClient.addFilesToSvn(expectedFiles)
+        mockSvnClient.commit(wcDir, "Releasing version 1.1.2 of the 'pdf-generator' plugin.")
+        mockSvnClient.tag(
+                "grails-pdf-generator/trunk",
+                "grails-pdf-generator/tags",
+                "RELEASE_1_1_2",
+                "Tagging the 1.1.2 release of the 'pdf-generator' plugin.")
+        mockSvnClient.tag(
+                "grails-pdf-generator/trunk",
+                "grails-pdf-generator/tags",
+                "LATEST_RELEASE",
+                "Making version 1.1.2 of the 'pdf-generator' plugin the latest.")
+
+        def mockMasterPluginList = mock()
+        mockMasterPluginList.update(
+                "pdf-generator",
+                pluginXmlFile,
                 false,
                 "Updating master plugin list for release 1.1.2 of plugin pdf-generator")
 
@@ -151,6 +231,7 @@ class SvnDeployerUnitTests extends GroovyTestCase {
         def mockMasterPluginList = mock()
         mockMasterPluginList.update(
                 "pdf-generator",
+                pluginXmlFile,
                 true,
                 "Updating master plugin list for release 0.5-SNAPSHOT of plugin pdf-generator")
 
@@ -222,6 +303,7 @@ class SvnDeployerUnitTests extends GroovyTestCase {
         def mockMasterPluginList = mock()
         mockMasterPluginList.update(
                 "pdf-generator",
+                pluginXmlFile,
                 false,
                 "Updating master plugin list for release 1.1.2 of plugin pdf-generator")
 

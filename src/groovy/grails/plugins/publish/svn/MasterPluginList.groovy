@@ -48,7 +48,8 @@ class MasterPluginList {
     /**
      * Updates the remote master plugin list with the latest information about a
      * given plugin.
-     * @param pluginName The name of the plugin.
+     * @param pluginName (String) The name of the plugin.
+     * @param pluginXml (File) Location of the plugin's XML descriptor.
      * @param skipLatest If <code>true</code> the current plugin version is
      * <em>not</em> marked as the latest.
      * @param msg The commit message to use when committing the master plugin list
@@ -58,7 +59,7 @@ class MasterPluginList {
      * master plugin list inbetween fetching the latest version and then committing
      * the changes. Defaults to 3.
      */
-    def update(pluginName, skipLatest, msg, maxAttempts = 3) {
+    def update(pluginName, pluginXml, skipLatest, msg, maxAttempts = 3) {
         // Check whether the repository already has a master plugin list.
         def pluginsListFile
         def remotePath = "$REMOTE_META_DIR/$PLUGINS_LIST_NAME"
@@ -74,6 +75,7 @@ class MasterPluginList {
         // Generate a new plugin list by inserting the latest information for
         // the given plugin into the existing plugin list.
         def publisher = new DefaultPluginPublisher(
+                pluginXml.parentFile,
                 svnClient.latestRevision.toString(),
                 svnClient.repoUrl.toString())
         def updatedList = publisher.publishRelease(pluginName, new FileSystemResource(pluginsListFile), !skipLatest)
