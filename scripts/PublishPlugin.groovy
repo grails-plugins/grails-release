@@ -54,8 +54,8 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
     if (argsMap["snapshot"]) isRelease = false
 
     // Is source control management enabled for this run?
-    def scmEnabled = getPropertyValue("grails.release.scm.enabled", "true").toBoolean()
-    scmEnabled = scmEnabled || argsMap["scm"]
+    boolean scmEnabled = Boolean.valueOf(getPropertyValue("grails.release.scm.enabled", true))
+    if (argsMap["scm"]) scmEnabled = true
     if (argsMap["noScm"]) scmEnabled = false
 
     if (scmEnabled) {
