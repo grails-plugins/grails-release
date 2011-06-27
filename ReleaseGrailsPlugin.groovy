@@ -15,7 +15,7 @@
  */
 
 class ReleaseGrailsPlugin {
-    def version = "1.0.0.M2"
+    def version = "1.0.0.M3"
     def grailsVersion = "1.2 > *"
     def dependsOn = [:]
 

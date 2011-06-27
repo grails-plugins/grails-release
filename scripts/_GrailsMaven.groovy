@@ -316,6 +316,16 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                                 artifactId moduleId.name
                                 version moduleId.revision
                                 scope dep.scope
+
+								if(dep.allExcludeRules) {
+									exclusions {
+										for(er in dep.allExcludeRules) {
+											exclusion {
+												artifactId er.id.mid.name
+											}
+										}										
+									}									
+								}
                             }                            
                         }
                     }
@@ -336,6 +346,16 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                                 version moduleId.revision
                                 type "zip"
                                 scope dep.scope
+
+								if(dep.allExcludeRules) {
+									exclusions {
+										for(er in dep.allExcludeRules) {
+											exclusion {
+												artifactId er.id.mid.name
+											}
+										}										
+									}									
+								}
                             }                        
                         }
                     }
