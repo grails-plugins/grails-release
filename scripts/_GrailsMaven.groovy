@@ -115,7 +115,7 @@ target(processDefinitions: "Reads the repository definition configuration.") {
         callable.delegate = distributionInfo
         callable.resolveStrategy = Closure.DELEGATE_FIRST
         try {
-            callable.call()				
+            callable.call()             
         }
         catch (e) {
             println "Error reading dependency distribution settings: ${e.message}"
@@ -317,24 +317,24 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                                 version moduleId.revision
                                 scope dep.scope
 
-								if(dep.allExcludeRules) {
-									exclusions {
-										for(er in dep.allExcludeRules) {
-											exclusion {
-												artifactId er.id.mid.name
-											}
-										}										
-									}									
-								}
+                                if(dep.allExcludeRules) {
+                                    exclusions {
+                                        for(er in dep.allExcludeRules) {
+                                            exclusion {
+                                                artifactId er.id.mid.name
+                                            }
+                                        }                                       
+                                    }                                   
+                                }
                             }                            
                         }
                     }
                     
-					// Use the 1.4 method to get only non-transitive plugin deps if possible
+                    // Use the 1.4 method to get only non-transitive plugin deps if possible
                     def pluginDeps = dependencyManager.hasProperty('declaredPluginDependencyDescriptors') ? 
-										dependencyManager.declaredPluginDependencyDescriptors : 
-										dependencyManager.getPluginDependencyDescriptors()
-										
+                                        dependencyManager.declaredPluginDependencyDescriptors : 
+                                        dependencyManager.getPluginDependencyDescriptors()
+                                        
                     def pluginsInstalledViaInstallPlugin = grails.util.Metadata.current.getInstalledPlugins()
                     for(dep in pluginDeps) {
                         def moduleId = dep.getDependencyRevisionId()                        
@@ -347,15 +347,15 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                                 type "zip"
                                 scope dep.scope
 
-								if(dep.allExcludeRules) {
-									exclusions {
-										for(er in dep.allExcludeRules) {
-											exclusion {
-												artifactId er.id.mid.name
-											}
-										}										
-									}									
-								}
+                                if(dep.allExcludeRules) {
+                                    exclusions {
+                                        for(er in dep.allExcludeRules) {
+                                            exclusion {
+                                                artifactId er.id.mid.name
+                                            }
+                                        }                                       
+                                    }                                   
+                                }
                             }                        
                         }
                     }
