@@ -72,7 +72,25 @@ class GeneratePomTests extends AbstractCliTestCase {
         assertEquals "0.1", pom.version.text()
         assertEquals "zip", pom.packaging.text()
 
-        assertEquals "", pom.dependencies.text()
+        assertEquals 4, pom.dependencies.dependency.size()
+
+        def depNames = pom.dependencies.dependency.artifactId*.text() as Set
+        assert "httpclient" in depNames
+        assert "commons-io" in depNames
+        assert "fixtures" in depNames
+        assert "spring-security-core" in depNames
+        
+        def ssc = pom.dependencies.dependency.find { it.artifactId.text() == "spring-security-core" }
+        assert ssc.exclusions.exclusion.size() == 1
+        assert ssc.exclusions.exclusion.artifactId.text() == "excluded-dep"
+
+        def httpc = pom.dependencies.dependency.find { it.artifactId.text() == "httpclient" }
+        assert httpc.exclusions.exclusion.size() == 2
+        assert httpc.exclusions.exclusion.artifactId[0].text() == "commons-logging"
+        assert httpc.exclusions.exclusion.artifactId[1].text() == "commons-codec"
+
+        def cio = pom.dependencies.dependency.find { it.artifactId.text() == "commons-io" }
+        assert cio.exclusions.isEmpty()
 
         assertEquals "Plugin summary/headline", pom.name.text()
         assertEquals "Brief description of the plugin.", pom.description.text().trim()
