@@ -74,10 +74,23 @@ class MasterPluginList {
 
         // Generate a new plugin list by inserting the latest information for
         // the given plugin into the existing plugin list.
-        def publisher = new DefaultPluginPublisher(
-                pluginXml.parentFile,
-                svnClient.latestRevision.toString(),
-                svnClient.repoUrl.toString())
+        def hasBaseDirArg = DefaultPluginPublisher.declaredConstructors.any {
+            it.parameterTypes.size() == 3 && it.parameterTypes[0] == File
+        }
+
+        def publisher
+        if (hasBaseDirArg) {
+            publisher = new DefaultPluginPublisher(
+                    pluginXml.parentFile,
+                    svnClient.latestRevision.toString(),
+                    svnClient.repoUrl.toString())
+        }
+        else {
+            publisher = new DefaultPluginPublisher(
+                    svnClient.latestRevision.toString(),
+                    svnClient.repoUrl.toString())
+        }
+
         def updatedList = publisher.publishRelease(pluginName, new FileSystemResource(pluginsListFile), !skipLatest)
 
         // Now commit the changes to disk by overwriting the existing plugin list.
