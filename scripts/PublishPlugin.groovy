@@ -101,11 +101,12 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         grailsCentralPortal["url"] = repoClass.GRAILS_CENTRAL_PORTAL_URL
     }
         
-
-    def repoName = argsMap["repository"]
+    // Is a default repository configured for this project? If yes, use that
+    // unless a '--repository' command line option is specified.
+    def repoName = argsMap["repository"] ?: grailsSettings.config.grails.project.repos.default
     def type = "svn"
 
-    if (repoName) {
+    if (repoName && repoName != "grailsCentral") {
         // First look for the repository definition for this name. This
         // could either be from the newer Maven-based definitions or the
         // legacy Subversion-based ones.

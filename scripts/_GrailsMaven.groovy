@@ -47,7 +47,7 @@ target(mavenDeploy:"Deploys the plugin to a Maven repository") {
                         webdav: "wagon-webdav" ]
     
     def protocol = protocols.http
-    def repoName = argsMap.repository
+    def repoName = argsMap.repository ?: grailsSettings.config.grails.project.repos.default
     def repo = repoName ? distributionInfo.remoteRepos[repoName] : null
     if(argsMap.protocol) {
         protocol = protocols[argsMap.protocol]
@@ -131,6 +131,10 @@ target(processDefinitions: "Reads the repository definition configuration.") {
         }
 
         for (entry in projectConfig.repos) {
+            // Skip 'default' since that's used to specify the name of the default
+            // repository to use for a project.
+            if (entry.key == "default") continue
+
             // Add this repository to the distribution info. The key is the repository
             // ID while the value is a map containing the repository configuration.
             def props = entry.value + [id: entry.key]

@@ -1,6 +1,8 @@
 grails.plugin.location.publish = "../../.."
-grails.plugin.repos.distribution.mySvn = "http://rimu/svn/grails-plugins"
-//grails.plugin.repos.distribution.mySvn = "http://pledbrook:teatimex@rimu/svn/grails-plugins"
+
+grails.project.repos.default = "mySvn"
+grails.project.repos.mySvn.url = "http://rimu/svn/grails-plugins"
+grails.project.repos.mySvn.type = "svn"
 
 grails.project.class.dir = "target/classes"
 grails.project.test.class.dir = "target/test-classes"
