@@ -76,7 +76,7 @@ target(mavenDeploy:"Deploys the plugin to a Maven repository") {
         }
     }
 
-    if (retval) return retval
+    if (retval) exit retval
     
     artifact.'install-provider'(artifactId:protocol, version:"1.0-beta-2")
     
@@ -89,6 +89,7 @@ target(mavenDeploy:"Deploys the plugin to a Maven repository") {
     catch(e) {
         println "Error deploying artifact: ${e.message}"
         println "Have you specified a configured repository to deploy to (--repository argument) or specified distributionManagement in your POM?"
+        exit 1
     }
 }
 
@@ -420,7 +421,7 @@ private installOrDeploy(File file, ext, boolean deploy, repos = [:]) {
             localRepository(path:repos.local)
         }
 
-    }    
+    }
 }
 
 private generateChecksum(File file) {
