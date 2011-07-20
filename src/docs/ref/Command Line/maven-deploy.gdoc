@@ -29,7 +29,7 @@ grails maven-deploy --repository=otherRepo --binary
 
 h2. Description
 
-Packages the current project (either a plugin or application), installs the resulting artifact into the local Maven cache along with its POM, and then deploys both to a [configured remote repository|guide:2.1 Repositories].
+Packages the current project (either a plugin or application), installs the resulting artifact into the local Maven cache along with its POM, and then deploys both to a [configured remote repository|guide:repositories].
 
 If you want to install the artifact to a different location from the standard Maven cache, you can set the destination path in @BuildConfig.groovy@ or @settings.groovy@ via the option
 
