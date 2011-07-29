@@ -326,7 +326,11 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                                     exclusions {
                                         for(er in dep.allExcludeRules) {
                                             exclusion {
-                                                artifactId er.id.mid.name
+												def exclusionId = er.id.mid
+												if(exclusionId.organisation != '*') {
+													groupId exclusionId.organisation
+												}
+                                                artifactId exclusionId.name
                                             }
                                         }                                       
                                     }                                   
@@ -356,7 +360,11 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                                     exclusions {
                                         for(er in dep.allExcludeRules) {
                                             exclusion {
-                                                artifactId er.id.mid.name
+												def exclusionId = er.id.mid
+												if(exclusionId.organisation != '*') {
+													groupId exclusionId.organisation
+												}
+                                                artifactId exclusionId.name
                                             }
                                         }                                       
                                     }                                   
