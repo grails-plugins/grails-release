@@ -53,6 +53,13 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
     isRelease = !pluginInfo.version.text().endsWith("-SNAPSHOT")
     if (argsMap["snapshot"]) isRelease = false
 
+    pluginInfo = [
+            name : pluginInfo.artifactId.text(),
+            group : pluginInfo.groupId.text(),
+            version : pluginInfo.version.text(),
+            isSnapshot : !isRelease ]
+    event "PublishPluginStart", [ pluginInfo ]
+
     // Is source control management enabled for this run?
     boolean scmEnabled = Boolean.valueOf(getPropertyValue("grails.release.scm.enabled", true))
     if (argsMap["scm"]) scmEnabled = true
@@ -263,7 +270,11 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
     }
     
     if (!argsMap["pingOnly"]) {
+        event "DeployPluginStart", [ pluginInfo, pluginZip, pomFileLocation ]
+
         deployer.deployPlugin(pluginZip as File, new File(basedir, "plugin.xml"), new File(pomFileLocation), isRelease)
+
+        event "DeployPluginEnd", [ pluginInfo, pluginZip, pomFileLocation ]
     }
 
     // What's the URL of the portal to ping? The explicit 'portal' argument
@@ -286,6 +297,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         // We don't ping the grails.org portal if a repository has been specified
         // but that repository has no default portal configured.
         println "No default portal defined for repository '${repoName}' - skipping portal notification"
+        event "PublishPluginEnd", [ pluginInfo ]
         return
     }
 
@@ -293,13 +305,15 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
     // ends with '/'. Otherwise the resolve won't do what we want.
     def portalUrl = new URI(portalDefn.url)
     if (!portalUrl.path.endsWith("/")) portalUrl = new URI(portalUrl.toString() + "/")
-    portalUrl = portalUrl.resolve(pluginInfo.artifactId.text())
+    portalUrl = portalUrl.resolve(pluginInfo.name)
 
     // Now that we have a URL, simply send a PUT request with the appropriate
     // JSON content.
     println "Notifying plugin portal '${portalUrl}' of release..."
 
     if (!argsMap["dryRun"]) {
+        event "PingPortalStart", [ pluginInfo, portalUrl, repo.uri.toString() ]
+
         def username = portalDefn.username
         def password = portalDefn.password
 
@@ -312,13 +326,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         def http = new HTTPBuilder(portalUrl)
         http.auth.basic username, password
         http.request(PUT, JSON) { req ->
-            body = [
-                name : pluginInfo.artifactId.text(),
-                version : pluginInfo.version.text(),
-                group : pluginInfo.groupId.text(),
-                isSnapshot : !isRelease,
-                url : repo.uri.toString()
-            ]
+            body = pluginInfo + [ url : repo.uri.toString() ]
             
             response.success = { resp ->
                 println "Notification successful"
@@ -336,7 +344,11 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
                 println "ERROR: Notification failed - status ${resp.status} - ${json.message}"
             }
         }
+
+        event "PingPortalEnd", [ pluginInfo, portalUrl, repo.uri.toString() ]
     }
+
+    event "PublishPluginEnd", [ pluginInfo ]
 }
 
 private processScm(scm) {
@@ -375,11 +387,11 @@ private processScm(scm) {
             return
         }
 
-        def version = pluginInfo.version.text()
+        def version = pluginInfo.version
         def msg = inputHelper.userInput("Enter extra commit message text for this release (optional): ")
         if (msg) msg = "\n\n" + msg
 
-        scm.commit "Releasing version ${version} of ${pluginInfo.artifactId.text()} plugin.${msg}"
+        scm.commit "Releasing version ${version} of ${pluginInfo.name} plugin.${msg}"
         if (isRelease) scm.tag "v${version}", "Tagging the ${version} version of the plugin source."
         scm.synchronize()
     }
@@ -396,7 +408,7 @@ private scmImportProject(scm, inputHelper) {
     if (!scmHost && pluginManager.hasGrailsPlugin("svn")) {
         def answer = inputHelper.userInput("Would you like to add this plugin's source to the Grails plugin source repository? (Y,n) ")
         if (answer?.equalsIgnoreCase("y")) {
-            hostUrl = "https://svn.codehaus.org/grails-plugins/grails-${pluginInfo.artifactId.text()}"
+            hostUrl = "https://svn.codehaus.org/grails-plugins/grails-${pluginInfo.name}"
         }
     }
 
@@ -404,5 +416,5 @@ private scmImportProject(scm, inputHelper) {
         hostUrl = inputHelper.userInput("Please enter the URL of the remote SCM repository: ")
     }
 
-    scmProvider.importIntoRepo hostUrl, "Initial import of plugin source code for the release of version ${pluginInfo.version.text()}"
+    scmProvider.importIntoRepo hostUrl, "Initial import of plugin source code for the release of version ${pluginInfo.version}"
 }
