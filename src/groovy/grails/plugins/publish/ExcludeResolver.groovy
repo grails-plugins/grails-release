@@ -69,18 +69,19 @@ class ExcludeResolver {
                    if(directModulesId.contains(dependencyModuleId)) {
                        def depDescriptor = dep.descriptor
                        def transitiveDepList = []
-                       results[dep.moduleRevision.id] = transitiveDepList
-                       for(transitive in depDescriptor.dependencies) {
-                           def tdid = transitive.dependencyId
-                           if(tdid instanceof ResolvedModuleRevision) {
-                               transitiveDepList << tdid.id                                                  
-                           }
-                           else {
-                               transitiveDepList << tdid                                                                                 
-                           }
+                       if(dep.moduleRevision != null) {
+                           results[dep.moduleRevision.id] = transitiveDepList
+                           for(transitive in depDescriptor.dependencies) {
+                               def tdid = transitive.dependencyId
+                               if(tdid instanceof ResolvedModuleRevision) {
+                                   transitiveDepList << tdid.id                                                  
+                               }
+                               else {
+                                   transitiveDepList << tdid                                                                                 
+                               }
 
+                           }                           
                        }
-
                    }
                }           
            }           
