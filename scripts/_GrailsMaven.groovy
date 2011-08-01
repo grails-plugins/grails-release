@@ -174,6 +174,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
         }
     }
 
+    event("StatusUpdate", ["Generating POM file..."])
     new File(pomFileLocation).withWriter { w ->
         def xml = new groovy.xml.MarkupBuilder(w)
 
@@ -274,7 +275,10 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                 name grailsAppName
             }
                 
-                
+            def excludeResolver = classLoader.loadClass("grails.plugins.publish.ExcludeResolver").newInstance(grailsSettings.dependencyManager)    
+            
+            def excludeInfo = excludeResolver.resolveExcludes()
+            
             if(plugin) {
                 dependencies {
                     corePlugins = pluginManager.allPlugins.findAll { it.pluginClass.name.startsWith("org.codehaus.groovy.grails.plugins") }*.name
@@ -313,6 +317,44 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                     def dependencyManager = grailsSettings.dependencyManager
                     def appDeps = dependencyManager.getApplicationDependencyDescriptors()
                     def allowedScopes = ['runtime','compile']
+                    def excludeHandler = {dep, moduleId ->
+                        if(dep.transitive == false) {
+                               def excludes = excludeInfo[moduleId]
+                               if(excludes != null) {
+                                   exclusions {
+                                       for(eId in excludes) {
+                                           exclusion {
+                                               groupId eId.organisation
+                                               artifactId eId.name
+                                           }
+                                       }
+                                   }
+                               }
+                           }
+                           else if(dep.allExcludeRules) {
+                               exclusions {
+                                   for(er in dep.allExcludeRules) {
+                                       exclusion {
+											def exclusionId = er.id.mid
+											if(exclusionId.organisation != '*') {
+												groupId exclusionId.organisation
+											}
+											else {
+											    def excludes = excludeInfo[moduleId]
+											    if(excludes != null) {
+											        def resolvedExclude = excludes.find { it.name == exclusionId.name }												        
+											        if(resolvedExclude != null) {
+											            groupId resolvedExclude.organisation
+											        }
+											    }
+
+											}
+                                           artifactId exclusionId.name
+                                       }
+                                   }                                       
+                               }                                   
+                           }                        
+                    }
                     for(dep in appDeps) {
                         if(allowedScopes.contains(dep.scope)  && dep.exported) {
                             def moduleId = dep.getDependencyRevisionId()
@@ -321,20 +363,8 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                                 artifactId moduleId.name
                                 version moduleId.revision
                                 scope dep.scope
-
-                                if(dep.allExcludeRules) {
-                                    exclusions {
-                                        for(er in dep.allExcludeRules) {
-                                            exclusion {
-												def exclusionId = er.id.mid
-												if(exclusionId.organisation != '*') {
-													groupId exclusionId.organisation
-												}
-                                                artifactId exclusionId.name
-                                            }
-                                        }                                       
-                                    }                                   
-                                }
+                                
+                                excludeHandler(dep, moduleId)
                             }                            
                         }
                     }
@@ -356,19 +386,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                                 type "zip"
                                 scope dep.scope
 
-                                if(dep.allExcludeRules) {
-                                    exclusions {
-                                        for(er in dep.allExcludeRules) {
-                                            exclusion {
-												def exclusionId = er.id.mid
-												if(exclusionId.organisation != '*') {
-													groupId exclusionId.organisation
-												}
-                                                artifactId exclusionId.name
-                                            }
-                                        }                                       
-                                    }                                   
-                                }
+                                excludeHandler(dep, moduleId)
                             }                        
                         }
                     }
