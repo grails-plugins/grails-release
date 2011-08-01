@@ -25,7 +25,6 @@ class PublishPluginTests extends AbstractCliTestCase {
         enterInput "n" 
 
         assertEquals 0, waitForProcess()
-        verifyHeader()
 
         // Make sure that the script was found.
         assertFalse "PublishPlugin script not found.", output.contains("Script not found:")
@@ -41,7 +40,6 @@ class PublishPluginTests extends AbstractCliTestCase {
         enterInput "n" 
 
         assertEquals 0, waitForProcess()
-        verifyHeader()
 
         // Make sure that the script was found.
         assertFalse "PublishPlugin script not found.", output.contains("Script not found:")
@@ -56,7 +54,6 @@ class PublishPluginTests extends AbstractCliTestCase {
         execute([ "publish-plugin", "--dryRun", "--noScm" ])
              
         assertEquals 0, waitForProcess()
-        verifyHeader()
 
         // Make sure that the script was found.
         assertFalse "PublishPlugin script not found.", output.contains("Script not found:")

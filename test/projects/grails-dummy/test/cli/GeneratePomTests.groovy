@@ -20,7 +20,6 @@ class GeneratePomTests extends AbstractCliTestCase {
         execute([ "generate-pom" ])
              
         assertEquals 0, waitForProcess()
-        verifyHeader()
                               
         // Make sure that the script was found.
         assertFalse "GeneratePom script not found.", output.contains("Script not found:")
@@ -37,18 +36,18 @@ class GeneratePomTests extends AbstractCliTestCase {
         assertEquals "0.1", pom.version.text()
         assertEquals "zip", pom.packaging.text()
 
-        assertEquals 3, pom.dependencies.dependency.size()
-        assertEquals "org.grails.plugins", pom.dependencies.dependency[0].groupId.text()
-        assertEquals "debug", pom.dependencies.dependency[0].artifactId.text()
-        assertEquals "[1.0,)", pom.dependencies.dependency[0].version.text()
-
-        assertEquals "org.grails.plugins", pom.dependencies.dependency[1].groupId.text()
-        assertEquals "shiro", pom.dependencies.dependency[1].artifactId.text()
-        assertEquals "1.1-SNAPSHOT", pom.dependencies.dependency[1].version.text()
-
-        assertEquals "org.grails.plugins", pom.dependencies.dependency[2].groupId.text()
-        assertEquals "geb-spock", pom.dependencies.dependency[2].artifactId.text()
-        assertEquals "[1.1,1.3]", pom.dependencies.dependency[2].version.text()
+        assertEquals 4, pom.dependencies.dependency.size()
+        
+        verifyDependency pom, "org.grails.plugins", "debug", "[1.0,)"
+        verifyDependency pom, "org.grails.plugins", "shiro", "1.1-SNAPSHOT"
+        verifyDependency pom, "org.grails.plugins", "geb", "[0.5.0,0.6.0]"                
+        verifyDependency pom, "org.apache.maven", "maven-ant-tasks", "2.1.0"                        
+        
+        def dep = pom.dependencies.dependency.find { it.artifactId.text() == 'maven-ant-tasks'}
+        
+        assert dep != null
+        // check that a transitive = false dependency has generated exclusions
+        assert dep.exclusions.exclusion.size() == 15
 
         assertEquals "Dummy plugin", pom.name.text()
         assertEquals "A dummy plugin. Only used for testing.", pom.description.text()
@@ -67,5 +66,14 @@ class GeneratePomTests extends AbstractCliTestCase {
         assertEquals "JIRA", pom.issueManagement.system.text()
         assertEquals "http://jira.codehaus.org/browse/GRAILSPLUGINS", pom.issueManagement.url.text()
         assertEquals "http://svn.grails-plugins.codehaus.org/browse/grails-plugins/", pom.scm.url.text()
+    }
+    
+    void verifyDependency(pom, group, name, version) {
+       def dep = pom.dependencies.dependency.find { it.artifactId.text() == name}
+
+       assert dep != null
+       assert name == dep.artifactId.text()
+       assert version == dep.version.text()
+       assert group == dep.groupId.text()        
     }
 }
