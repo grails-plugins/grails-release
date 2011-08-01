@@ -16,6 +16,8 @@
 
 import grails.util.*
 import org.codehaus.groovy.grails.plugins.*
+import org.codehaus.groovy.grails.resolve.*
+import org.apache.ivy.core.module.id.*
 import org.apache.ivy.util.ChecksumHelper
 
 scriptScope = grails.util.BuildScope.WAR
@@ -286,42 +288,6 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
             
             if(plugin) {
                 dependencies {
-                    corePlugins = pluginManager.allPlugins.findAll { it.pluginClass.name.startsWith("org.codehaus.groovy.grails.plugins") }*.name
-                    if(pluginInstance != null && pluginInstance.hasProperty('dependsOn')) {
-                        for(dep in pluginInstance.dependsOn) {
-                            String depName = dep.key
-                            if(!corePlugins.contains(dep.key)) {
-                                // Note: specifying group in dependsOn is a Grails 1.3 feature
-                                // 1.2 users don't have this capability
-                                def depGroup = "org.grails.plugins"
-                                if(depName.contains(":")) {
-                                    def i = depName.split(":")
-                                    depGroup = i[0]
-                                    depName = i[1]
-                                }
-                                String depVersion = dep.value
-                                def upper = GrailsPluginUtils.getUpperVersion(depVersion)
-                                def lower = GrailsPluginUtils.getLowerVersion(depVersion)
-                                if(upper == lower) depVersion = upper
-                                else {
-                                    upper = upper == '*' ? ')' : upper + ']'
-                                    lower = lower == '*' ? '(' : '[' + lower
-
-                                    depVersion = "$lower,$upper"
-                                }
-
-                                dependency {
-                                    groupId depGroup
-                                    artifactId GrailsNameUtils.getScriptName(depName)
-                                    version depVersion
-                                    type "zip"
-                                }
-                            }
-                        }        
-                    }
-                    def dependencyManager = grailsSettings.dependencyManager
-                    def appDeps = dependencyManager.getApplicationDependencyDescriptors()
-                    def allowedScopes = ['runtime','compile']
                     def excludeHandler = {dep, moduleId ->
                         if(dep.transitive == false) {
                                def excludes = excludeInfo[moduleId]
@@ -359,7 +325,13 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                                    }                                       
                                }                                   
                            }                        
-                    }
+                    }                    
+                    corePlugins = pluginManager.allPlugins.findAll { it.pluginClass.name.startsWith("org.codehaus.groovy.grails.plugins") }*.name
+
+                    def dependencyManager = grailsSettings.dependencyManager
+                    def appDeps = dependencyManager.getApplicationDependencyDescriptors()
+                    def allowedScopes = ['runtime','compile']
+
                     for(dep in appDeps) {
                         if(allowedScopes.contains(dep.scope)  && dep.exported) {
                             def moduleId = dep.getDependencyRevisionId()
@@ -380,8 +352,10 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                                         dependencyManager.getPluginDependencyDescriptors()
                                         
                     def pluginsInstalledViaInstallPlugin = grails.util.Metadata.current.getInstalledPlugins()
+                    def processedPluginModuleIds = []
                     for(dep in pluginDeps) {
                         def moduleId = dep.getDependencyRevisionId()                        
+                        processedPluginModuleIds << moduleId.moduleId
                         if(allowedScopes.contains(dep.scope) && dep.exported && !pluginsInstalledViaInstallPlugin.containsKey(moduleId.name) ) {                            
 
                             dependency {
@@ -395,6 +369,49 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                             }                        
                         }
                     }
+                    
+                    if(pluginInstance != null && pluginInstance.hasProperty('dependsOn')) {
+                        for(dep in pluginInstance.dependsOn) {
+                            String depName = dep.key
+                            if(!corePlugins.contains(dep.key)) {
+                                // Note: specifying group in dependsOn is a Grails 1.3 feature
+                                // 1.2 users don't have this capability
+                                String depGroup = "org.grails.plugins"
+                                if(depName.contains(":")) {
+                                    def i = depName.split(":")
+                                    depGroup = i[0]
+                                    depName = i[1]
+                                }
+                                String depVersion = dep.value
+                                def upper = GrailsPluginUtils.getUpperVersion(depVersion)
+                                def lower = GrailsPluginUtils.getLowerVersion(depVersion)
+                                if(upper == lower) depVersion = upper
+                                else {
+                                    upper = upper == '*' ? ')' : upper + ']'
+                                    lower = lower == '*' ? '(' : '[' + lower
+
+                                    depVersion = "$lower,$upper".toString()
+                                }
+                                
+                                def convertedPluginName = GrailsNameUtils.getScriptName(depName)                                
+                                String stringVersion = depVersion.toString()
+                                ModuleRevisionId depMrid = ModuleRevisionId.newInstance(depGroup.toString(), convertedPluginName.toString(), stringVersion)
+                                
+                                if(processedPluginModuleIds.contains(depMrid.moduleId)) continue;
+                                
+                                dependency {
+
+                                    groupId depGroup
+                                    artifactId convertedPluginName
+                                    version depVersion
+                                    type "zip"
+                                                                        
+                                    excludeHandler(new EnhancedDefaultDependencyDescriptor(depMrid, false, "compile"),
+                                                    depMrid)
+                                }
+                            }
+                        }        
+                    }                    
                 }
             }
         }
