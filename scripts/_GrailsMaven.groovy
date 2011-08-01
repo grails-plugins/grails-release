@@ -65,10 +65,10 @@ target(mavenDeploy:"Deploys the plugin to a Maven repository") {
         if (username) {
             def projectConfig = grailsSettings.config.grails.project
             if (projectConfig.repos."${repoName}".custom) {
-                println "WARN: username and password defined in config as well as a 'custom' entry - ignoring the provided username and password."
+                event "StatusError", ["Warning: Username and password defined in config as well as a 'custom' entry - ignoring the provided username and password."]
             }
             else {
-                println "Using configured username and password from grails.project.repos.${repoName}"
+                event "StatusUpdate", ["Using configured username and password from grails.project.repos.${repoName}"]
                 repo.configurer = { authentication username: username, password: password }
                 repo.args.remove "username"
                 repo.args.remove "password"
@@ -87,8 +87,8 @@ target(mavenDeploy:"Deploys the plugin to a Maven repository") {
         installOrDeploy(deployFile, ext, true, [remote:repo, local:distributionInfo.localRepo])
     }
     catch(e) {
-        println "Error deploying artifact: ${e.message}"
-        println "Have you specified a configured repository to deploy to (--repository argument) or specified distributionManagement in your POM?"
+        event "StatusError", ["Error deploying artifact: ${e.message}"]
+        event "StatusError", ["Have you specified a configured repository to deploy to (--repository argument) or specified distributionManagement in your POM?"]
         exit 1
     }
 }
@@ -119,7 +119,7 @@ target(processDefinitions: "Reads the repository definition configuration.") {
             callable.call()             
         }
         catch (e) {
-            println "Error reading dependency distribution settings: ${e.message}"
+            event "StatusError", ["Error reading dependency distribution settings: ${e.message}"]
             exit 1
         }
     }
@@ -155,7 +155,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
 
     if (basePom.exists()) {
         pomFileLocation = basePom.absolutePath
-        println "Skipping POM generation because 'pom.xml' exists in the root of the project."
+        event("StatusUpdate" ["Skipping POM generation because 'pom.xml' exists in the root of the project."])
         return 1
     }
 
@@ -172,6 +172,11 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
         if (!binding.variables.containsKey("pluginInfo")) {
             pluginInfo = pluginSettings.getPluginInfo(basedir)
         }
+    }
+    
+    if(!plugin.version) {
+        event "StatusError", ["Cannot generate POM: invalid version $plugin.version"]
+        exit 1
     }
 
     event("StatusUpdate", ["Generating POM file..."])
@@ -394,7 +399,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
             }
         }
     }
-    println "POM generated: ${pomFileLocation}"
+    event("StatusUpdate",["POM generated: ${pomFileLocation}"])
 }
 
 processAuthConfig = { repoName, c ->
@@ -406,7 +411,7 @@ processAuthConfig = { repoName, c ->
     // Check whether only one of the authentication parameters has been set. If
     // so, exit with an error.
     if (!username ^ !password) {
-        println "grails.project.repos.${repoName}.username and .password must both be defined or neither."
+        event("StatusError", ["grails.project.repos.${repoName}.username and .password must both be defined or neither."])
         return 1
     }
 
