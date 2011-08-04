@@ -2,7 +2,7 @@
                       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
     <head>
-        <title>Release Plugin 1.0.0.M1</title>
+        <title>Release Plugin 1.0.0.RC3</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <link rel="stylesheet" href="./css/main.css" type="text/css" media="screen, print" title="Style" charset="utf-8" />
         <link rel="stylesheet" href="./css/pdf.css" type="text/css" media="print" title="PDF" charset="utf-8" />
@@ -23,11 +23,13 @@ function addJsClass(el) {
                         <a href="./guide/index.html" class="button">Table of contents</a>
                         <div id="nav-summary-childs" style="display:none;">
                             
-                            <div class="toc-item" style="margin-left:0"><a href="./guide/1 Introduction.html"><strong>1</strong><span>Introduction</span></a></div>
+                            <div class="toc-item" style="margin-left:0"><a href="./guide/introduction.html"><strong>1</strong><span>Introduction</span></a></div>
                             
-                            <div class="toc-item" style="margin-left:0"><a href="./guide/2 Configuration.html"><strong>2</strong><span>Configuration</span></a></div>
+                            <div class="toc-item" style="margin-left:0"><a href="./guide/configuration.html"><strong>2</strong><span>Configuration</span></a></div>
                             
-                            <div class="toc-item" style="margin-left:0"><a href="./guide/3 Maven integration.html"><strong>3</strong><span>Maven integration</span></a></div>
+                            <div class="toc-item" style="margin-left:0"><a href="./guide/maven.html"><strong>3</strong><span>Maven integration</span></a></div>
+                            
+                            <div class="toc-item" style="margin-left:0"><a href="./guide/plugins.html"><strong>4</strong><span>Publishing Grails plugins</span></a></div>
                             
                         </div>
                     </div>
@@ -46,7 +48,8 @@ function addJsClass(el) {
                 <span id="sponsor"><a href="http://springsource.com" target="_blank"><img alt="SpringSource Logo" title="SpringSource - Weapons for the War on Java Complexity" src="./img/springsource-logo.png" border="0"/></a></span>
                 
             </div>
-            <p>release-plugin</p>
+            <p>A plugin that allows you to publish Grails plugins, either to a public or private repository. It also supports deploying Grails applications and plugins to Maven repositories without the need to use Maven directly.
+</p>
         </div>
 
 
@@ -60,30 +63,36 @@ function addJsClass(el) {
                         <div class="project">
                             <h1>Release Plugin - Reference Documentation</h1>
                             <p><strong>Authors:</strong> Peter Ledbrook</p>
-                            <p><strong>Version:</strong> 1.0.0.M1</p>
+                            <p><strong>Version:</strong> 1.0.0.RC3</p>
                         </div>
 
                         
                         <div id="table-of-content">
                             <h2>Table of Contents</h2>
                             
-                            <div class="toc-item" style="margin-left:0px"><a href="./guide/1 Introduction.html"><strong>1</strong><span>Introduction</span></a></div>
+                            <div class="toc-item" style="margin-left:0px"><a href="./guide/introduction.html"><strong>1</strong><span>Introduction</span></a></div>
                             
-                            <div class="toc-item" style="margin-left:10px"><a href="./guide/1 Introduction.html#1.1 Migrating from release-plugin"><strong>1.1</strong><span>Migrating from release-plugin</span></a></div>
+                            <div class="toc-item" style="margin-left:10px"><a href="./guide/introduction.html#migrating"><strong>1.1</strong><span>Migrating from release-plugin</span></a></div>
                             
-                            <div class="toc-item" style="margin-left:0px"><a href="./guide/2 Configuration.html"><strong>2</strong><span>Configuration</span></a></div>
+                            <div class="toc-item" style="margin-left:0px"><a href="./guide/configuration.html"><strong>2</strong><span>Configuration</span></a></div>
                             
-                            <div class="toc-item" style="margin-left:10px"><a href="./guide/2 Configuration.html#2.1 Repositories"><strong>2.1</strong><span>Repositories</span></a></div>
+                            <div class="toc-item" style="margin-left:10px"><a href="./guide/configuration.html#repositories"><strong>2.1</strong><span>Repositories</span></a></div>
                             
-                            <div class="toc-item" style="margin-left:10px"><a href="./guide/2 Configuration.html#2.2 Plugin portals"><strong>2.2</strong><span>Plugin portals</span></a></div>
+                            <div class="toc-item" style="margin-left:10px"><a href="./guide/configuration.html#pluginPortals"><strong>2.2</strong><span>Plugin portals</span></a></div>
                             
-                            <div class="toc-item" style="margin-left:10px"><a href="./guide/2 Configuration.html#2.3 Source control management"><strong>2.3</strong><span>Source control management</span></a></div>
+                            <div class="toc-item" style="margin-left:10px"><a href="./guide/configuration.html#scm"><strong>2.3</strong><span>Source control management</span></a></div>
                             
-                            <div class="toc-item" style="margin-left:0px"><a href="./guide/3 Maven integration.html"><strong>3</strong><span>Maven integration</span></a></div>
+                            <div class="toc-item" style="margin-left:0px"><a href="./guide/maven.html"><strong>3</strong><span>Maven integration</span></a></div>
                             
-                            <div class="toc-item" style="margin-left:10px"><a href="./guide/3 Maven integration.html#3.1 The local Maven cache"><strong>3.1</strong><span>The local Maven cache</span></a></div>
+                            <div class="toc-item" style="margin-left:10px"><a href="./guide/maven.html#mavenCache"><strong>3.1</strong><span>The local Maven cache</span></a></div>
                             
-                            <div class="toc-item" style="margin-left:10px"><a href="./guide/3 Maven integration.html#3.2 Deployment to remote repositories"><strong>3.2</strong><span>Deployment to remote repositories</span></a></div>
+                            <div class="toc-item" style="margin-left:10px"><a href="./guide/maven.html#deployment"><strong>3.2</strong><span>Deployment to remote repositories</span></a></div>
+                            
+                            <div class="toc-item" style="margin-left:0px"><a href="./guide/plugins.html"><strong>4</strong><span>Publishing Grails plugins</span></a></div>
+                            
+                            <div class="toc-item" style="margin-left:10px"><a href="./guide/plugins.html#grailsCentral"><strong>4.1</strong><span>Publishing to Grails Central Plugin Repository</span></a></div>
+                            
+                            <div class="toc-item" style="margin-left:10px"><a href="./guide/plugins.html#custom"><strong>4.2</strong><span>Custom repositories and plugin portals</span></a></div>
                             
                             <div style="clear:both" ></div>
                         </div>
@@ -102,16 +111,16 @@ function addJsClass(el) {
                     <div class="menu-block"><h1 class="menu-title" onclick="toggleRef(this.parentNode.childNodes[1])">Command Line</h1><div class="menu-sub">
                         
                         
-                        <div class="menu-item"><a href="./ref/Command Line/generate-pom.html">generate-pom</a>
+                        <div class="menu-item"><a href="./ref/Command%20Line/generate-pom.html">generate-pom</a>
                         </div>
                         
-                        <div class="menu-item"><a href="./ref/Command Line/maven-deploy.html">maven-deploy</a>
+                        <div class="menu-item"><a href="./ref/Command%20Line/maven-deploy.html">maven-deploy</a>
                         </div>
                         
-                        <div class="menu-item"><a href="./ref/Command Line/maven-install.html">maven-install</a>
+                        <div class="menu-item"><a href="./ref/Command%20Line/maven-install.html">maven-install</a>
                         </div>
                         
-                        <div class="menu-item"><a href="./ref/Command Line/publish-plugin.html">publish-plugin</a>
+                        <div class="menu-item"><a href="./ref/Command%20Line/publish-plugin.html">publish-plugin</a>
                         </div>
                         
                         </div>

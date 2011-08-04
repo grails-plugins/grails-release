@@ -2,12 +2,12 @@
                       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
-    <title>Release Plugin 1.0.0.RC3</title>
+    <title>2.2 Plugin portals 1.0.0.RC3</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <link rel="stylesheet" href="../../css/main.css" type="text/css" media="screen, print" title="Style" charset="utf-8"/>
     <link rel="stylesheet" href="../../css/pdf.css" type="text/css" media="print" title="PDF" charset="utf-8"/>
     <script type="text/javascript">
-function addJsClass(el) {
+function addJsClass() {
     var classes = document.body.className.split(" ");
     classes.push("js");
     document.body.className = classes.join(" ");
@@ -16,14 +16,13 @@ function addJsClass(el) {
 </head>
 
 <body class="body" onload="addJsClass();">
-
 <div id="navigation">
     <ul>
         <li>
             <div id="nav-summary" onmouseover="toggleNavSummary(false)" onmouseout="toggleNavSummary(true)">
                 <a href="../../guide/index.html" class="button">Table of contents</a>
 
-                <div id="nav-summary-childs">
+                <div id="nav-summary-childs" style="display:none;">
                     
                     <div class="toc-item" style="margin-left:0"><a href="../../guide/introduction.html"><strong>1</strong><span>Introduction</span></a>
                     </div>
@@ -62,12 +61,50 @@ function addJsClass(el) {
 <table id="colset" border="0" cellpadding="0" cellspacing="0">
     <tr>
         <td id="col1">
-            <div id="main" class="reference corner-all">
+            <div id="main" class="corner-all">
+
+                
+                    <div class="toc-item prev-left"><a href="../../guide/introduction.html">&lt;&lt; <strong>1</strong><span>Introduction</span></a></div>
+                
 
                 <span id='toggle-col1' class="toggle">(<a href="#" onclick="localToggle(); return false;">Quick Reference</a>)</span>
 
-                <h1>generate-pom</h1><p class="paragraph"/><h2>Purpose</h2><p class="paragraph"/>Creates a POM for the current project based on the information in <code>BuildConfig.groovy</code> and the plugin descriptor (if it exists).<p class="paragraph"/><h2>Options</h2><p class="paragraph"/><div class="code"><pre>grails generate&#45;pom</pre></div><p class="paragraph"/><h2>Description</h2><p class="paragraph"/>Generates a POM in the 'target' directory with the metadata and dependency information provided by <code>BuildConfig.groovy</code> and the plugin descriptor (if there is one).
+                
+                    <div class="toc-item next-right"><a href="../../guide/maven.html"><strong>3</strong><span>Maven integration</span> >></a></div>
+                
 
+
+                <div class="project">
+                    <h1>2.2 Plugin portals - Reference Documentation</h1>
+
+                    <p><strong>Authors:</strong> Peter Ledbrook</p>
+
+                    <p><strong>Version:</strong> 1.0.0.RC3</p>
+                </div>
+
+                
+
+                
+
+<h2 id="pluginPortals">2.2 Plugin portals</h2>
+When a Grails plugin is published to a repository, a plugin portal can optionally be notified of the release. For example, when you publish a plugin to the Grails Central Plugin Repository, the command will automatically notify the <a href="http://grails.org/plugins" target="blank">main plugin portal</a> on the grails.org website. That means people can see the details of the new release almost immediately.<p class="paragraph"/>Like repositories, portals have very few configuration options:<p class="paragraph"/><div class="code"><pre>grails.project.portal.&#60;portalId&#62;.url = <span class="java&#45;quote">"http://beta.grails.org/plugin/"</span> 
+grails.project.portal.&#60;portalId&#62;.username = <span class="java&#45;quote">"joe"</span> 
+grails.project.portal.&#60;portalId&#62;.password = <span class="java&#45;quote">"ht56jU&#38;B"</span></pre></div>
+<ul class="star">
+<li><code>url</code> - the URL of the plugin portal.</li>
+<li><code>username</code> - the username to use when notifying the portal.</li>
+<li><code>password</code> - the password to use.</li>
+</ul><p class="paragraph"/>One thing to bear in mind: as with repositories, the ID 'grailsCentral' is reserved, this time for the <a href="http://grails.org/plugins/" target="blank">main plugin portal</a> on grails.org. Of course, you can still configure a username and password for this portal using the above settings.
+
+
+
+                <div style="clear:both;margin-top:15px;"></div>
+                
+                    <div class="toc-item prev-left"><a href="../../guide/introduction.html">&lt;&lt; <strong>1</strong><span>Introduction</span></a></div>
+                
+                    <div class="toc-item next-right"><a href="../../guide/maven.html"><strong>3</strong><span>Maven integration</span> >></a></div>
+                
+                <div style="clear:both"></div>
             </div>
         </td>
         <td id="col2">
@@ -78,10 +115,8 @@ function addJsClass(el) {
                 </div>
                 <div class="menu">
                     
-                    <div class="menu-block">
-                        <h1 class="menu-title" onclick="toggleRef(nextElement(this))">Command Line</h1>
-                        <div class="menu-sub selected">
-                            
+                    <div class="menu-block"><h1 class="menu-title" onclick="toggleRef(this.parentNode.childNodes[1])">Command Line</h1><div class="menu-sub">
+                        
                             
                             <div class="menu-item"><a href="../../ref/Command%20Line/generate-pom.html">generate-pom</a>
                             </div>
@@ -95,7 +130,7 @@ function addJsClass(el) {
                             <div class="menu-item"><a href="../../ref/Command%20Line/publish-plugin.html">publish-plugin</a>
                             </div>
                             
-                        </div>
+                            </div>
                     </div>
                     
                 </div>
@@ -108,7 +143,6 @@ function addJsClass(el) {
     
     
 </div>
-
 
 <script type="text/javascript" src="../../js/docs.js"></script>
 
