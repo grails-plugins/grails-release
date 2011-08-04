@@ -1,4 +1,4 @@
-Starting with Grails 1.4, the Release plugin replaces the old @release-plugin@ command. Fortunately, you should have little trouble switching to the new @publish-plugin@ command. Let's take a look at the most important differences (apart from the name change!).
+Starting with Grails 2.0, the Release plugin replaces the old @release-plugin@ command. Fortunately, you should have little trouble switching to the new @publish-plugin@ command. Let's take a look at the most important differences (apart from the name change!).
 
 h4. No \-\-zipOnly option
 
@@ -8,7 +8,7 @@ The source control management is handled by plugins, such as the Subversion plug
 
 h4. Configuration changes
 
-Although your old repository configurations will continue to work, i.e. ones like @grails.plugin.repos.distribution.<id>@ used by @release-plugin@, there is far more flexibility if you migrate to the latest style of repository and portal configuration. In particular, by using the syntax described in chapter 2 you'll be able to put repository credentials and URLs in your personal ~/.grails/settings.groovy file.
+Although your old repository configurations will continue to work, i.e. ones like @grails.plugin.repos.distribution.<id>@ used by @release-plugin@, there is far more flexibility if you migrate to the latest style of repository and portal configuration. In particular, by using the syntax described in the [configuration chapter|guide:configuration] you'll be able to put repository credentials and URLs in your personal ~/.grails/settings.groovy file.
 
 You can also continue to use the repository configuration options supported by the old Maven Publisher plugin, but again, the new syntax is preferable.
 

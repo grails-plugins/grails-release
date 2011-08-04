@@ -1,0 +1,24 @@
+The most common use case for the @publish-plugin@ command is to publish a public plugin so that it is available to all Grails users; well, to those that have an internet connection at least. Because of this, the command's default configuration is geared towards the Grails Central Plugin Repository. As long as you have a [Xircles account|http://grails.org/Creating+Plugins], simply installing the Release plugin and executing
+
+{code}
+grails publish-plugin
+{code}
+
+will do everything necessary to publish the plugin and announce its release. You may be asked whether you want to import the plugin source into source control and for your Xircles and grails.org usernames and passwords, but otherwise that's it. Your plugin will be deployed to the Grails Central Plugin Repository, its plugin portal page on grails.org will be updated, and the release will be announced on various channels such as Twitter (user \@grailsplugins).
+
+This process can be streamlined in several ways. For example, if you are always asked whether you want to import the plugin source into SCM, you can disable the check with either the @\-\-noScm@ command line option or by adding this setting to either @BuildConfig.groovy@ or @~/.grails/settings.groovy@:
+
+{code}
+grails.release.scm.enabled = false
+{code}
+
+It's also a pain to enter your username and password every time you publish a plugin, but you can set these for both the Grails Central Plugin Repository and the grails.org plugin portal in @~/.grails/settings.groovy@:
+
+{code}
+grails.project.repos.grailsCentral.username = "me"
+grails.project.repos.grailsCentral.password = "s0longf!shthanks"
+grails.project.portal.grailsCentral.username = "jane.doe"
+grails.project.portal.grailsCentral.password = "gra!lsr0cks"
+{code}
+
+The above values will be used whenever you publish to the Grails Central Plugin Repository and grails.org.

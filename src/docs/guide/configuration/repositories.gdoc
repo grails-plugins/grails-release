@@ -12,13 +12,13 @@ The general form of the above configuration option is @grails.project.repos.<rep
 You can not use a repository ID of 'grailsCentral'. That is because it is reserved for the Grails Central Plugin Repository. The good news is that you can configure the username and password for 'grailsCentral' via the options described below.
 {note}
 
-You can now deploy artifacts to the repository by passing a @--repository=myRepo@ argument to either the [publish-plugin|commandLine] or [maven-deploy|commandLine] commands. Since you often deploy a plugin or application to the same repository again and again, typing that argument gets a bit laborious, so you can also specify the name of a default repository to deploy to:
+You can now deploy artifacts to the repository by passing a @\-\-repository=myRepo@ argument to either the [publish-plugin|commandLine] or [maven-deploy|commandLine] commands. Since you often deploy a plugin or application to the same repository again and again, typing that argument gets a bit laborious, so you can also specify the name of a default repository to deploy to:
 
 {code}
 grails.project.repos.default = "myRepo"
 {code}
 
-The above configuration option means that a project will be deployed to "myRepo" unless an explicit @--repository@ argument is provided on the command line. Note that the command line option always takes precedence over other settings. You can also pass a value of "grailsCentral" for the option when a different repository is configured as the default but you want to publish to the Grails Central Plugin Repository.
+The above configuration option means that a project will be deployed to "myRepo" unless an explicit @\-\-repository@ argument is provided on the command line. You can also pass a value of "grailsCentral" for the command line option or the 'default' config setting to indicate you want to publish to the Grails Central Plugin Repository. Note that the command line option always takes precedence over other settings.
 
 Things become slightly more verbose if you want to provide extra details about the repository. What about user credentials for example? Here's a comprehensive configuration:
 
@@ -30,7 +30,7 @@ grails.project.repos.myRepo.password = "password"
 grails.project.repos.myRepo.portal = "grailsCentral"
 {code}
 
-As you can see, even a "full" explicit configuration is pretty short. So what do the various entries mean?
+As you can see, even a complete explicit configuration is pretty short. So what do the various entries mean?
 
 * @url@ - the URL to use when connecting to the remote repository. Typically this is HTTP-based, but "svn+ssh" is not uncommon for old-style Subversion plugin repositories.
 * @type@ - can be either "maven" or "svn", but the former is the default value so it's rare to explicitly declare a value of "maven" for this option.

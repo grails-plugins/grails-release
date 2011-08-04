@@ -7,7 +7,9 @@ Publishes a Grails plugin to a plugin repository and notifies an associated plug
 h2. Options
 
 {code}
-grails publish-plugin [--dryRun] [--snapshot] [--repository=repoId] [--protocol=protocol] [--portal=portal] [--pingOnly] [--scm] [--noScm] [--binary]
+grails publish-plugin [--dryRun] [--snapshot] [--repository=repoId]
+                      [--protocol=protocol] [--portal=portal] [--pingOnly]
+                      [--scm] [--noScm] [--binary]
 {code}
 
 * @dryRun@ will simply print out what files will be deployed. It won't actually perform the deployment, so it's a good way to see whether the command will do what you expect.
@@ -40,3 +42,22 @@ grails publish-plugin --repository=acme --portal=comp --snapshot
 h2. Description
 
 In order for Grails to use plugins declaratively via the dependency DSL, they must be published to a repository. This command allows you to publish to both Maven-compatible and old-style Subversion repositories while also optionally notifying a plugin portal (like the one on grails.org) of the plugin releases.
+
+When publishing a public plugin, i.e. one that is hosted on the Grails Central Plugin Repository and the grails.org plugin portal, this command is typically run as:
+
+{code}
+grails publish-plugin
+{code}
+
+You may end up in the situation where the plugin has been deployed to its repository but the portal wasn't notified, for example if the portal is unavailable when you execute the command. In this case, you can attempt to notify the plugin portal at a later date by using the @\-\-pingOnly@ option, which bypasses the plugin deployment.
+
+h2. Events
+
+* @PublishPluginStart@ - Fired when the publish plugin command starts. One argument is passed in the event: a plugin info object with @name@, @version@, @group@, and @isSnapshot@ properties.
+* @DeployPluginStart@ - Fired just before the plugin is deployed to its repository. Takes three arguments: a plugin info object (see @PublishPluginStart@), the location of the plugin zip, and the location of the POM file.
+* @DeployPluginEnd@ - Fired just after the plugin is deployed to its repository. Takes three arguments: a plugin info object (see @PublishPluginStart@), the location of the plugin zip, and the location of the POM file.
+* @PingPortalStart@ - Fired just before the plugin portal is notified. Takes three arguments: a plugin info object (see @PublishPluginStart@), the URL of the plugin portal, and the URL of the repository to which the plugin was deployed.
+* @PingPortalEnd@ - Fired just after the plugin portal is notified. Takes three arguments: a plugin info object (see @PublishPluginStart@), the URL of the plugin portal, and the URL of the repository to which the plugin was deployed.
+* @PublishPluginEnd@ - Fired at the end of the command. Has one argument: a plugin info object (see @PublishPluginStart@).
+
+In the plugin info object, @name@ is the name of the plugin, @version@ is its version number, @group@ is the group ID that goes in the POM, and @isSnapshot@ indicates whether the plugin is a snapshot version (@true@) or not (@false@).

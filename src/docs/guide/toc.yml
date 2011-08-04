@@ -10,3 +10,7 @@ maven:
   title: Maven integration
   mavenCache: The local Maven cache
   deployment: Deployment to remote repositories
+plugins:
+  title: Publishing Grails plugins
+  grailsCentral: Publishing to Grails Central Plugin Repository
+  custom: Custom repositories and plugin portals
