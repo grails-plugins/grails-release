@@ -176,7 +176,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
         }
     }
     
-    if(!plugin.version) {
+    if( plugin && !plugin.version) {
         event "StatusError", ["Cannot generate POM: invalid version $plugin.version"]
         exit 1
     }
