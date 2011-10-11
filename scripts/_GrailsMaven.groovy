@@ -165,6 +165,11 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
         if (!binding.variables.containsKey("pluginInfo")) {
             pluginInfo = pluginSettings.getPluginInfo(basedir)
         }
+
+        if (!plugin.version) {
+            event "StatusError", ["Cannot generate POM: no version specified for this plugin"]
+            exit 1
+        }
     }
     
     pomFileLocation = "${grailsSettings.projectTargetDir}/pom.xml"
@@ -174,11 +179,6 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
         pomFileLocation = basePom.absolutePath
         event("StatusUpdate", ["Skipping POM generation because 'pom.xml' exists in the root of the project."])
         return 1
-    }
-
-    if(!plugin.version) {
-        event "StatusError", ["Cannot generate POM: invalid version $plugin.version"]
-        exit 1
     }
 
     event("StatusUpdate", ["Generating POM file..."])
