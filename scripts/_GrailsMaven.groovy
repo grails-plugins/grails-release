@@ -152,15 +152,6 @@ target(processDefinitions: "Reads the repository definition configuration.") {
 target(generatePom: "Generates a pom.xml file for the current project unless './pom.xml' exists.") {
     depends(packageApp)
 
-    pomFileLocation = "${grailsSettings.projectTargetDir}/pom.xml"
-    basePom = new File("${basedir}/pom.xml")
-
-    if (basePom.exists()) {
-        pomFileLocation = basePom.absolutePath
-        event("StatusUpdate" ["Skipping POM generation because 'pom.xml' exists in the root of the project."])
-        return 1
-    }
-
     // Get hold of the plugin instance for this plugin if it's a plugin
     // project. If it isn't, then these variables will be null.
     def plugin = pluginManager?.allPlugins?.find { it.basePlugin }
@@ -176,6 +167,15 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
         }
     }
     
+    pomFileLocation = "${grailsSettings.projectTargetDir}/pom.xml"
+    basePom = new File("${basedir}/pom.xml")
+
+    if (basePom.exists()) {
+        pomFileLocation = basePom.absolutePath
+        event("StatusUpdate", ["Skipping POM generation because 'pom.xml' exists in the root of the project."])
+        return 1
+    }
+
     if(!plugin.version) {
         event "StatusError", ["Cannot generate POM: invalid version $plugin.version"]
         exit 1
