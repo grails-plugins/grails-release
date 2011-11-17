@@ -18,7 +18,9 @@ grails.project.dependency.resolution = {
     }
 
     plugins {
-        runtime ":svn:1.0.0.M1"
+        runtime (":svn:1.0.0.M1") {
+            export = false
+        }
     }
 
     dependencies {
@@ -28,7 +30,7 @@ grails.project.dependency.resolution = {
               "org.codehaus.groovy.modules.http-builder:http-builder:0.5.0", {
             excludes "commons-logging", "xml-apis", "groovy"
         }
-        test  "org.gmock:gmock:0.8.0", {
+        test  "org.gmock:gmock:0.8.1", {
             export = false
         }
     }
