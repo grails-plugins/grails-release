@@ -24,22 +24,27 @@ where
     PORTAL   = The portal to inform of the plugin's release.
                (default: Grails Plugin Portal).
 	           
-    --dryRun   = Shows you what will happen when you publish the plugin, but doesn't
-                 actually publish it.
+    --dryRun    = Shows you what will happen when you publish the plugin, but doesn't
+                  actually publish it.
 	           
-    --snapshot = Force this release to be a snapshot version, i.e. it isn't automatically
-                 made the latest available release.
+    --snapshot  = Force this release to be a snapshot version, i.e. it isn't automatically
+                  made the latest available release.
 
-    --scm      = Enables source control management for this release.
+    --scm       = Enables source control management for this release.
 
-    --noScm    = Disables source control management for this release.
+    --noScm     = Disables source control management for this release.
 
-    --pingOnly = Don't publish/deploy the plugin, only send a notification to the
-                 plugin portal. This is useful if portal notification failed during a
-                 previous attempt to publish the plugin. Mutually exclusive with the
-                 --dryRun option.
+    --message   = Commit message to use when committing source changes using your SCM
+                  provider.
 
-    --binary   = Release as a binary plugin.
+    --noMessage = Commit using just the default message. 
+
+    --pingOnly  = Don't publish/deploy the plugin, only send a notification to the
+                  plugin portal. This is useful if portal notification failed during a
+                  previous attempt to publish the plugin. Mutually exclusive with the
+                  --dryRun option.
+
+    --binary    = Release as a binary plugin.
 """
 
 scmProvider = null
@@ -352,7 +357,13 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
 }
 
 private processScm(scm) {
-    // 
+    // Configure authentication for the SCM provider if credentials provided
+    // in build settings.
+    def scmConfig = grailsSettings.config.grails.project.scm
+    if (scmConfig.username) {
+        scm.auth scmConfig.username, scmConfig.password
+    }
+
     def inputHelper = new CommandLineHelper()
     if (!scm.managed) {
         // The project isn't under source control, so import it into the user's
@@ -388,7 +399,8 @@ private processScm(scm) {
         }
 
         def version = pluginInfo.version
-        def msg = inputHelper.userInput("Enter extra commit message text for this release (optional): ")
+        def msg = argsMap["message"] ?: (argsMap["noMessage"] ?
+                "" : inputHelper.userInput("Enter extra commit message text for this release (optional): "))
         if (msg) msg = "\n\n" + msg
 
         scm.commit "Releasing version ${version} of ${pluginInfo.name} plugin.${msg}"
