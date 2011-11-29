@@ -364,6 +364,12 @@ private processScm(scm) {
         scm.auth scmConfig.username, scmConfig.password
     }
 
+    // Find out if the user wants to add any extra text to the standard
+    // commit message.
+    def msg = argsMap["message"] ?: (argsMap["noMessage"] ?
+            "" : inputHelper.userInput("Enter extra commit message text for this release (optional): "))
+    if (msg) msg = "\n\n" + msg
+
     def inputHelper = new CommandLineHelper()
     if (!scm.managed) {
         // The project isn't under source control, so import it into the user's
@@ -374,7 +380,7 @@ private processScm(scm) {
             return
         }
 
-        scmImportProject(scm, inputHelper)
+        scmImportProject(scm, inputHelper, msg)
     }
     else {
         // First check for any untracked files in the project. We don't want any
@@ -399,9 +405,6 @@ private processScm(scm) {
         }
 
         def version = pluginInfo.version
-        def msg = argsMap["message"] ?: (argsMap["noMessage"] ?
-                "" : inputHelper.userInput("Enter extra commit message text for this release (optional): "))
-        if (msg) msg = "\n\n" + msg
 
         scm.commit "Releasing version ${version} of ${pluginInfo.name} plugin.${msg}"
         if (isRelease) scm.tag "v${version}", "Tagging the ${version} version of the plugin source."
@@ -409,7 +412,7 @@ private processScm(scm) {
     }
 }
 
-private scmImportProject(scm, inputHelper) {
+private scmImportProject(scm, inputHelper, msg) {
     // Get a URL for the repository to import this project into. The developer may
     // want to use the default Grails plugin source repository, which requires the
     // Subversion plugin. Alternatively, it could be another host such as GitHub or
@@ -428,5 +431,5 @@ private scmImportProject(scm, inputHelper) {
         hostUrl = inputHelper.userInput("Please enter the URL of the remote SCM repository: ")
     }
 
-    scmProvider.importIntoRepo hostUrl, "Initial import of plugin source code for the release of version ${pluginInfo.version}"
+    scmProvider.importIntoRepo hostUrl, "Initial import of plugin source code for the release of version ${pluginInfo.version}.${msg}"
 }
