@@ -277,6 +277,18 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
     if (!argsMap["pingOnly"]) {
         event "DeployPluginStart", [ pluginInfo, pluginZip, pomFileLocation ]
 
+        def pomFile = pomFileLocation as File
+        if (deployer.isVersionAlreadyPublished(pomFile)) {
+            def inputHelper = new CommandLineHelper()
+            def answer = inputHelper.userInput(
+                    "This version has already been published. Do you want to replace it " +
+                    "(not recommended except for snapshots)? (y,N) ")
+            if (!answer?.equalsIgnoreCase("y")) {
+                event "StatusFinal", ["Plugin publication cancelled."]
+                exit(1)
+            }
+        }
+
         deployer.deployPlugin(pluginZip as File, new File(basedir, "plugin.xml"), new File(pomFileLocation), isRelease)
 
         event "DeployPluginEnd", [ pluginInfo, pluginZip, pomFileLocation ]

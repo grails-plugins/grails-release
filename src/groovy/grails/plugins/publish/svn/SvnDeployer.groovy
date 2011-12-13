@@ -48,6 +48,18 @@ class SvnDeployer implements PluginDeployer {
     }
 
     /**
+     * Checks whether the Subversion tag exists for the plugin and version
+     * described by the given POM file.
+     * @param pomFile The plugin's POM file.
+     */
+    boolean isVersionAlreadyPublished(File pomFile) {
+        handleAuthentication {
+            def (pluginName, pluginVersion) = parsePom(pomFile)
+            return svnClient.pathExists("grails-${pluginName}/tags/${constructVersionTag(pluginVersion)}")
+        }
+    }
+
+    /**
      * Does all the work involved in deploying the given plugin package
      * to a Grails-compatible Subversion repository (configured at object
      * instantiation). This involves checking out the trunk of the
@@ -65,9 +77,7 @@ class SvnDeployer implements PluginDeployer {
      */
     void deployPlugin(File pluginPackage, File pluginXmlFile, File pomFile, boolean isRelease) {
         // Extract information from the POM.
-        def pom = new XmlSlurper().parseText(pomFile.text)
-        def pluginName = pom.artifactId.text()
-        def pluginVersion = pom.version.text()
+        def (pluginName, pluginVersion) = parsePom(pomFile)
         def basePath = "grails-${pluginName}"
         def trunk = "${basePath}/trunk"
 
@@ -172,7 +182,7 @@ class SvnDeployer implements PluginDeployer {
             svnClient.tag(
                     "${basePath}/trunk",
                     "${basePath}/tags",
-                    "RELEASE_${pluginVersion.replaceAll('\\.','_')}",
+                    constructVersionTag(pluginVersion),
                     "Tagging the ${pluginVersion} release of the '${pluginName}' plugin.")
         }
 
@@ -192,6 +202,15 @@ class SvnDeployer implements PluginDeployer {
         // Support for legacy Grails clients: update the master plugin list
         // in the Subversion repository.
         updatePluginList(pluginName, pluginXmlFile, pluginVersion, isRelease)
+    }
+
+    /**
+     * Parses the given POM file (must have a 'text' property) and returns
+     * a tuple of the plugin name and version (in that order).
+     */
+    protected final parsePom(pomFile) {
+        def pom = new XmlSlurper().parseText(pomFile.text)
+        return [pom.artifactId.text(), pom.version.text()]
     }
 
     /**
@@ -232,6 +251,14 @@ class SvnDeployer implements PluginDeployer {
         if (srcFile.canonicalFile != destFile.canonicalFile) {
             FileUtils.copyFile(srcFile, destFile)
         }
+    }
+
+    /**
+     * Creates the string to use for the Subversion tag for the given version.
+     * Of the form "RELEASE_1_0_1".
+     */
+    protected constructVersionTag(String pluginVersion) {
+        return "RELEASE_${pluginVersion.replaceAll('\\.','_')}".toString()
     }
 
     /**

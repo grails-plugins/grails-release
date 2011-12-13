@@ -22,6 +22,19 @@ class MavenDeployer implements PluginDeployer {
         // the definition of remote repositories.
         this.repoDefn.args.remove("type")
     }
+
+    /**
+     * Checks whether the Subversion tag exists for the plugin and version
+     * described by the given POM file.
+     * @param pomFile The plugin's POM file.
+     */
+    boolean isVersionAlreadyPublished(File pomFile) {
+        def url = buildPomUrl(pomFile)
+
+        // Very quick, ugly hack :)
+        try { new URL(url).text; return true }
+        catch (e) { return false }
+    }
     
     /**
      * Deploys the given plugin package to the Maven repository configured
@@ -46,5 +59,19 @@ class MavenDeployer implements PluginDeployer {
                 remoteRepository(repoDefn.args)
             }
         }
+    }
+
+    /**
+     * Parses the given POM file (must have a 'text' property) and returns
+     * a tuple of the plugin name and version (in that order).
+     */
+    protected final buildPomUrl(pomFile) {
+        def pom = new XmlSlurper().parseText(pomFile.text)
+        def url = new StringBuilder(repoDefn.args["url"].toString())
+        url << '/' << pom.groupId.text().replace('.', '/')
+        url << '/' << pom.artifactId.text()
+        url << '/' << pom.version.text()
+        url << '/' << "${pom.artifactId.text()}-${pom.version.text()}.pom"
+        return url.toString()
     }
 }
