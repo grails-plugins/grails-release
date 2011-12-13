@@ -1,6 +1,6 @@
 .settings/
 /docs/
-grails-*.zip
+grails-*.zip*
 plugin.xml
 pom.xml
 target
