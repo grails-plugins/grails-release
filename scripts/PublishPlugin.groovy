@@ -366,11 +366,11 @@ private processScm(scm) {
 
     // Find out if the user wants to add any extra text to the standard
     // commit message.
+    def inputHelper = new CommandLineHelper()
     def msg = argsMap["message"] ?: (argsMap["noMessage"] ?
             "" : inputHelper.userInput("Enter extra commit message text for this release (optional): "))
     if (msg) msg = "\n\n" + msg
 
-    def inputHelper = new CommandLineHelper()
     if (!scm.managed) {
         // The project isn't under source control, so import it into the user's
         // preferred SCM system - unless the user explicitly doesn't want it added
