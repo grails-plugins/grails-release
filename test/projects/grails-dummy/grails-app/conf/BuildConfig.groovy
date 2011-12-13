@@ -32,6 +32,7 @@ grails.project.dependency.resolution = {
     }
 
     dependencies {
+        provided "org.apache.ivy:ivy:2.2.0"
         compile("org.apache.maven:maven-ant-tasks:2.1.0") {
             transitive = false
         }

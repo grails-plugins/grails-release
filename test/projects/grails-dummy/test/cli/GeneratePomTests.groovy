@@ -36,15 +36,16 @@ class GeneratePomTests extends AbstractCliTestCase {
         assertEquals "0.1", pom.version.text()
         assertEquals "zip", pom.packaging.text()
 
-        assertEquals 4, pom.dependencies.dependency.size()
-        
+        assertEquals 5, pom.dependencies.dependency.size()
+
         verifyDependency pom, "org.grails.plugins", "debug", "[1.0,)"
         verifyDependency pom, "org.grails.plugins", "shiro", "1.1-SNAPSHOT"
-        verifyDependency pom, "org.grails.plugins", "geb", "[0.5.0,0.6.0]"                
-        verifyDependency pom, "org.apache.maven", "maven-ant-tasks", "2.1.0"                        
-        
+        verifyDependency pom, "org.grails.plugins", "geb", "[0.5.0,0.6.0]"
+        verifyDependency pom, "org.apache.maven", "maven-ant-tasks", "2.1.0"
+        verifyDependency pom, "org.apache.ivy", "ivy", "2.2.0", "provided"
+
         def dep = pom.dependencies.dependency.find { it.artifactId.text() == 'maven-ant-tasks'}
-        
+
         assert dep != null
         // check that a transitive = false dependency has generated exclusions
         assert dep.exclusions.exclusion.size() == 15
@@ -67,13 +68,15 @@ class GeneratePomTests extends AbstractCliTestCase {
         assertEquals "http://jira.codehaus.org/browse/GRAILSPLUGINS", pom.issueManagement.url.text()
         assertEquals "http://svn.grails-plugins.codehaus.org/browse/grails-plugins/", pom.scm.url.text()
     }
-    
-    void verifyDependency(pom, group, name, version) {
+
+    void verifyDependency(pom, group, name, version, scope = null) {
        def dep = pom.dependencies.dependency.find { it.artifactId.text() == name}
 
        assert dep != null
        assert name == dep.artifactId.text()
        assert version == dep.version.text()
-       assert group == dep.groupId.text()        
+       assert group == dep.groupId.text()
+
+       if (scope) assert scope == dep.scope.text()
     }
 }
