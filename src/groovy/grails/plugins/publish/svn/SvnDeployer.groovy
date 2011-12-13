@@ -115,16 +115,25 @@ class SvnDeployer implements PluginDeployer {
         sha1File.text = DigestUtils.shaHex(packageBytes)
         md5File.text = DigestUtils.md5Hex(packageBytes)
 
+        // Need checksums for the POMs too to make Ivy happy.
+        def baseName = FilenameUtils.getBaseName(pluginPackage.name) - "grails-"
+        def pomBytes = pomFile.readBytes()
+        def sha1Pom = new File(wc, "${baseName}.pom.sha1")
+        def md5Pom = new File(wc, "${baseName}.pom.md5")
+        sha1Pom.text = DigestUtils.shaHex(pomBytes)
+        md5Pom.text = DigestUtils.md5Hex(pomBytes)
+
         // Copy the plugin package, plugin descriptor, and POM files to
         // the working copy so that we can commit them.
-        def baseName = FilenameUtils.getBaseName(pluginPackage.name) - "grails-"
         def destFiles = [ 
                 new File(wc, pluginPackage.name),
                 new File(wc, "${baseName}-plugin.xml"),
                 new File(wc, "${baseName}.pom"),
                 new File(wc, "plugin.xml"),               // Required for backwards compatibility
                 sha1File,
-                md5File ]
+                md5File,
+                sha1Pom,
+                md5Pom]
         copyIfNotSame(pluginPackage, destFiles[0])
         copyIfNotSame(pluginXmlFile, destFiles[1])
         copyIfNotSame(pomFile, destFiles[2])
@@ -138,6 +147,18 @@ class SvnDeployer implements PluginDeployer {
 
         // Add these files so that they can be committed to the remote repository.
         handleAuthentication { svnClient.addFilesToSvn(destFiles) }
+
+        // Remove generated files from previous releases, such as zips, POMs and checksums.
+        def destFileNames = destFiles*.name
+        def filesToDelete = wc.listFiles().findAll { f ->
+            // Don't delete the files we're adding
+            !(f.name in destFileNames) &&
+            // But do delete any other plugin zips, POMs, and plugin descriptors.
+                (f.name =~ /^grails-${pluginName}-\S+\.zip/ ||
+                 f.name =~ /^${pluginName}-\S+\.pom/ ||
+                 f.name =~ /^${pluginName}-\S+\-plugin.xml/)
+        }
+        handleAuthentication { svnClient.removeFilesFromSvn(filesToDelete) }
 
         // Commit the changes.
         out.println "Committing the new version of the plugin and its metadata to the repository"
