@@ -10,7 +10,7 @@ includeTargets << grailsScript("_GrailsPluginDev")
 includeTargets << new File(releasePluginDir, "scripts/_GrailsMaven.groovy")
 
 USAGE = """
-    publish-plugin [--repository=REPO] [--protocol=PROTOCOL] [--portal=PORTAL] [--dryRun] [--snapshot] [--scm] [--noScm] [--pingOnly]
+    publish-plugin [--repository=REPO] [--protocol=PROTOCOL] [--portal=PORTAL] [--dry-run] [--snapshot] [--scm] [--no-scm] [--message=MESSAGE] [--no-message] [--ping-only]
 
 where
     REPO     = The name of a configured repository to deploy the plugin to. Can be
@@ -23,26 +23,27 @@ where
 	           
     PORTAL   = The portal to inform of the plugin's release.
                (default: Grails Plugin Portal).
+
+    MESSAGE  = Commit message to use when committing source changes using your SCM
+               provider.
 	           
-    --dryRun    = Shows you what will happen when you publish the plugin, but doesn't
-                  actually publish it.
+    --dry-run    = Shows you what will happen when you publish the plugin, but doesn't
+                   actually publish it.
 	           
     --snapshot  = Force this release to be a snapshot version, i.e. it isn't automatically
                   made the latest available release.
 
     --scm       = Enables source control management for this release.
 
-    --noScm     = Disables source control management for this release.
+    --no-scm     = Disables source control management for this release.
 
-    --message   = Commit message to use when committing source changes using your SCM
-                  provider.
 
-    --noMessage = Commit using just the default message. 
+    --no-message = Commit using just the default message. 
 
-    --pingOnly  = Don't publish/deploy the plugin, only send a notification to the
-                  plugin portal. This is useful if portal notification failed during a
-                  previous attempt to publish the plugin. Mutually exclusive with the
-                  --dryRun option.
+    --ping-only  = Don't publish/deploy the plugin, only send a notification to the
+                   plugin portal. This is useful if portal notification failed during a
+                   previous attempt to publish the plugin. Mutually exclusive with the
+                   --dry-run option.
 
     --binary    = Release as a binary plugin.
 """
@@ -52,6 +53,12 @@ scmHost = null
 
 target(default: "Publishes a plugin to either a Subversion or Maven repository.") {
     depends(parseArguments, packagePlugin, processDefinitions, generatePom)
+
+    // Handle old names for options. Trying to be consistent with Grails 2.0 conventions.
+    if (argsMap["dryRun"]) { argsMap["dry-run"] = true }
+    if (argsMap["noScm"]) { argsMap["no-scm"] = true }
+    if (argsMap["noMessage"]) { argsMap["no-message"] = true }
+    if (argsMap["pingOnly"]) { argsMap["ping-only"] = true }
 
     // Read the plugin information from the POM.
     pluginInfo = new XmlSlurper().parse(new File(pomFileLocation))
@@ -68,7 +75,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
     // Is source control management enabled for this run?
     boolean scmEnabled = Boolean.valueOf(getPropertyValue("grails.release.scm.enabled", true))
     if (argsMap["scm"]) scmEnabled = true
-    if (argsMap["noScm"]) scmEnabled = false
+    if (argsMap["no-scm"]) scmEnabled = false
 
     if (scmEnabled) {
         final inputHelper = new CommandLineHelper()
@@ -156,14 +163,8 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         println "Publishing to Grails Central"
     }
 
-    // Handle old name for dry run option. Should be removed for 1.0 release.
-    if (argsMap["dry-run"]) {
-        println "WARN: The '--dry-run' option has been deprecated in favour of '--dryRun' for consistency with the release-plugin command."
-        argsMap["dryRun"] = true
-    }
-
     def deployer
-    if (argsMap["dryRun"]) {
+    if (argsMap["dry-run"]) {
         def retval = processAuthConfig.call(repo.name) { username, password ->
             if (username) {
                 println "Using configured username and password from grails.project.repos.${repo.name}"
@@ -274,7 +275,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         exit(1)
     }
     
-    if (!argsMap["pingOnly"]) {
+    if (!argsMap["ping-only"]) {
         event "DeployPluginStart", [ pluginInfo, pluginZip, pomFileLocation ]
 
         def pomFile = pomFileLocation as File
@@ -328,7 +329,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
     // JSON content.
     println "Notifying plugin portal '${portalUrl}' of release..."
 
-    if (!argsMap["dryRun"]) {
+    if (!argsMap["dry-run"]) {
         event "PingPortalStart", [ pluginInfo, portalUrl, repo.uri.toString() ]
 
         def username = portalDefn.username
@@ -379,7 +380,7 @@ private processScm(scm) {
     // Find out if the user wants to add any extra text to the standard
     // commit message.
     def inputHelper = new CommandLineHelper()
-    def msg = argsMap["message"] ?: (argsMap["noMessage"] ?
+    def msg = argsMap["message"] ?: (argsMap["no-message"] ?
             "" : inputHelper.userInput("Enter extra commit message text for this release (optional): "))
     if (msg) msg = "\n\n" + msg
 
