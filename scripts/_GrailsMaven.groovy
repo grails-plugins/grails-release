@@ -330,10 +330,10 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
 
                     def dependencyManager = grailsSettings.dependencyManager
                     def appDeps = dependencyManager.getApplicationDependencyDescriptors()
-                    def allowedScopes = ['runtime','compile']
+                    def allowedScopes = ['runtime','compile', 'provided']
 
                     for(dep in appDeps) {
-                        if(allowedScopes.contains(dep.scope)  && dep.exported) {
+                        if(dep.scope in allowedScopes && dep.exported) {
                             def moduleId = dep.getDependencyRevisionId()
                             dependency {
                                 groupId moduleId.organisation
@@ -356,7 +356,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                     for(dep in pluginDeps) {
                         def moduleId = dep.getDependencyRevisionId()                        
                         processedPluginModuleIds << moduleId.moduleId
-                        if(allowedScopes.contains(dep.scope) && dep.exported && !pluginsInstalledViaInstallPlugin.containsKey(moduleId.name) ) {                            
+                        if(dep.scope in allowedScopes && dep.exported && !pluginsInstalledViaInstallPlugin.containsKey(moduleId.name) ) {                            
 
                             dependency {
                                 groupId moduleId.organisation
