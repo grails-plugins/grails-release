@@ -23,8 +23,8 @@ grails.project.dependency.resolution = {
 
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
-        build "org.apache.ivy:ivy:2.2.0"
-        build "org.apache.maven:maven-ant-tasks:2.1.0",
+        provided "org.apache.ivy:ivy:2.2.0"
+        provided "org.apache.maven:maven-ant-tasks:2.1.0",
               "org.codehaus.groovy.modules.http-builder:http-builder:0.5.0", {
             excludes "commons-logging", "xml-apis", "groovy"
         }
