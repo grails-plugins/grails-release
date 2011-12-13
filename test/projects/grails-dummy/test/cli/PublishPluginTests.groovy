@@ -21,7 +21,8 @@ class PublishPluginTests extends AbstractCliTestCase {
     }
 
     void testDefault() {
-        execute([ "publish-plugin", "--dryRun" ])
+        execute([ "publish-plugin", "--dry-run" ])
+        enterInput ""
         enterInput "n" 
 
         assertEquals 0, waitForProcess()
@@ -36,7 +37,8 @@ class PublishPluginTests extends AbstractCliTestCase {
     }
 
     void testExplicitSnapshot() {
-        execute([ "publish-plugin", "--dryRun", "--snapshot", "--scm" ])
+        execute([ "publish-plugin", "--dry-run", "--snapshot", "--scm" ])
+        enterInput ""
         enterInput "n" 
 
         assertEquals 0, waitForProcess()
@@ -51,7 +53,7 @@ class PublishPluginTests extends AbstractCliTestCase {
     }
 
     void testNoScm() {
-        execute([ "publish-plugin", "--dryRun", "--noScm" ])
+        execute([ "publish-plugin", "--dry-run", "--no-scm" ])
              
         assertEquals 0, waitForProcess()
 

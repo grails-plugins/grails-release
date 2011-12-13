@@ -10,12 +10,10 @@ grails.project.dependency.resolution = {
         grailsCentral()
     }
     plugins {
-        // TODO This should be a version range, but the Grails repository resolver
-        // can't handle those yet: http://jira.grails.org/browse/GRAILS-7491.
-        compile group: "org.grails.plugins", name: "spring-security-core", version: "1.0", {
+        compile group: "org.grails.plugins", name: "spring-security-core", version: "[1.0,1.3)", {
             exclude "excluded-dep"
         }
-        compile "org.grails.plugins:fixtures:1.0.3", "org.grails.plugins:hibernate:1.3.7"
+        compile "org.grails.plugins:fixtures:1.1-SNAPSHOT", "org.grails.plugins:hibernate:2.0.0"
     }
     dependencies {
         compile "org.apache.httpcomponents:httpclient:4.1.1", {

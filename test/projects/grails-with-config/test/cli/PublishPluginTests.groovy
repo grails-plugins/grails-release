@@ -21,7 +21,8 @@ class PublishPluginTests extends AbstractCliTestCase {
     }
 
     void testDefault() {
-        execute([ "publish-plugin", "--dryRun" ])
+        execute([ "publish-plugin", "--dry-run" ])
+        enterInput ""
         enterInput "n"
              
         assertEquals 0, waitForProcess()
@@ -45,8 +46,7 @@ class PublishPluginTests extends AbstractCliTestCase {
     }
 
     void testWithMavenRepo() {
-        execute([ "publish-plugin", "--dryRun", "--repository=maven1", "--noScm" ])
-        enterInput "n"
+        execute([ "publish-plugin", "--dry-run", "--repository=maven1", "--no-scm" ])
 
         assertEquals 0, waitForProcess()
         verifyHeader()
@@ -84,7 +84,8 @@ class PublishPluginTests extends AbstractCliTestCase {
 </project>
 """
 
-        execute([ "publish-plugin", "--dryRun", "--repository=maven1", "--scm" ])
+        execute([ "publish-plugin", "--dry-run", "--repository=maven1", "--scm" ])
+        enterInput ""
         enterInput "n"
 
         assertEquals 0, waitForProcess()
@@ -110,7 +111,8 @@ class PublishPluginTests extends AbstractCliTestCase {
     }
 
     void testWithExplicitMavenRepo() {
-        execute([ "publish-plugin", "--dryRun", "--repository=maven1-snapshots" ])
+        execute([ "publish-plugin", "--dry-run", "--repository=maven1-snapshots" ])
+        enterInput ""
         enterInput "n"
 
         assertEquals 0, waitForProcess()
@@ -134,7 +136,8 @@ class PublishPluginTests extends AbstractCliTestCase {
     }
 
     void testWithSubversionRepo() {
-        execute([ "publish-plugin", "--dryRun", "--repository=svn1" ])
+        execute([ "publish-plugin", "--dry-run", "--repository=svn1" ])
+        enterInput ""
         enterInput "n"
 
         assertEquals 0, waitForProcess()
@@ -156,7 +159,8 @@ class PublishPluginTests extends AbstractCliTestCase {
     }
 
     void testLegacySubversionConfig() {
-        execute([ "publish-plugin", "--dryRun", "--repository=myRepo" ])
+        execute([ "publish-plugin", "--dry-run", "--repository=myRepo" ])
+        enterInput ""
         enterInput "n"
 
         assertEquals 0, waitForProcess()
@@ -175,7 +179,8 @@ class PublishPluginTests extends AbstractCliTestCase {
     }
 
     void testUnknownRepository() {
-        execute([ "publish-plugin", "--dryRun", "--repository=dummy" ])
+        execute([ "publish-plugin", "--dry-run", "--repository=dummy" ])
+        enterInput ""
         enterInput "n"
 
         assertEquals 1, waitForProcess()
@@ -193,7 +198,8 @@ class PublishPluginTests extends AbstractCliTestCase {
     }
 
     void testIncompleteCredentialsInConfig() {
-        execute([ "publish-plugin", "--dryRun", "--repository=bad" ])
+        execute([ "publish-plugin", "--dry-run", "--repository=bad" ])
+        enterInput ""
         enterInput "n"
 
         assertEquals 1, waitForProcess()

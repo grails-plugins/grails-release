@@ -21,7 +21,8 @@ class PublishPluginTests extends AbstractCliTestCase {
     }
 
     void testDefault() {
-        execute([ "publish-plugin", "--dryRun" ])
+        execute([ "publish-plugin", "--dry-run" ])
+        enterInput "" 
         enterInput "n" 
 
         assertEquals 0, waitForProcess()
@@ -85,7 +86,8 @@ class PublishPluginTests extends AbstractCliTestCase {
     }
 
     void testExplicitSnapshot() {
-        execute([ "publish-plugin", "--dryRun", "--repository=grailsCentral" ])
+        execute([ "publish-plugin", "--dry-run", "--repository=grailsCentral" ])
+        enterInput "" 
         enterInput "n" 
 
         assertEquals 0, waitForProcess()
