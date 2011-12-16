@@ -211,9 +211,19 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
                 repo.name,
                 masterPluginList,
                 System.out) { msg ->
-            // This closure is executed whenever the deployer needs to
-            // ask for user input.
-            return inputHelper.userInput(msg)
+                    if (msg.toLowerCase().contains("password") && binding.variables.containsKey("grailsConsole")) {
+                        try {
+                            if (grailsConsole.metaClass.respondsTo(grailsConsole, "secureUserInput", msg)) {
+                                return grailsConsole.secureUserInput(msg)
+                            } else {
+                                return grailsConsole.reader.readLine(msg, new Character("*" as char))
+                            }
+                        } catch (ClassNotFoundException e) {
+                            return inputHelper.userInput(msg)
+                        }
+                    } else {
+                        return inputHelper.userInput(msg)
+                    }
         }
     }
     else if (type == "maven"){
