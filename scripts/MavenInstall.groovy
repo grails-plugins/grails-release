@@ -17,7 +17,7 @@
 includeTargets << new File("${releasePluginDir}/scripts/_GrailsMaven.groovy")
 
 target(main:"Installs a Grails plugin as a Maven artefact") {
-	depends(parseArguments, mavenInstall)
-	println "Maven install complete."
+    depends(parseArguments, mavenInstall)
+    println "Maven install complete."
 }
 setDefaultTarget(main)

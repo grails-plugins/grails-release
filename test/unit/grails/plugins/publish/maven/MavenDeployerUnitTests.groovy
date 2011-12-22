@@ -9,7 +9,7 @@ class MavenDeployerUnitTests extends GroovyTestCase {
         def packageFile = new File("grails-something-1.0.zip")
         def pluginXmlFile = new File("plugin.xml")
         def pomFile = new File("target/pom.xml")
-        
+
         def repoDefn = [ args: [ id: "remote1", url: "http://rimu:8081/artifactory/" ] ]
         def testDelegate = new DeployTestDelegate()
 
@@ -22,14 +22,14 @@ class MavenDeployerUnitTests extends GroovyTestCase {
             c.call()
             return it instanceof Closure
         })
-        
+
         def mockNamespaceBuilder = mock(NamespaceBuilder)
         mockNamespaceBuilder.static.newInstance(mockAnt, 'antlib:org.apache.maven.artifact.ant').returns(mockAnt)
 
         play {
             def deployer = new MavenDeployer(mockAnt, repoDefn, "wagon-http")
             deployer.deployPlugin(packageFile, pluginXmlFile, pomFile, false)
-            
+
             assertEquals pluginXmlFile, testDelegate.attachArgs.file
             assertEquals "xml", testDelegate.attachArgs.type
             assertEquals "plugin", testDelegate.attachArgs.classifier
@@ -38,12 +38,12 @@ class MavenDeployerUnitTests extends GroovyTestCase {
             assertNull testDelegate.repoConfigurer
         }
     }
-    
+
     void testDeployPluginWithRepositoryConfigurer() {
         def packageFile = new File("grails-something-1.0.zip")
         def pluginXmlFile = new File("plugin.xml")
         def pomFile = new File("target/pom.xml")
-        
+
         def repoDefn = [ args: [ id: "remote1", url: "http://rimu:8081/artifactory/", type: "maven" ], configurer: "test" ]
         def testDelegate = new DeployTestDelegate()
 
@@ -56,14 +56,14 @@ class MavenDeployerUnitTests extends GroovyTestCase {
             c.call()
             return it instanceof Closure
         })
-        
+
         def mockNamespaceBuilder = mock(NamespaceBuilder)
         mockNamespaceBuilder.static.newInstance(mockAnt, 'antlib:org.apache.maven.artifact.ant').returns(mockAnt)
 
         play {
             def deployer = new MavenDeployer(mockAnt, repoDefn, "wagon-http")
             deployer.deployPlugin(packageFile, pluginXmlFile, pomFile, true)
-            
+
             assertEquals pluginXmlFile, testDelegate.attachArgs.file
             assertEquals "xml", testDelegate.attachArgs.type
             assertEquals "plugin", testDelegate.attachArgs.classifier
@@ -81,15 +81,15 @@ class DeployTestDelegate {
     def pomFile
     def repoArgs
     def repoConfigurer
-    
+
     void attach(args) {
         attachArgs = args
     }
-    
+
     void pom(args) {
         pomFile = args?.file
     }
-    
+
     void remoteRepository(args, configurer = null) {
         repoArgs = args
         repoConfigurer = configurer

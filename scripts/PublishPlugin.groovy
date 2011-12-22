@@ -20,16 +20,16 @@ where
     PROTOCOL = The protocol to use when deploying to a Maven-compatible repository.
                Can be one of 'http', 'scp', 'scpexe', 'ftp', or 'webdav'.
                (default: 'http').
-	           
+
     PORTAL   = The portal to inform of the plugin's release.
                (default: Grails Plugin Portal).
 
     MESSAGE  = Commit message to use when committing source changes using your SCM
                provider.
-	           
+
     --dry-run    = Shows you what will happen when you publish the plugin, but doesn't
                    actually publish it.
-	           
+
     --snapshot  = Force this release to be a snapshot version, i.e. it isn't automatically
                   made the latest available release.
 
@@ -38,7 +38,7 @@ where
     --no-scm     = Disables source control management for this release.
 
 
-    --no-message = Commit using just the default message. 
+    --no-message = Commit using just the default message.
 
     --ping-only  = Don't publish/deploy the plugin, only send a notification to the
                    plugin portal. This is useful if portal notification failed during a
@@ -119,7 +119,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         }
         grailsCentralPortal["url"] = repoClass.GRAILS_CENTRAL_PORTAL_URL
     }
-        
+
     // Is a default repository configured for this project? If yes, use that
     // unless a '--repository' command line option is specified.
     def repoName = argsMap["repository"] ?: grailsSettings.config.grails.project.repos.default
@@ -145,7 +145,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
             type = "svn"
             url = grailsSettings.config.grails.plugin.repos.distribution."$repoName"
         }
-        
+
         // Check that the repository is defined.
         if (url) {
             repo = repoClass.newInstance(
@@ -237,7 +237,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
                 ftp: "wagon-ftp",
                 webdav: "wagon-webdav" ]
         def protocol = protocols.http
-        
+
         def repoDefn = distributionInfo.remoteRepos[repoName]
         repoDefn.args.remove "portal"
 
@@ -269,7 +269,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
                 exit(1)
                 return 1
             }
-            
+
             if (protocols[repo.uri.scheme]) {
                 protocol = protocols[repo.uri.scheme]
             }
@@ -277,14 +277,14 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
                 println "WARNING: unknown protocol '${repo.uri.scheme}' for repository '${repo.name}'"
             }
         }
-        
+
         deployer = classLoader.loadClass("grails.plugins.publish.maven.MavenDeployer").newInstance(ant, repoDefn, protocol)
     }
     else {
         println "Unknown type '$type' defined for repository '$repoName'"
         exit(1)
     }
-    
+
     if (!argsMap["ping-only"]) {
         event "DeployPluginStart", [ pluginInfo, pluginZip, pomFileLocation ]
 
@@ -355,7 +355,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         http.auth.basic username, password
         http.request(PUT, JSON) { req ->
             body = pluginInfo + [ url : repo.uri.toString() ]
-            
+
             response.success = { resp ->
                 println "Notification successful"
             }

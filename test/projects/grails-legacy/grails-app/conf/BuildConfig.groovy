@@ -9,7 +9,7 @@ grails.project.dependency.distribution = {
     remoteRepository(id: "maven1-snapshots", type: "maven", url: "http://rimu:8081/artifactory/plugins-snapshots-local") {
         authentication username: "admin", password: "password"
     }
-    
+
     remoteRepository(id: "svn1", type: "svn", url: "http://peter:password@svn.codehaus.org/grails-plugins")
 }
 

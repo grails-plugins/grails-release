@@ -135,7 +135,7 @@ class SvnDeployer implements PluginDeployer {
 
         // Copy the plugin package, plugin descriptor, and POM files to
         // the working copy so that we can commit them.
-        def destFiles = [ 
+        def destFiles = [
                 new File(wc, pluginPackage.name),
                 new File(wc, "${baseName}-plugin.xml"),
                 new File(wc, "${baseName}.pom"),

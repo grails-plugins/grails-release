@@ -19,7 +19,7 @@ class LegacyGrailsPlugin {
     def documentation = "http://grails.org/plugin/legacy"
 
     def doWithWebDescriptor = { xml ->
-        // TODO Implement additions to web.xml (optional), this event occurs before 
+        // TODO Implement additions to web.xml (optional), this event occurs before
     }
 
     def doWithSpring = {

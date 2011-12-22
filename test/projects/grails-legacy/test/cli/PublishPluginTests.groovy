@@ -24,7 +24,7 @@ class PublishPluginTests extends AbstractCliTestCase {
         execute([ "publish-plugin", "--dry-run" ])
         enterInput ""
         enterInput "n"
-             
+
         assertEquals 0, waitForProcess()
         verifyHeader()
 
@@ -53,7 +53,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 
         // Make sure it's not publishing to Grails central.
         assertFalse "Command is publishing to Grails central when it shouldn't be.", output.contains("Publishing to Grails Central")
-        
+
         verifyUploadFiles()
     }
 
@@ -84,7 +84,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 
         // Make sure it's not publishing to Grails central.
         assertFalse "Command is publishing to Grails central when it shouldn't be.", output.contains("Publishing to Grails Central")
-        
+
         verifyUploadFiles(basePom)
     }
 
@@ -104,7 +104,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 
         // Make sure it's not publishing to Grails central.
         assertFalse "Command is publishing to Grails central when it shouldn't be.", output.contains("Publishing to Grails Central")
-        
+
         verifyUploadFiles()
     }
 
@@ -124,7 +124,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 
         // Make sure it's not publishing to Grails central.
         assertFalse "Command is publishing to Grails central when it shouldn't be.", output.contains("Publishing to Grails Central")
-        
+
         verifyUploadFiles()
     }
 
@@ -144,7 +144,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 
         // Make sure it's not publishing to Grails central.
         assertFalse "Command is publishing to Grails central when it shouldn't be.", output.contains("Publishing to Grails Central")
-        
+
         verifyUploadFiles()
     }
 

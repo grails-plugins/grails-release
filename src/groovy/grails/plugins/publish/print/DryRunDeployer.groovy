@@ -9,7 +9,7 @@ import grails.plugins.publish.PluginDeployer
  */
 class DryRunDeployer implements PluginDeployer {
     def output = System.out
-    
+
     boolean isVersionAlreadyPublished(File pomFile) {
         return false
     }

@@ -11,7 +11,7 @@ class DryRunScmProvider {
     void importIntoRepo(String hostUrl, String msg = "") {
         interactive.out.println "Import project code into repository '$hostUrl' with commit message '$msg'"
     }
-   
+
     boolean isManaged(File fileOrDir = null) {
         if (!fileOrDir) fileOrDir = baseDir
 

@@ -23,7 +23,7 @@ class PublishPluginTests extends AbstractCliTestCase {
     void testDefault() {
         execute([ "publish-plugin", "--dry-run" ])
         enterInput ""
-        enterInput "n" 
+        enterInput "n"
 
         assertEquals 0, waitForProcess()
 
@@ -39,7 +39,7 @@ class PublishPluginTests extends AbstractCliTestCase {
     void testExplicitSnapshot() {
         execute([ "publish-plugin", "--dry-run", "--snapshot", "--scm" ])
         enterInput ""
-        enterInput "n" 
+        enterInput "n"
 
         assertEquals 0, waitForProcess()
 
@@ -54,7 +54,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 
     void testNoScm() {
         execute([ "publish-plugin", "--dry-run", "--no-scm" ])
-             
+
         assertEquals 0, waitForProcess()
 
         // Make sure that the script was found.
@@ -72,7 +72,7 @@ class PublishPluginTests extends AbstractCliTestCase {
         assertTrue "Command not publishing correct package.", output.contains("Deploying the plugin package ${packageFile.path}")
         assertTrue "Command not publishing XML plugin descriptor.", output.contains("with plugin descriptor ${pdFile.path}")
         assertTrue "Command not publishing POM.", output.contains("and POM file ${pomFile.path}")
-        
+
         if (isRelease) {
             assertTrue "Command is not publishing a release version.", output.contains("This is a release version")
         }

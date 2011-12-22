@@ -24,7 +24,7 @@ class PublishPluginTests extends AbstractCliTestCase {
         execute([ "publish-plugin", "--dry-run" ])
         enterInput ""
         enterInput "n"
-             
+
         assertEquals 0, waitForProcess()
         verifyHeader()
 
@@ -37,7 +37,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 
         // Make sure it's publishing to Grails central.
         assertTrue "Command is not publishing to Grails central.", output.contains("Publishing to Grails Central")
-        
+
         // Make sure the main public plugin portal is notified.
         assertTrue "Command is not notifying grailsCentral plugin portal.",
                 output.contains("Notifying plugin portal 'http://grails.org/plugin/with-config' of release")
@@ -63,12 +63,12 @@ class PublishPluginTests extends AbstractCliTestCase {
 
         // Make sure it's not publishing to Grails central.
         assertFalse "Command is publishing to Grails central when it shouldn't be.", output.contains("Publishing to Grails Central")
-        
+
         // Make sure that no plugin portal is notified, since this repository has none configured.
         assertTrue "Command is notifying a plugin portal.", output.contains("No default portal defined for repository 'maven1' - skipping portal notification")
 
         assertTrue "Command not confirming that username/password config used.", output.contains("Using configured username and password from grails.project.repos.maven1")
-        
+
         verifyUploadFiles()
     }
 
@@ -103,10 +103,10 @@ class PublishPluginTests extends AbstractCliTestCase {
 
         // Make sure it's not publishing to Grails central.
         assertFalse "Command is publishing to Grails central when it shouldn't be.", output.contains("Publishing to Grails Central")
-        
+
         // Make sure that no plugin portal is notified, since this repository has none configured.
         assertTrue "Command is notifying a plugin portal.", output.contains("No default portal defined for repository 'maven1' - skipping portal notification")
-        
+
         verifyUploadFiles(basePom)
     }
 
@@ -128,10 +128,10 @@ class PublishPluginTests extends AbstractCliTestCase {
         assertFalse "Command is publishing to Grails central when it shouldn't be.", output.contains("Publishing to Grails Central")
 
         assertTrue "Command not confirming that username/password config used.", output.contains("Using configured username and password from grails.project.repos.maven1")
-        
+
         // Make sure the main public plugin portal is notified.
         assertTrue "Command is not notifying the my-portal plugin portal.", output.contains("Notifying plugin portal 'http://beta.grails.org/plugin/with-config' of release")
-        
+
         verifyUploadFiles()
     }
 
@@ -174,7 +174,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 
         // Make sure it's not publishing to Grails central.
         assertFalse "Command is publishing to Grails central when it shouldn't be.", output.contains("Publishing to Grails Central")
-        
+
         verifyUploadFiles()
     }
 

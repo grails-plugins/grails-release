@@ -22,7 +22,7 @@ Brief description of the plugin.
     def documentation = "http://grails.org/plugin/phantom"
 
     def doWithWebDescriptor = { xml ->
-        // TODO Implement additions to web.xml (optional), this event occurs before 
+        // TODO Implement additions to web.xml (optional), this event occurs before
     }
 
     def doWithSpring = {

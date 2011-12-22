@@ -7,10 +7,10 @@ class GeneratePomTests extends AbstractCliTestCase {
 
     private runAndVerify() {
         execute([ "generate-pom" ])
-             
+
         assertEquals 0, waitForProcess()
         verifyHeader()
-                              
+
         // Make sure that the script was found.
         assertFalse "GeneratePom script not found.", output.contains("Script not found:")
 

@@ -61,7 +61,7 @@ class SvnDeployerUnitTests extends GroovyTestCase {
         // The current directory is a working copy for the repository.
         def mockSvnClient = mock()
         mockSvnClient.isWorkingCopyForRepository(wcDir, "grails-pdf-generator/trunk").returns(true)
-        
+
         // No need to check out the trunk since the current directory
         // already a checkout of trunk. Need to update the working copy
         // though.
@@ -107,7 +107,7 @@ class SvnDeployerUnitTests extends GroovyTestCase {
         // Pretend that the XML descriptor is located in the non-default location.
         pluginXmlFile = new File("target", "plugin.xml")
         pluginXmlFile.parentFile.mkdirs()
-        
+
         def zipContent = "Hello world"
         def zipFile = new File(baseDir, "grails-pdf-generator-1.1.2.zip")
         zipFile.text = zipContent
@@ -215,7 +215,7 @@ class SvnDeployerUnitTests extends GroovyTestCase {
         // The current directory is not a working copy for the repository.
         def mockSvnClient = mock()
         mockSvnClient.isWorkingCopyForRepository(new File("."), "grails-pdf-generator/trunk").returns(false)
-        
+
         // The plugin is not already in the repository.
         mockSvnClient.pathExists("grails-pdf-generator/trunk").returns(false)
         mockSvnClient.createPath("grails-pdf-generator/trunk", "Adding 'pdf-generator' plugin to the repository.")
@@ -278,7 +278,7 @@ class SvnDeployerUnitTests extends GroovyTestCase {
         // The current directory is not a working copy for the repository.
         def mockSvnClient = mock()
         mockSvnClient.isWorkingCopyForRepository(new File("."), "grails-pdf-generator/trunk").returns(false)
-        
+
         // The plugin is not already in the repository.
         mockSvnClient.pathExists("grails-pdf-generator/trunk").raises(
                 new SVNAuthenticationException(SVNErrorMessage.create(SVNErrorCode.AUTHN_CREDS_UNAVAILABLE)))
@@ -350,7 +350,7 @@ class SvnDeployerUnitTests extends GroovyTestCase {
         // The current directory is not a working copy for the repository.
         def mockSvnClient = mock()
         mockSvnClient.isWorkingCopyForRepository(new File("."), "grails-pdf-generator/trunk").returns(false)
-        
+
         // The plugin is not already in the repository.
         mockSvnClient.pathExists("grails-pdf-generator/trunk").raises(
                 new SVNAuthenticationException(SVNErrorMessage.create(SVNErrorCode.AUTHN_CREDS_UNAVAILABLE))).times(4)

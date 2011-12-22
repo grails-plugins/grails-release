@@ -26,29 +26,27 @@ import org.apache.ivy.core.sort.*
 /**
  * This class will resolve the excludes for all of the dependencies in an application. The reason for this class' existence is that resolve engines like Ivy don't support
  * transitive=false declaration at the POM level. So we need to transform a transitive=false declaration into a set of explicit exclusions when generating the POM file
- 
+ *
  * @author Graeme Rocher
  * @since 1.0
  */
 class ExcludeResolver {
-    
+
     IvyDependencyManager dependencyManager
-    
+
     ExcludeResolver(IvyDependencyManager dependencyManager) {
         this.dependencyManager = dependencyManager
     }
-    
-    
+
     Map<ModuleRevisionId, List<ModuleId>> resolveExcludes() {
        def results = [:]
        def applicationDescriptors = dependencyManager.getApplicationDependencyDescriptors()
-       
-       
+
        def eventManager = new EventManager()
        def sortEngine = new SortEngine(dependencyManager.ivySettings)
        def resolveEngine = new ResolveEngine(dependencyManager.ivySettings,eventManager,sortEngine)
        resolveEngine.dictatorResolver = dependencyManager.chainResolver
-       
+
        def md = dependencyManager.createModuleDescriptor()
        def directModulesId = []
        for(d in applicationDescriptors) {
@@ -58,7 +56,7 @@ class ExcludeResolver {
            newDescriptor.addDependencyConfiguration(d.scope, "default");
            md.addDependency newDescriptor
        }
-       
+
        if(directModulesId) {
            def options = new ResolveOptions(download:false, outputReport:false, validate:false)
            def report = resolveEngine.resolve(md, options)
@@ -74,20 +72,17 @@ class ExcludeResolver {
                            for(transitive in depDescriptor.dependencies) {
                                def tdid = transitive.dependencyId
                                if(tdid instanceof ResolvedModuleRevision) {
-                                   transitiveDepList << tdid.id                                                  
+                                   transitiveDepList << tdid.id
                                }
                                else {
-                                   transitiveDepList << tdid                                                                                 
+                                   transitiveDepList << tdid
                                }
-
-                           }                           
+                           }
                        }
                    }
-               }           
-           }           
+               }
+           }
        }
-       return results 
+       return results
     }
-    
-
 }

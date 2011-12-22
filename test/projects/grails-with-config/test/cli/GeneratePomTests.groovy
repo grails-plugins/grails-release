@@ -34,12 +34,12 @@ class GeneratePomTests extends AbstractCliTestCase {
 <project>
 </project>
 """
-        
+
         execute([ "generate-pom" ])
 
         assertEquals 1, waitForProcess()
         verifyHeader()
-                              
+
         // Make sure that the script was found.
         assertFalse "GeneratePom script not found.", output.contains("Script not found:")
 
@@ -51,13 +51,12 @@ class GeneratePomTests extends AbstractCliTestCase {
         assertFalse "Generated POM file does exists", pomFile.exists()
     }
 
-
     private runAndVerify() {
         execute([ "generate-pom" ])
-             
+
         assertEquals 0, waitForProcess()
         verifyHeader()
-                              
+
         // Make sure that the script was found.
         assertFalse "GeneratePom script not found.", output.contains("Script not found:")
 
@@ -80,7 +79,7 @@ class GeneratePomTests extends AbstractCliTestCase {
         assert "fixtures" in depNames
         assert "spring-security-core" in depNames
         assert "hibernate" in depNames
-        
+
         def ssc = pom.dependencies.dependency.find { it.artifactId.text() == "spring-security-core" }
         assert ssc.exclusions.exclusion.size() > 1
         assert ssc.exclusions.exclusion.any { it.artifactId.text() == "excluded-dep" }

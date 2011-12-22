@@ -22,8 +22,8 @@ class PublishPluginTests extends AbstractCliTestCase {
 
     void testDefault() {
         execute([ "publish-plugin", "--dry-run" ])
-        enterInput "" 
-        enterInput "n" 
+        enterInput ""
+        enterInput "n"
 
         assertEquals 0, waitForProcess()
         verifyHeader()
@@ -87,8 +87,8 @@ class PublishPluginTests extends AbstractCliTestCase {
 
     void testExplicitSnapshot() {
         execute([ "publish-plugin", "--dry-run", "--repository=grailsCentral" ])
-        enterInput "" 
-        enterInput "n" 
+        enterInput ""
+        enterInput "n"
 
         assertEquals 0, waitForProcess()
         verifyHeader()
@@ -108,7 +108,7 @@ class PublishPluginTests extends AbstractCliTestCase {
         assertTrue "Command not publishing correct package.", output.contains("Deploying the plugin package ${packageFile.path}")
         assertTrue "Command not publishing XML plugin descriptor.", output.contains("with plugin descriptor ${pdFile.path}")
         assertTrue "Command not publishing POM.", output.contains("and POM file ${pomFile.path}")
-        
+
         if (isRelease) {
             assertTrue "Command is not publishing a release version.", output.contains("This is a release version")
         }

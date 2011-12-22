@@ -17,7 +17,7 @@ class MavenDeployer implements PluginDeployer {
         this.mavenTasks = groovy.xml.NamespaceBuilder.newInstance(ant, 'antlib:org.apache.maven.artifact.ant')
         this.repoDefn = repoDefinition
         this.protocol = protocol
-        
+
         // The Ant Maven tasks don't recognise the 'type' argument in
         // the definition of remote repositories.
         this.repoDefn.args.remove("type")
@@ -35,7 +35,7 @@ class MavenDeployer implements PluginDeployer {
         try { new URL(url).text; return true }
         catch (e) { return false }
     }
-    
+
     /**
      * Deploys the given plugin package to the Maven repository configured
      * at object instantiation.
@@ -51,7 +51,7 @@ class MavenDeployer implements PluginDeployer {
         mavenTasks.deploy(file: pluginPackage) {
             attach file: pluginXmlFile, type:"xml", classifier: "plugin"
             pom(file: pomFile)
-            
+
             if (repoDefn.configurer) {
                 remoteRepository(repoDefn.args, repoDefn.configurer)
             }

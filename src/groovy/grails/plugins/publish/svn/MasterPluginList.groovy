@@ -137,7 +137,7 @@ class MasterPluginList {
         // Perform the check out on the remote path.
         checkoutDir.mkdirs()
         svnClient.checkOut(checkoutDir, remotePath)
-        
+
         // Create an initial master plugin list and add it via the working copy.
         // This file will later be modified and committed.
         def localListFile = new File(checkoutDir, PLUGINS_LIST_NAME)

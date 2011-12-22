@@ -42,12 +42,12 @@ target(mavenInstall:"Installs a plugin or application into your local Maven cach
 
 target(mavenDeploy:"Deploys the plugin to a Maven repository") {
     depends(init)
-    def protocols = [     http: "wagon-http",
-                        scp:    "wagon-ssh",
-                        scpexe:    "wagon-ssh-external",
-                        ftp: "wagon-ftp",
-                        webdav: "wagon-webdav" ]
-    
+    def protocols = [http:   "wagon-http",
+                     scp:    "wagon-ssh",
+                     scpexe: "wagon-ssh-external",
+                     ftp:    "wagon-ftp",
+                     webdav: "wagon-webdav" ]
+
     def protocol = protocols.http
     def repoName = argsMap.repository ?: grailsSettings.config.grails.project.repos.default
     def repo = repoName ? distributionInfo.remoteRepos[repoName] : null
@@ -79,10 +79,9 @@ target(mavenDeploy:"Deploys the plugin to a Maven repository") {
     }
 
     if (retval) exit retval
-    
+
     artifact.'install-provider'(artifactId:protocol, version:"1.0-beta-2")
-    
-    
+
     def deployFile = isPlugin ? new File(pluginZip) : grailsSettings.projectWarFile
     def ext = isPlugin ? deployFile.name[-3..-1] : "war"
     try {
@@ -118,7 +117,7 @@ target(processDefinitions: "Reads the repository definition configuration.") {
         callable.delegate = distributionInfo
         callable.resolveStrategy = Closure.DELEGATE_FIRST
         try {
-            callable.call()             
+            callable.call()
         }
         catch (e) {
             event "StatusError", ["Error reading dependency distribution settings: ${e.message}"]
@@ -171,7 +170,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
             exit 1
         }
     }
-    
+
     pomFileLocation = "${grailsSettings.projectTargetDir}/pom.xml"
     basePom = new File("${basedir}/pom.xml")
 
@@ -185,8 +184,8 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
     new File(pomFileLocation).withWriter { w ->
         def xml = new groovy.xml.MarkupBuilder(w)
 
-        xml.project(xmlns: "http://maven.apache.org/POM/4.0.0", 
-                'xmlns:xsi': "http://www.w3.org/2001/XMLSchema-instance", 
+        xml.project(xmlns: "http://maven.apache.org/POM/4.0.0",
+                'xmlns:xsi': "http://www.w3.org/2001/XMLSchema-instance",
                 'xsi:schemaLocation': "http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd") {
             modelVersion "4.0.0"
             if (plugin) {
@@ -199,7 +198,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                 }
 
                 groupId group
-                artifactId plugin.fileSystemShortName 
+                artifactId plugin.fileSystemShortName
                 packaging pluginInfo.packaging == "binary" ? "jar" : "zip"
                 version plugin.version
 
@@ -281,11 +280,11 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                 version grailsAppVersion
                 name grailsAppName
             }
-                
-            def excludeResolver = classLoader.loadClass("grails.plugins.publish.ExcludeResolver").newInstance(grailsSettings.dependencyManager)    
-            
+
+            def excludeResolver = classLoader.loadClass("grails.plugins.publish.ExcludeResolver").newInstance(grailsSettings.dependencyManager)
+
             def excludeInfo = excludeResolver.resolveExcludes()
-            
+
             if(plugin) {
                 dependencies {
                     def excludeHandler = {dep, moduleId ->
@@ -340,23 +339,23 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                                 artifactId moduleId.name
                                 version moduleId.revision
                                 scope dep.scope
-                                
+
                                 excludeHandler(dep, moduleId)
-                            }                            
+                            }
                         }
                     }
-                    
+
                     // Use the 1.4 method to get only non-transitive plugin deps if possible
-                    def pluginDeps = dependencyManager.hasProperty('declaredPluginDependencyDescriptors') ? 
-                                        dependencyManager.declaredPluginDependencyDescriptors : 
+                    def pluginDeps = dependencyManager.hasProperty('declaredPluginDependencyDescriptors') ?
+                                        dependencyManager.declaredPluginDependencyDescriptors :
                                         dependencyManager.getPluginDependencyDescriptors()
-                                        
+
                     def pluginsInstalledViaInstallPlugin = grails.util.Metadata.current.getInstalledPlugins()
                     def processedPluginModuleIds = []
                     for(dep in pluginDeps) {
-                        def moduleId = dep.getDependencyRevisionId()                        
+                        def moduleId = dep.getDependencyRevisionId()
                         processedPluginModuleIds << moduleId.moduleId
-                        if(dep.scope in allowedScopes && dep.exported && !pluginsInstalledViaInstallPlugin.containsKey(moduleId.name) ) {                            
+                        if(dep.scope in allowedScopes && dep.exported && !pluginsInstalledViaInstallPlugin.containsKey(moduleId.name) ) {
 
                             dependency {
                                 groupId moduleId.organisation
@@ -366,10 +365,10 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                                 scope dep.scope
 
                                 excludeHandler(dep, moduleId)
-                            }                        
+                            }
                         }
                     }
-                    
+
                     if(pluginInstance != null && pluginInstance.hasProperty('dependsOn')) {
                         for(dep in pluginInstance.dependsOn) {
                             String depName = dep.key
@@ -392,26 +391,26 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
 
                                     depVersion = "$lower,$upper".toString()
                                 }
-                                
-                                def convertedPluginName = GrailsNameUtils.getScriptName(depName)                                
+
+                                def convertedPluginName = GrailsNameUtils.getScriptName(depName)
                                 String stringVersion = depVersion.toString()
                                 ModuleRevisionId depMrid = ModuleRevisionId.newInstance(depGroup.toString(), convertedPluginName.toString(), stringVersion)
-                                
+
                                 if(processedPluginModuleIds.contains(depMrid.moduleId)) continue;
-                                
+
                                 dependency {
 
                                     groupId depGroup
                                     artifactId convertedPluginName
                                     version depVersion
                                     type "zip"
-                                                                        
+
                                     excludeHandler(new EnhancedDefaultDependencyDescriptor(depMrid, false, "compile"),
                                                     depMrid)
                                 }
                             }
-                        }        
-                    }                    
+                        }
+                    }
                 }
             }
         }
