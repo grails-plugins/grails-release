@@ -81,18 +81,16 @@ class GeneratePomTests extends AbstractCliTestCase {
         assert "hibernate" in depNames
 
         def ssc = pom.dependencies.dependency.find { it.artifactId.text() == "spring-security-core" }
-        assert ssc.exclusions.exclusion.size() > 1
-        assert ssc.exclusions.exclusion.any { it.artifactId.text() == "excluded-dep" }
+        assert ssc.exclusions.exclusion.size() == 4
+        assert ssc.exclusions.exclusion.artifactId.any { it.text() == "excluded-dep" }
 
         def httpc = pom.dependencies.dependency.find { it.artifactId.text() == "httpclient" }
-        assert httpc.exclusions.exclusion.size() > 2
-        assert httpc.exclusions.exclusion.any { it.artifactId.text() == "commons-logging" }
-        assert httpc.exclusions.exclusion.any { it.artifactId.text() == "commons-codec" }
+        assert httpc.exclusions.exclusion.size() == 5
+        assert httpc.exclusions.exclusion.artifactId.any { it.text() == "commons-logging" }
+        assert httpc.exclusions.exclusion.artifactId.any { it.text() == "commons-codec" }
 
         def cio = pom.dependencies.dependency.find { it.artifactId.text() == "commons-io" }
-        assert cio.exclusions.exclusion.size() >= 2
-        assert httpc.exclusions.exclusion.any { it.artifactId.text() == "xml-apis" }
-        assert httpc.exclusions.exclusion.any { it.artifactId.text() == "xmlParserAPIs" }
+        assert cio.exclusions.exclusion.size() == 3
 
         assertEquals "Plugin summary/headline", pom.name.text()
         assertEquals "Brief description of the plugin.", pom.description.text().trim()
