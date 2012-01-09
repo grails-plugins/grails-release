@@ -37,7 +37,7 @@ class PublishPluginTests extends AbstractCliTestCase {
     }
 
     void testExplicitSnapshot() {
-        execute([ "publish-plugin", "--dry-run", "--snapshot", "--scm" ])
+        execute([ "publish-plugin", "--dryRun", "--snapshot", "--scm" ])
         enterInput ""
         enterInput "n"
 

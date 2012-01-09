@@ -52,7 +52,7 @@ scmProvider = null
 scmHost = null
 
 target(default: "Publishes a plugin to either a Subversion or Maven repository.") {
-    depends(parseArguments, packagePlugin, processDefinitions, generatePom)
+    depends(parseArguments, checkGrailsVersion, packagePlugin, processDefinitions, generatePom)
 
     // Handle old names for options. Trying to be consistent with Grails 2.0 conventions.
     if (argsMap["dryRun"]) { argsMap["dry-run"] = true }
