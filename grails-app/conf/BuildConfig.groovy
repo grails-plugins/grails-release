@@ -17,7 +17,7 @@ grails.project.dependency.resolution = {
     }
 
     plugins {
-        runtime ":svn:1.0.1"
+        runtime ":svn:1.0.2"
     }
 
     dependencies {
