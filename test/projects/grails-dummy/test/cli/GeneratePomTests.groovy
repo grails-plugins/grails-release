@@ -29,7 +29,7 @@ class GeneratePomTests extends AbstractCliTestCase {
         assertTrue "POM file does not exist", pomFile.exists()
 
         // Now check the content using XmlSlurper.
-        def pom = new XmlSlurper().parseText(pomFile.text)
+        def pom = new XmlSlurper().parseText(pomFile.getText("UTF-8"))
         assertEquals "4.0.0", pom.modelVersion.text()
         assertEquals "org.example.grails", pom.groupId.text()
         assertEquals "dummy", pom.artifactId.text()
@@ -50,7 +50,8 @@ class GeneratePomTests extends AbstractCliTestCase {
         // check that a transitive = false dependency has generated exclusions
         assert dep.exclusions.exclusion.size() == 15
 
-        assertEquals "Dummy plugin", pom.name.text()
+        def expectedPluginTitle = new String([68, -61, -68, 109, 109, 121, 32, 112, 108, 117, 103, 105, 110] as byte[], "UTF-8")
+        assertEquals expectedPluginTitle, pom.name.text() // UTF-8 Test
         assertEquals "A dummy plugin. Only used for testing.", pom.description.text()
         assertEquals "http://grails.org/plugin/dummy", pom.url.text()
         assertEquals "Apache License 2.0", pom.licenses.license[0].name.text()

@@ -183,9 +183,10 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
     }
 
     event("StatusUpdate", ["Generating POM file..."])
-    new File(pomFileLocation).withWriter { w ->
+    new File(pomFileLocation).withWriter('UTF-8') { w ->
         def xml = new groovy.xml.MarkupBuilder(w)
 
+        xml.mkp.pi xml: [version: "1.0", encoding: "UTF-8"]
         xml.project(xmlns: "http://maven.apache.org/POM/4.0.0",
                 'xmlns:xsi': "http://www.w3.org/2001/XMLSchema-instance",
                 'xsi:schemaLocation': "http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd") {

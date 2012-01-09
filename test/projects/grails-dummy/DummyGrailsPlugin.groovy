@@ -13,7 +13,7 @@ class DummyGrailsPlugin {
     // TODO Fill in these fields
     def author = "Jane Doe"
     def authorEmail = "jdoe@springsource.org"
-    def title = "Dummy plugin"
+    def title = "Dümmy plugin"
     def description = "A dummy plugin. Only used for testing."
     def groupId = "org.example.grails"
 
