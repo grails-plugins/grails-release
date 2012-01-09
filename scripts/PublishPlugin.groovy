@@ -431,7 +431,10 @@ private processScm(scm) {
             "" : inputHelper.userInput("Enter extra commit message text for this release (optional): "))
     if (msg) msg = "\n\n" + msg
 
-    if (!scm.managed && isInteractive) {
+    if (!scm.managed) {
+        // Ignore SCM import if in non-interactive mode.
+        if (!isInteractive) return
+
         // The project isn't under source control, so import it into the user's
         // preferred SCM system - unless the user explicitly doesn't want it added
         // to source control.
