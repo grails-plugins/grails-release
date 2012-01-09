@@ -82,9 +82,12 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         final interactive = new Expando(
                 out: System.out,
                 askUser: { msg ->
-                    // This closure is executed whenever the deployer needs to
+                    // This closure is executed whenever the SCM needs to
                     // ask for user input.
-                    return inputHelper.userInput(msg)
+                    return userInput(
+                            inputHelper,
+                            msg,
+                            "SCM requires an answer to \"${msg}\", but you are running in non-interactive mode.")
                 })
 
         // Load any SCM provider that may be installed.
@@ -211,19 +214,12 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
                 repo.name,
                 masterPluginList,
                 System.out) { msg ->
-                    if (msg.toLowerCase().contains("password") && binding.variables.containsKey("grailsConsole")) {
-                        try {
-                            if (grailsConsole.metaClass.respondsTo(grailsConsole, "secureUserInput", msg)) {
-                                return grailsConsole.secureUserInput(msg)
-                            } else {
-                                return grailsConsole.reader.readLine(msg, new Character("*" as char))
-                            }
-                        } catch (ClassNotFoundException e) {
-                            return inputHelper.userInput(msg)
-                        }
-                    } else {
-                        return inputHelper.userInput(msg)
-                    }
+            // This closure is executed whenever the deployer needs to
+            // ask for user input.
+            return userInput(
+                    inputHelper,
+                    msg,
+                    "SvnDeployer requires an answer to \"${msg}\", but you are running in non-interactive mode.")
         }
     }
     else if (type == "maven"){
@@ -291,9 +287,11 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         def pomFile = pomFileLocation as File
         if (deployer.isVersionAlreadyPublished(pomFile)) {
             def inputHelper = new CommandLineHelper()
-            def answer = inputHelper.userInput(
+            def answer = userInput(
+                    inputHelper,
                     "This version has already been published. Do you want to replace it " +
-                    "(not recommended except for snapshots)? (y,N) ")
+                        "(not recommended except for snapshots)? (y,N) ",
+                    "This version of the plugin has already been published.")
             if (!answer?.equalsIgnoreCase("y")) {
                 event "StatusFinal", ["Plugin publication cancelled."]
                 exit(1)
@@ -347,8 +345,14 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
 
         if (!username) {
             def inputHelper = new CommandLineHelper()
-            username = inputHelper.userInput("Username for portal (leave empty if authentication not required): ")
-            password = inputHelper.userInput("Password for portal (leave empty if authentication not required): ")
+            username = userInput(
+                    inputHelper,
+                    "Username for portal (leave empty if authentication not required): ",
+                    "You haven't configured the plugin portal username - required in non-interactive mode")
+            password = userInput(
+                    inputHelper,
+                    "Password for portal (leave empty if authentication not required): ",
+                    "You haven't configured the plugin portal password - required in non-interactive mode")
         }
 
         def http = new HTTPBuilder(portalUrl)
@@ -379,6 +383,39 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
     event "PublishPluginEnd", [ pluginInfo ]
 }
 
+private userInput(inputHelper, msg, nonInteractiveErrorMsg) {
+    if (!isInteractive) {
+        event "StatusError", [nonInteractiveErrorMsg]
+        event "StatusFinal", ["Plugin publication cancelled."]
+        exit 1
+        return ""
+    }
+    else {
+        return requiresSecureInput(msg) ? secureUserInput(inputHelper, msg) : inputHelper.userInput(msg)
+    }
+}
+
+private secureUserInput(inputHelper, msg) {
+    if (binding.variables.containsKey("grailsConsole")) {
+        try {
+            if (grailsConsole.metaClass.respondsTo(grailsConsole, "secureUserInput", msg)) {
+                return grailsConsole.secureUserInput(msg)
+            }
+            else {
+                return grailsConsole.reader.readLine(msg, new Character("*" as char))
+            }
+        }
+        catch (ClassNotFoundException e) {
+            return inputHelper.userInput(msg)
+        }
+    }
+    else {
+        return inputHelper.userInput(msg)
+    }
+}
+
+private requiresSecureInput(msg) { msg.toLowerCase().contains("password") }
+
 private processScm(scm) {
     // Configure authentication for the SCM provider if credentials provided
     // in build settings.
@@ -390,11 +427,11 @@ private processScm(scm) {
     // Find out if the user wants to add any extra text to the standard
     // commit message.
     def inputHelper = new CommandLineHelper()
-    def msg = argsMap["message"] ?: (argsMap["no-message"] ?
+    def msg = argsMap["message"] ?: (argsMap["no-message"] || !isInteractive || argsMap["ping-only"] ?
             "" : inputHelper.userInput("Enter extra commit message text for this release (optional): "))
     if (msg) msg = "\n\n" + msg
 
-    if (!scm.managed) {
+    if (!scm.managed && isInteractive) {
         // The project isn't under source control, so import it into the user's
         // preferred SCM system - unless the user explicitly doesn't want it added
         // to source control.
@@ -414,7 +451,8 @@ private processScm(scm) {
         // then continue with the commit. The user should also have the option of
         // cancelling without making any changes.
         if (scm.unmanagedFiles) {
-            println "You have untracked files. Please add them to source control or the ignore list before publishing the plugin."
+            event "StatusError", ["You have untracked files. Please add them to source control or the ignore list before publishing the plugin."]
+            event "StatusFinal", ["Plugin publication cancelled."]
             exit 1
             return
         }
@@ -422,7 +460,8 @@ private processScm(scm) {
         // Is the current code up to date? If not, we shouldn't commit and release.
         // TODO Support doing an update right here, right now.
         if (!scm.upToDate()) {
-            println "Your local source is not up to date. Please update it before publishing the plugin."
+            event "StatusError", ["Your local source is not up to date. Please update it before publishing the plugin."]
+            event "StatusFinal", ["Plugin publication cancelled."]
             exit 1
             return
         }
