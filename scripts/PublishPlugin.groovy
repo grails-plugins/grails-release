@@ -292,16 +292,21 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
 
         def pomFile = pomFileLocation as File
         if (deployer.isVersionAlreadyPublished(pomFile)) {
-            def inputHelper = new CommandLineHelper()
-            def answer = userInput(
-                    inputHelper,
-                    "This version has already been published. Do you want to replace it " +
-                        "(not recommended except for snapshots)? (y,N) ",
-                    "This version of the plugin has already been published.")
-            if (!answer?.equalsIgnoreCase("y")) {
-                event "StatusFinal", ["Plugin publication cancelled."]
-				if (argsMap["no-squash-ok"]) { exit(0) }
-				else { exit(1) }
+			if (argsMap["no-squash-ok"]) {
+				println "This version of the plugin has already been published."
+				event "StatusFinal", ["Plugin publication cancelled with clean exit."]
+				exit(0)
+			} else {
+				def inputHelper = new CommandLineHelper()
+				def answer = userInput(
+						inputHelper,
+						"This version has already been published. Do you want to replace it " +
+							"(not recommended except for snapshots)? (y,N) ",
+						"This version of the plugin has already been published.")
+				if (!answer?.equalsIgnoreCase("y")) {
+					event "StatusFinal", ["Plugin publication cancelled."]
+					exit(1)
+				}
             }
         }
 
