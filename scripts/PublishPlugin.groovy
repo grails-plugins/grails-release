@@ -126,7 +126,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
     // Is a default repository configured for this project? If yes, use that
     // unless a '--repository' command line option is specified.
     def repoName = argsMap["repository"] ?: grailsSettings.config.grails.project.repos.default
-    def type = "svn"
+    def type = "grailsCentral"
 
     if (repoName && repoName != "grailsCentral") {
         // First look for the repository definition for this name. This
@@ -220,6 +220,20 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
                     inputHelper,
                     msg,
                     "SvnDeployer requires an answer to \"${msg}\", but you are running in non-interactive mode.")
+        }
+    } else if(type == "grailsCentral") {
+        deployer = classLoader.loadClass("grails.plugins.publish.portal.GrailsCentralDeployer").newInstance()
+        def retval = processAuthConfig.call(repo.name) { username, password ->
+            if (username) {
+                deployer.username = username
+                deployer.password = password
+            }
+        }
+
+        if (retval) return retval
+        def uri = repo?.uri?.toString()
+        if(uri) {
+            deployer.portalUrl = uri
         }
     }
     else if (type == "maven"){

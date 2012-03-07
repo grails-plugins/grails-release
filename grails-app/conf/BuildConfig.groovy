@@ -17,7 +17,7 @@ grails.project.dependency.resolution = {
     }
 
     plugins {
-        runtime ":svn:1.0.2"
+        runtime ":rest-client-builder:1.0.1"
     }
 
     dependencies {
