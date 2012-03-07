@@ -26,12 +26,14 @@ class GrailsCentralDeployer implements PluginDeployer {
     void deployPlugin(File pluginPackage, File pluginXmlFile, File pomFile, boolean isRelease) {
         def (pluginName, pluginVersion) = parsePom(pomFile)
         def url = "$portalUrl/api/v1.0/publish/$pluginName/$pluginVersion"
+        println "Publishing to $url"
         def resp = rest.post(url) {
             auth username, password
             contentType "multipart/form-data"
-            zip = new FileSystemResource(pluginPackage)
-            pom = new FileSystemResource(pomFile)
-            xml = new FileSystemResource(pluginXmlFile)
+            accept "text/plain"
+            zip = pluginPackage
+            pom = pomFile
+            xml = pluginXmlFile
         }
         if(resp.status != 200) {
             throw new RuntimeException( "Server returned error deploying to Grails central repository: ${resp.status}" )
