@@ -227,6 +227,13 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
             if (username) {
                 deployer.username = username
                 deployer.password = password
+
+                def gcp = distributionInfo.portals["grailsCentral"]
+                if(gcp && !gcp?.username) {
+                    gcp.username = username
+                    gcp.password = password
+
+                }
             }
         }
 
