@@ -12,7 +12,7 @@ import org.springframework.core.io.*
 class GrailsCentralDeployer implements PluginDeployer {
     //private proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("localhost", 8888))
     RestBuilder rest = new RestBuilder(connectTimeout: 1000, readTimeout:10000, proxy:null )
-    String portalUrl = "http://grails.org"
+    String portalUrl = "http://grails.org/plugins"
     String username
     String password
     
@@ -25,7 +25,9 @@ class GrailsCentralDeployer implements PluginDeployer {
     }
     void deployPlugin(File pluginPackage, File pluginXmlFile, File pomFile, boolean isRelease) {
         def (pluginName, pluginVersion) = parsePom(pomFile)
-        def url = "$portalUrl/api/v1.0/publish/$pluginName/$pluginVersion"
+        def base = new URL(portalUrl)
+        base = base.port > -1? "http://$base.host:$base.port" : "http://$base.host"
+        def url = "$base/api/v1.0/publish/$pluginName/$pluginVersion"
         println "Publishing to $url"
         def resp = rest.post(url) {
             auth username, password

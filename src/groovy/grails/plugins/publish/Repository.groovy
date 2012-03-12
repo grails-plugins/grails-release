@@ -11,7 +11,7 @@ class Repository {
     /** The standard Grails Central repository. */
     static final Repository grailsCentral = new Repository(
             "grailsCentral",
-            new URI("http://grails.org"),
+            new URI("http://grails.org/plugins"),
             "grailsCentral")
 
     /** The name of this repository. */
