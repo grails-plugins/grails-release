@@ -17,35 +17,40 @@ where
                a Subversion repository or a Maven-compatible one.
                (default: Grails Central Plugin Repository).
 
-    PROTOCOL = The protocol to use when deploying to a Maven-compatible repository.
-               Can be one of 'http', 'scp', 'scpexe', 'ftp', or 'webdav'.
-               (default: 'http').
+    PROTOCOL = The protocol to use when deploying to a Maven-compatible
+               repository. Can be one of 'http', 'scp', 'scpexe', 'ftp', or
+               'webdav'. (default: 'http').
 
     PORTAL   = The portal to inform of the plugin's release.
                (default: Grails Plugin Portal).
 
-    MESSAGE  = Commit message to use when committing source changes using your SCM
-               provider.
+    MESSAGE  = Commit message to use when committing source changes using your
+               SCM provider.
 
-    --dry-run    = Shows you what will happen when you publish the plugin, but doesn't
-                   actually publish it.
+    --dry-run      = Shows you what will happen when you publish the plugin,
+                     but doesn't actually publish it.
 
-    --snapshot  = Force this release to be a snapshot version, i.e. it isn't automatically
-                  made the latest available release.
+    --snapshot     = Force this release to be a snapshot version, i.e. it isn't
+                     automatically made the latest available release.
 
-    --scm       = Enables source control management for this release.
+    --scm          = Enables source control management for this release.
 
-    --no-scm     = Disables source control management for this release.
+    --no-scm       = Disables source control management for this release.
 
 
-    --no-message = Commit using just the default message.
+    --no-message   = Commit using just the default message.
 
-    --ping-only  = Don't publish/deploy the plugin, only send a notification to the
-                   plugin portal. This is useful if portal notification failed during a
-                   previous attempt to publish the plugin. Mutually exclusive with the
-                   --dry-run option.
+    --no-squash-ok = Don't fail if this plugin has already been published.
+                     This is useful if this plugin is being published from a 
+                     continuous integration server and you don't want the 
+                     command to exit with failure.
 
-    --binary    = Release as a binary plugin.
+    --ping-only    = Don't publish/deploy the plugin, only send a notification
+                     to the plugin portal. This is useful if portal
+                     notification failed during a previous attempt to publish
+                     the plugin. Mutually exclusive with the --dry-run option.
+
+    --binary       = Release as a binary plugin.
 """
 
 scmProvider = null
@@ -59,6 +64,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
     if (argsMap["noScm"]) { argsMap["no-scm"] = true }
     if (argsMap["noMessage"]) { argsMap["no-message"] = true }
     if (argsMap["pingOnly"]) { argsMap["ping-only"] = true }
+    if (argsMap["noSquashOk"]) { argsMap["no-squash-ok"] = true }
 
     // Read the plugin information from the POM.
     pluginInfo = new XmlSlurper().parse(new File(pomFileLocation))
@@ -286,15 +292,21 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
 
         def pomFile = pomFileLocation as File
         if (deployer.isVersionAlreadyPublished(pomFile)) {
-            def inputHelper = new CommandLineHelper()
-            def answer = userInput(
-                    inputHelper,
-                    "This version has already been published. Do you want to replace it " +
-                        "(not recommended except for snapshots)? (y,N) ",
-                    "This version of the plugin has already been published.")
-            if (!answer?.equalsIgnoreCase("y")) {
-                event "StatusFinal", ["Plugin publication cancelled."]
-                exit(1)
+			if (argsMap["no-squash-ok"]) {
+				println "This version of the plugin has already been published."
+				event "StatusFinal", ["Plugin publication cancelled with clean exit."]
+				exit(0)
+			} else {
+				def inputHelper = new CommandLineHelper()
+				def answer = userInput(
+						inputHelper,
+						"This version has already been published. Do you want to replace it " +
+							"(not recommended except for snapshots)? (y,N) ",
+						"This version of the plugin has already been published.")
+				if (!answer?.equalsIgnoreCase("y")) {
+					event "StatusFinal", ["Plugin publication cancelled."]
+					exit(1)
+				}
             }
         }
 
