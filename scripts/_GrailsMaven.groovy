@@ -422,15 +422,17 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
 }
 
 target(checkGrailsVersion: "Checks for Grails 2 and above - issues warning if Grails version is lower.") {
-    def m = grailsVersion =~ /^(\d+)\.\d+.*$/
-    if (m && m[0][1].toInteger() < 2) {
-        def inputHelper = new CommandLineHelper()
-        def answer = inputHelper.userInput(
-                "WARNING! For full Grails 2.0 compatibility you should use Grails 2.0 " +
-                "or above with this command. Do you wish to continue? (y,N) ")
-        if (!answer || !answer[0]?.equalsIgnoreCase("y")) {
-            event "StatusFinal", ["Command cancelled."]
-            exit 1
+    if (isInteractive) {
+        def m = grailsVersion =~ /^(\d+)\.\d+.*$/
+        if (m && m[0][1].toInteger() < 2) {
+            def inputHelper = new CommandLineHelper()
+            def answer = inputHelper.userInput(
+                    "WARNING! For full Grails 2.0 compatibility you should use Grails 2.0 " +
+                    "or above with this command. Do you wish to continue? (y,N) ")
+            if (!answer || !answer[0]?.equalsIgnoreCase("y")) {
+                event "StatusFinal", ["Command cancelled."]
+                exit 1
+            }
         }
     }
 }
