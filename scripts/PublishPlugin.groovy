@@ -64,7 +64,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
     if (argsMap["noScm"]) { argsMap["no-scm"] = true }
     if (argsMap["noMessage"]) { argsMap["no-message"] = true }
     if (argsMap["pingOnly"]) { argsMap["ping-only"] = true }
-    if (argsMap["noSquashOk"]) { argsMap["allow-overwrite"] = true }
+    if (argsMap["allowOverwrite"]) { argsMap["allow-overwrite"] = true }
 
     // Read the plugin information from the POM.
     pluginInfo = new XmlSlurper().parse(new File(pomFileLocation))
