@@ -9,7 +9,7 @@ h2. Options
 {code}
 grails publish-plugin [--dryRun] [--snapshot] [--repository=repoId]
                       [--protocol=protocol] [--portal=portal] [--pingOnly]
-                      [--scm] [--noScm] [--binary] [--no-squash-ok]
+                      [--scm] [--noScm] [--binary] [--allow-overwrite]
 {code}
 
 * @dryRun@ will simply print out what files will be deployed. It won't actually perform the deployment, so it's a good way to see whether the command will do what you expect.
