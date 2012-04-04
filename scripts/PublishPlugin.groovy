@@ -40,7 +40,7 @@ where
 
     --no-message   = Commit using just the default message.
 
-    --allow-overwrite = Don't fail if this plugin has already been published.
+    --no-overwrite = Don't fail if this plugin has already been published.
                      This is useful if this plugin is being published from a 
                      continuous integration server and you don't want the 
                      command to exit with failure.
@@ -64,7 +64,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
     if (argsMap["noScm"]) { argsMap["no-scm"] = true }
     if (argsMap["noMessage"]) { argsMap["no-message"] = true }
     if (argsMap["pingOnly"]) { argsMap["ping-only"] = true }
-    if (argsMap["allowOverwrite"]) { argsMap["allow-overwrite"] = true }
+    if (argsMap["noOverwrite"]) { argsMap["no-overwrite"] = true }
 
     // Read the plugin information from the POM.
     pluginInfo = new XmlSlurper().parse(new File(pomFileLocation))
@@ -313,7 +313,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
 
         def pomFile = pomFileLocation as File
         if (deployer.isVersionAlreadyPublished(pomFile)) {
-			if (argsMap["allow-overwrite"] || !isInteractive) {
+			if (argsMap["no-overwrite"]) {
 				println "This version of the plugin has already been published."
 				event "StatusFinal", ["Plugin publication cancelled with clean exit."]
 				exit(0)
