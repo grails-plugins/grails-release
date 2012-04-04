@@ -313,7 +313,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
 
         def pomFile = pomFileLocation as File
         if (deployer.isVersionAlreadyPublished(pomFile)) {
-			if (argsMap["allow-overwrite"]) {
+			if (argsMap["allow-overwrite"] || !isInteractive) {
 				println "This version of the plugin has already been published."
 				event "StatusFinal", ["Plugin publication cancelled with clean exit."]
 				exit(0)
