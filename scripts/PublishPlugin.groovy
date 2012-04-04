@@ -45,6 +45,8 @@ where
                      continuous integration server and you don't want the 
                      command to exit with failure.
 
+    --allow-overwrite = Allow any existing plugin to be overwritten.
+
     --ping-only    = Don't publish/deploy the plugin, only send a notification
                      to the plugin portal. This is useful if portal
                      notification failed during a previous attempt to publish
@@ -65,6 +67,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
     if (argsMap["noMessage"]) { argsMap["no-message"] = true }
     if (argsMap["pingOnly"]) { argsMap["ping-only"] = true }
     if (argsMap["noOverwrite"]) { argsMap["no-overwrite"] = true }
+    if (argsMap["allowOverwrite"]) { argsMap["allow-overwrite"] = true }
 
     // Read the plugin information from the POM.
     pluginInfo = new XmlSlurper().parse(new File(pomFileLocation))
@@ -318,13 +321,22 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
 				event "StatusFinal", ["Plugin publication cancelled with clean exit."]
 				exit(0)
 			} else {
-				def inputHelper = new CommandLineHelper()
-				def answer = userInput(
-						inputHelper,
-						"This version has already been published. Do you want to replace it " +
-							"(not recommended except for snapshots)? (y,N) ",
-						"This version of the plugin has already been published.")
-				if (!answer?.equalsIgnoreCase("y")) {
+				if (argsMap["allow-overwrite"]) {
+					println "This version of the plugin has already been published, it will be overwritten."
+				} else if (isInteractive) {
+					def inputHelper = new CommandLineHelper()
+					def answer = userInput(
+							inputHelper,
+							"This version has already been published. Do you want to replace it " +
+								"(not recommended except for snapshots)? (y,N) ",
+							"This version of the plugin has already been published.")
+					if (!answer?.equalsIgnoreCase("y")) {
+						event "StatusFinal", ["Plugin publication cancelled."]
+						exit(1)
+					}
+				} else {
+					println "This version of the plugin has already been published"
+					println "Use the --allow-overwrite option to publish the plugin."
 					event "StatusFinal", ["Plugin publication cancelled."]
 					exit(1)
 				}
