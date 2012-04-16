@@ -16,10 +16,11 @@ class DryRunDeployer implements PluginDeployer {
 
     void deployPlugin(File pluginPackage, File pluginXmlFile, File pomFile, boolean isRelease) {
         def out = (output instanceof PrintStream) ? output : new PrintWriter(new OutputStreamWriter(output))
-        out.println "Deploying the plugin package ${pluginPackage.canonicalPath}"
-        out.println "with plugin descriptor ${pluginXmlFile.canonicalPath}"
-        out.println "and POM file ${pomFile.canonicalPath}"
-        out.println()
-        out.println "This is${ !isRelease ? ' not' : ''} a release version"
+        out.println """\
+Deploying the plugin package ${pluginPackage.canonicalPath}
+with plugin descriptor ${pluginXmlFile.canonicalPath}
+and POM file ${pomFile.canonicalPath}
+
+This is${ !isRelease ? ' not' : ''} a release version"""
     }
 }

@@ -15,17 +15,21 @@
  */
 package grails.plugins.publish
 
-import org.codehaus.groovy.grails.resolve.*
-import  org.apache.ivy.core.module.id.*
-import org.apache.ivy.core.module.descriptor.*
-import org.apache.ivy.core.report.*
-import org.apache.ivy.core.resolve.*
-import org.apache.ivy.core.event.*
-import org.apache.ivy.core.sort.*
+import org.codehaus.groovy.grails.resolve.IvyDependencyManager
+import org.apache.ivy.core.event.EventManager
+import org.apache.ivy.core.module.descriptor.DefaultDependencyDescriptor
+import org.apache.ivy.core.module.id.ModuleId
+import org.apache.ivy.core.module.id.ModuleRevisionId
+import org.apache.ivy.core.resolve.ResolveEngine
+import org.apache.ivy.core.resolve.ResolveOptions
+import org.apache.ivy.core.resolve.ResolvedModuleRevision
+import org.apache.ivy.core.sort.SortEngine
 
 /**
- * This class will resolve the excludes for all of the dependencies in an application. The reason for this class' existence is that resolve engines like Ivy don't support
- * transitive=false declaration at the POM level. So we need to transform a transitive=false declaration into a set of explicit exclusions when generating the POM file
+ * Resolves the excludes for all of the dependencies in an application. The reason for this
+ * class' existence is that resolve engines like Ivy don't support transitive=false declaration
+ * at the POM level. So we need to transform a transitive=false declaration into a set of
+ * explicit exclusions when generating the POM file
  *
  * @author Graeme Rocher
  * @since 1.0
@@ -39,50 +43,52 @@ class ExcludeResolver {
     }
 
     Map<ModuleRevisionId, List<ModuleId>> resolveExcludes() {
-       def results = [:]
-       def applicationDescriptors = dependencyManager.getApplicationDependencyDescriptors()
+        def results = [:]
+        def applicationDescriptors = dependencyManager.getApplicationDependencyDescriptors()
 
-       def eventManager = new EventManager()
-       def sortEngine = new SortEngine(dependencyManager.ivySettings)
-       def resolveEngine = new ResolveEngine(dependencyManager.ivySettings,eventManager,sortEngine)
-       resolveEngine.dictatorResolver = dependencyManager.chainResolver
+        def eventManager = new EventManager()
+        def sortEngine = new SortEngine(dependencyManager.ivySettings)
+        def resolveEngine = new ResolveEngine(dependencyManager.ivySettings, eventManager,sortEngine)
+        resolveEngine.dictatorResolver = dependencyManager.chainResolver
 
-       def md = dependencyManager.createModuleDescriptor()
-       def directModulesId = []
-       for(d in applicationDescriptors) {
-           // the dependency without any exclude/transitive definitions
-           directModulesId << d.dependencyId
-           def newDescriptor = new DefaultDependencyDescriptor(d.getDependencyRevisionId(), false)
-           newDescriptor.addDependencyConfiguration(d.scope, "default");
-           md.addDependency newDescriptor
-       }
+        def md = dependencyManager.createModuleDescriptor()
+        def directModulesId = []
+        for (d in applicationDescriptors) {
+            // the dependency without any exclude/transitive definitions
+            directModulesId << d.dependencyId
+            def newDescriptor = new DefaultDependencyDescriptor(d.getDependencyRevisionId(), false)
+            newDescriptor.addDependencyConfiguration(d.scope, "default")
+            md.addDependency newDescriptor
+        }
 
-       if(directModulesId) {
-           def options = new ResolveOptions(download:false, outputReport:false, validate:false)
-           def report = resolveEngine.resolve(md, options)
-           def dependencies = report.dependencies
-           if(dependencies != null) {
-               for(dep in dependencies) {
-                   def dependencyModuleId = dep.moduleId
-                   if(directModulesId.contains(dependencyModuleId)) {
-                       def depDescriptor = dep.descriptor
-                       def transitiveDepList = []
-                       if(dep.moduleRevision != null) {
-                           results[dep.moduleRevision.id] = transitiveDepList
-                           for(transitive in depDescriptor.dependencies) {
-                               def tdid = transitive.dependencyId
-                               if(tdid instanceof ResolvedModuleRevision) {
-                                   transitiveDepList << tdid.id
-                               }
-                               else {
-                                   transitiveDepList << tdid
-                               }
-                           }
-                       }
-                   }
-               }
-           }
-       }
-       return results
+        if (directModulesId) {
+            def options = new ResolveOptions(download:false, outputReport:false, validate:false)
+            def report = resolveEngine.resolve(md, options)
+            for (dep in report.dependencies) {
+                def dependencyModuleId = dep.moduleId
+                if (!directModulesId.contains(dependencyModuleId)) {
+                    continue
+                }
+
+                def depDescriptor = dep.descriptor
+                def transitiveDepList = []
+                if (dep.moduleRevision == null) {
+                    continue
+                }
+
+                results[dep.moduleRevision.id] = transitiveDepList
+                for (transitive in depDescriptor.dependencies) {
+                    def tdid = transitive.dependencyId
+                    if (tdid instanceof ResolvedModuleRevision) {
+                        transitiveDepList << tdid.id
+                    }
+                    else {
+                        transitiveDepList << tdid
+                    }
+                }
+            }
+        }
+
+        return results
     }
 }
