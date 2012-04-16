@@ -2,11 +2,11 @@ Not all plugins should be publicly available: some are too specific to certain p
 
 h3. Repository types and configuration
 
-Grails supports two types of plugin repository: the traditional Subversion-based one and Maven-compatible. The public plugin repository is currently an example of the former. All you need to do is set up a standard Subversion repository and the Release plugin will do the rest.
+Grails supports one type of plugin repository, Maven-compatible. The public plugin repository is currently an example of this. All you need to do is set up a standard Subversion repository and the Release plugin will do the rest.
 
-Maven-compatible ones can be easily set up with either [Artifactory|http://www.jfrog.com/products.php] or [Nexus|http://nexus.sonatype.org/]. Subversion-based repositories are useful for older versions of Grails, but if you only use Grails 1.3 or above, we recommend you use a Maven-compatible repository for your plugins.
+Maven-compatible repositories can be easily set up with either [Artifactory|http://www.jfrog.com/products.php] or [Nexus|http://nexus.sonatype.org/].
 
-Whichever type of repository you go for, the [configuration settings|guide:repositories] are mostly the same. The key options are the repository URL and the username and password for deploying to the repository. All of these can be configured in either @~/.grails/settings.groovy@ or @BuildConfig.groovy@. Typically, a single repository hosts many plugins, so it's usually a good idea to put the configuration in @settings.groovy@ and then specify in @grails-app/conf/BuildConfig.groovy@ which repository a plugin should be published to by default:
+The key [configuration settings|guide:repositories] are the repository URL and the username and password for deploying to the repository. All of these can be configured in either @~/.grails/settings.groovy@ or @BuildConfig.groovy@. Typically, a single repository hosts many plugins, so it's usually a good idea to put the configuration in @settings.groovy@ and then specify in @grails-app/conf/BuildConfig.groovy@ which repository a plugin should be published to by default:
 
 {code}
 grails.project.repos.default = "companyRepo"
@@ -23,8 +23,6 @@ for example. This saves you from having to use the @\-\-repository@ command line
 {code}
 grails publish-plugin --repository=localReleases
 {code}
-
-One last thing: the Release plugin handles the differences between publishing to Subversion and Maven-compatible repositories, but you still need to let it know what type you're using. By default it assumes a Maven-compatible repository, but you can declare as repository as a Subversion one through its @type@ configuration option. Just set it to "svn".
 
 h3. Your own plugin portal
 
