@@ -2,7 +2,6 @@ package grails.plugins.publish.portal
 
 import grails.plugins.publish.PluginDeployer
 import grails.plugins.rest.client.RestBuilder
-import grails.plugins.rest.client.RestResponse
 
 /**
  * A deployer capable of deploying to the central repository at http://grails.org.
@@ -20,7 +19,7 @@ class GrailsCentralDeployer implements PluginDeployer {
 
     boolean isVersionAlreadyPublished(File pomFile) {
         def (pluginName, pluginVersion) = parsePom(pomFile)
-        RestResponse resp = rest.get("$portalUrl/api/v1.0/plugin/$pluginName/$pluginVersion")   
+        def resp = rest.get("$portalUrl/api/v1.0/plugin/$pluginName/$pluginVersion")   
         return resp?.status == 200
     }
 
@@ -30,7 +29,7 @@ class GrailsCentralDeployer implements PluginDeployer {
         base = base.port > -1 ? "http://$base.host:$base.port" : "http://$base.host"
         def url = "$base/api/v1.0/publish/$pluginName/$pluginVersion"
         println "Publishing to $url"
-        RestResponse resp = rest.post(url) {
+        def resp = rest.post(url) {
             auth username, password
             contentType "multipart/form-data"
             accept "text/plain"
