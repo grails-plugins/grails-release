@@ -167,7 +167,7 @@ class MasterPluginList {
                 // Update successful, so we don't have to do a check out.
                 doCheckout = false
             }
-            catch (SVNException ex) {
+            catch (ex) {
                 // Fall back to doing a check out.
                 if (verbose) println "Failed to update master plugin list working copy: ${ex.message}"
             }
