@@ -2,7 +2,6 @@ package grails.plugins.publish.svn
 
 import org.codehaus.groovy.grails.plugins.publishing.DefaultPluginPublisher
 import org.springframework.core.io.FileSystemResource
-import org.tmatesoft.svn.core.SVNException
 
 /**
  * This class allows you to interact with legacy master plugin lists that are
@@ -103,7 +102,7 @@ class MasterPluginList {
         try {
             svnClient.commit(checkoutDir, msg)
         }
-        catch (SVNException ex) {
+        catch (ex) {
             // Some SVN errors are recoverable. For example, the local copy of
             // the plugin list may be out of date, in which case we can update
             // it and try again. But don't keep trying for ever!

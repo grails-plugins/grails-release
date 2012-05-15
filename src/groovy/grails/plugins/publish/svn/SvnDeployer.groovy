@@ -7,7 +7,6 @@ import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
 import org.codehaus.groovy.grails.plugins.publishing.DefaultPluginPublisher
 import org.springframework.core.io.FileSystemResource
-import org.tmatesoft.svn.core.SVNAuthenticationException
 
 /**
  * Implementation of {@link PluginDeployer} that deploys plugin packages
@@ -273,7 +272,7 @@ class SvnDeployer implements PluginDeployer {
         try {
             return c()
         }
-        catch (SVNAuthenticationException ex) {
+        catch (ex) {
             // Only allow three authentication attempts.
             if (authCount == 3) throw ex
             else if (authCount > 0) out.println "Authentication failed - please try again."
