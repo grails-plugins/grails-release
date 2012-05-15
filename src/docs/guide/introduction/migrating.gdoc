@@ -2,7 +2,9 @@ Starting with Grails 2.0, the Release plugin replaces the old @release-plugin@ c
 
 h4. No \-\-zipOnly option
 
-The new @publish-plugin@ command doesn't integrate with Subversion, so the @\-\-zipOnly@ option is no longer available since there's no need to specify that you only want to publish the plugin zip.
+The new @publish-plugin@ command has a more flexible approach to source control management than @release-plugin@ and so the @\-\-zipOnly@ option is no longer available. Instead, you specify whether you want the plugin to manage source control integration via the new @\-\-scm@ and @\-\-noScm@ options. The former is effectively the default, but you can disable SCM for the project via the @grails.release.scm.enabled@ build configuration option. 
+
+The source control management is handled by plugins, such as the Subversion plugin that this plugin depends on. If you don't have the appropriate plugin for your SCM system, you won't be able to use the SCM integration.
 
 h4. Configuration changes
 

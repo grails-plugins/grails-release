@@ -10,7 +10,7 @@ includeTargets << grailsScript("_GrailsPluginDev")
 includeTargets << new File(releasePluginDir, "scripts/_GrailsMaven.groovy")
 
 USAGE = """
-    publish-plugin [--repository=REPO] [--protocol=PROTOCOL] [--portal=PORTAL] [--dry-run] [--snapshot] [--ping-only]
+    publish-plugin [--repository=REPO] [--protocol=PROTOCOL] [--portal=PORTAL] [--dry-run] [--snapshot] [--scm] [--no-scm] [--message=MESSAGE] [--no-message] [--ping-only]
 
 where
     REPO     = The name of a configured repository to deploy the plugin to. Can be
@@ -24,11 +24,21 @@ where
     PORTAL   = The portal to inform of the plugin's release.
                (default: Grails Plugin Portal).
 
+    MESSAGE  = Commit message to use when committing source changes using your
+               SCM provider.
+
     --dry-run      = Shows you what will happen when you publish the plugin,
                      but doesn't actually publish it.
 
     --snapshot     = Force this release to be a snapshot version, i.e. it isn't
                      automatically made the latest available release.
+
+    --scm          = Enables source control management for this release.
+
+    --no-scm       = Disables source control management for this release.
+
+
+    --no-message   = Commit using just the default message.
 
     --no-overwrite = Don't fail if this plugin has already been published.
                      This is useful if this plugin is being published from a 
@@ -45,11 +55,16 @@ where
     --binary       = Release as a binary plugin.
 """
 
-target(publishPlugin: "Publishes a plugin to either a Subversion or Maven repository.") {
+scmProvider = null
+scmHost = null
+
+target(default: "Publishes a plugin to either a Subversion or Maven repository.") {
     depends(parseArguments, checkGrailsVersion, packagePlugin, processDefinitions, generatePom)
 
     // Handle old names for options. Trying to be consistent with Grails 2.0 conventions.
     if (argsMap["dryRun"]) { argsMap["dry-run"] = true }
+    if (argsMap["noScm"]) { argsMap["no-scm"] = true }
+    if (argsMap["noMessage"]) { argsMap["no-message"] = true }
     if (argsMap["pingOnly"]) { argsMap["ping-only"] = true }
     if (argsMap["noOverwrite"]) { argsMap["no-overwrite"] = true }
     if (argsMap["allowOverwrite"]) { argsMap["allow-overwrite"] = true }
@@ -65,6 +80,39 @@ target(publishPlugin: "Publishes a plugin to either a Subversion or Maven reposi
             version : pluginInfo.version.text(),
             isSnapshot : !isRelease ]
     event "PublishPluginStart", [ pluginInfo ]
+
+    // Is source control management enabled for this run?
+    boolean scmEnabled = Boolean.valueOf(getPropertyValue("grails.release.scm.enabled", true))
+    if (argsMap["scm"]) scmEnabled = true
+    if (argsMap["no-scm"]) scmEnabled = false
+
+    if (scmEnabled) {
+        final inputHelper = new CommandLineHelper()
+        final interactive = new Expando(
+                out: System.out,
+                askUser: { msg ->
+                    // This closure is executed whenever the SCM needs to
+                    // ask for user input.
+                    return userInput(
+                            inputHelper,
+                            msg,
+                            "SCM requires an answer to \"${msg}\", but you are running in non-interactive mode.")
+                })
+
+        // Load any SCM provider that may be installed.
+        event "InitScm", [grailsSettings.baseDir, interactive]
+
+        if (!scmProvider) {
+            println "WARN: No SCM provider installed."
+        }
+    }
+
+    // If SCM is enabled and a provider available, make sure the plugin
+    // source is under source control and that the latest code is committed
+    // and tagged.
+    if (scmProvider) {
+        processScm scmProvider
+    }
 
     // Use the Grails Central Plugin repository as the default.
     def repoClass = classLoader.loadClass("grails.plugins.publish.Repository")
@@ -104,6 +152,11 @@ target(publishPlugin: "Publishes a plugin to either a Subversion or Maven reposi
             // ahead of the public Grails plugin portal.
             defaultPortal = repoDefn.args["portal"]
         }
+        else {
+            // Handle legacy Subversion repository definitions.
+            type = "svn"
+            url = grailsSettings.config.grails.plugin.repos.distribution."$repoName"
+        }
 
         // Check that the repository is defined.
         if (url) {
@@ -111,7 +164,7 @@ target(publishPlugin: "Publishes a plugin to either a Subversion or Maven reposi
                     repoName,
                     new URI(url),
                     defaultPortal ?: null)
-            println "Publishing to Maven repository '$repoName'"
+            println "Publishing to ${type == 'svn' ? 'Subversion' : 'Maven'} repository '$repoName'"
         }
         else {
             println "No configuration found for repository '$repoName'"
@@ -134,7 +187,50 @@ target(publishPlugin: "Publishes a plugin to either a Subversion or Maven reposi
 
         deployer = classLoader.loadClass("grails.plugins.publish.print.DryRunDeployer").newInstance()
     }
-    else if (type == "grailsCentral") {
+    else if (type == "svn") {
+        // Helper class for getting user input from the command line.
+        def inputHelper = new CommandLineHelper()
+
+        // If the username and password are declared in the standard configuration,
+        // grails.project.repos.<repo>.username/password, then pick them out now
+        // and set them on the SvnClient instance.
+        def uri = repo.uri
+        def svnClient = classLoader.loadClass("grails.plugin.svn.SvnClient").newInstance(uri.toString())
+        def retval = processAuthConfig.call(repo.name) { username, password ->
+            if (username) {
+                if (uri.userInfo) {
+                    println "WARN: username and password defined in config and in repository URI - using the credentials from the URI."
+                }
+                else {
+                    svnClient.setCredentials(username, password)
+                }
+            }
+        }
+
+        if (retval) return retval
+
+        // Create a deployer for Subversion
+        def masterPluginList = classLoader.loadClass("grails.plugins.publish.svn.MasterPluginList").newInstance(
+                svnClient,
+                repo.name,
+                new File(grailsSettings.projectWorkDir, ".plugin-meta"),
+                System.out,
+                false)
+
+        deployer = classLoader.loadClass("grails.plugins.publish.svn.SvnDeployer").newInstance(
+                svnClient,
+                grailsSettings.projectWorkDir,
+                repo.name,
+                masterPluginList,
+                System.out) { msg ->
+            // This closure is executed whenever the deployer needs to
+            // ask for user input.
+            return userInput(
+                    inputHelper,
+                    msg,
+                    "SvnDeployer requires an answer to \"${msg}\", but you are running in non-interactive mode.")
+        }
+    } else if(type == "grailsCentral") {
         deployer = classLoader.loadClass("grails.plugins.publish.portal.GrailsCentralDeployer").newInstance()
         def retval = processAuthConfig.call(repo.name) { username, password ->
             if (username) {
@@ -142,7 +238,7 @@ target(publishPlugin: "Publishes a plugin to either a Subversion or Maven reposi
                 deployer.password = password
 
                 def gcp = distributionInfo.portals["grailsCentral"]
-                if (gcp && !gcp?.username) {
+                if(gcp && !gcp?.username) {
                     gcp.username = username
                     gcp.password = password
 
@@ -152,11 +248,11 @@ target(publishPlugin: "Publishes a plugin to either a Subversion or Maven reposi
 
         if (retval) return retval
         def uri = repo?.uri?.toString()
-        if (uri) {
+        if(uri) {
             deployer.portalUrl = uri
         }
     }
-    else if (type == "maven") {
+    else if (type == "maven"){
         // Work out the protocol to use. This may be provided as a
         // '--protocol' argument on the command line or inferred from
         // the repository URL.
@@ -258,7 +354,8 @@ target(publishPlugin: "Publishes a plugin to either a Subversion or Maven reposi
     def portalName = argsMap["portal"] ?: repo.defaultPortal
     def portalDefn = null
     if (portalName) {
-        // Pick the configured portal with the given name, assuming one exists with that name.
+        // Pick the configured portal with the given name, assuming one
+        // exists with that name.
         portalDefn = distributionInfo.portals[portalName]
 
         if (!portalDefn?.url) {
@@ -281,7 +378,8 @@ target(publishPlugin: "Publishes a plugin to either a Subversion or Maven reposi
     if (!portalUrl.path.endsWith("/")) portalUrl = new URI(portalUrl.toString() + "/")
     portalUrl = portalUrl.resolve(pluginInfo.name)
 
-    // Now that we have a URL, simply send a PUT request with the appropriate JSON content.
+    // Now that we have a URL, simply send a PUT request with the appropriate
+    // JSON content.
     println "Notifying plugin portal '${portalUrl}' of release..."
 
     if (!argsMap["dry-run"]) {
@@ -337,26 +435,111 @@ private userInput(inputHelper, msg, nonInteractiveErrorMsg) {
         exit 1
         return ""
     }
-
-    return requiresSecureInput(msg) ? secureUserInput(inputHelper, msg) : inputHelper.userInput(msg)
+    else {
+        return requiresSecureInput(msg) ? secureUserInput(inputHelper, msg) : inputHelper.userInput(msg)
+    }
 }
 
 private secureUserInput(inputHelper, msg) {
-    if (!binding.variables.containsKey("grailsConsole")) {
-        return inputHelper.userInput(msg)
-    }
-
-    try {
-        if (grailsConsole.metaClass.respondsTo(grailsConsole, "secureUserInput", msg)) {
-            return grailsConsole.secureUserInput(msg)
+    if (binding.variables.containsKey("grailsConsole")) {
+        try {
+            if (grailsConsole.metaClass.respondsTo(grailsConsole, "secureUserInput", msg)) {
+                return grailsConsole.secureUserInput(msg)
+            }
+            else {
+                return grailsConsole.reader.readLine(msg, new Character("*" as char))
+            }
         }
-        return grailsConsole.reader.readLine(msg, new Character("*" as char))
+        catch (ClassNotFoundException e) {
+            return inputHelper.userInput(msg)
+        }
     }
-    catch (ClassNotFoundException e) {
+    else {
         return inputHelper.userInput(msg)
     }
 }
 
 private requiresSecureInput(msg) { msg.toLowerCase().contains("password") }
 
-setDefaultTarget 'publishPlugin'
+private processScm(scm) {
+    // Configure authentication for the SCM provider if credentials provided
+    // in build settings.
+    def scmConfig = grailsSettings.config.grails.project.scm
+    if (scmConfig.username) {
+        scm.auth scmConfig.username, scmConfig.password
+    }
+
+    // Find out if the user wants to add any extra text to the standard
+    // commit message.
+    def inputHelper = new CommandLineHelper()
+    def msg = argsMap["message"] ?: (argsMap["no-message"] || !isInteractive || argsMap["ping-only"] ?
+            "" : inputHelper.userInput("Enter extra commit message text for this release (optional): "))
+    if (msg) msg = "\n\n" + msg
+
+    if (!scm.managed) {
+        // Ignore SCM import if in non-interactive mode.
+        if (!isInteractive) return
+
+        // The project isn't under source control, so import it into the user's
+        // preferred SCM system - unless the user explicitly doesn't want it added
+        // to source control.
+        def answer = inputHelper.userInput("Project is not under source control. Do you want to import it now? (Y,n) ")
+        if (answer?.equalsIgnoreCase("n")) {
+            return
+        }
+
+        scmImportProject(scm, inputHelper, msg)
+    }
+    else {
+        // First check for any untracked files in the project. We don't want any
+        // files accidentally missed from the commit! If there are some, we won't
+        // allow a commit unless they are tracked or added to the project's ignores.
+        //
+        // TODO Allow the user to add each file to source control or ignores and
+        // then continue with the commit. The user should also have the option of
+        // cancelling without making any changes.
+        if (scm.unmanagedFiles) {
+            event "StatusError", ["You have untracked files. Please add them to source control or the ignore list before publishing the plugin."]
+            event "StatusFinal", ["Plugin publication cancelled."]
+            exit 1
+            return
+        }
+
+        // Is the current code up to date? If not, we shouldn't commit and release.
+        // TODO Support doing an update right here, right now.
+        if (!scm.upToDate()) {
+            event "StatusError", ["Your local source is not up to date. Please update it before publishing the plugin."]
+            event "StatusFinal", ["Plugin publication cancelled."]
+            exit 1
+            return
+        }
+
+        def version = pluginInfo.version
+
+        scm.commit "Releasing version ${version} of ${pluginInfo.name} plugin.${msg}"
+        if (isRelease) scm.tag "v${version}", "Tagging the ${version} version of the plugin source."
+        scm.synchronize()
+    }
+}
+
+private scmImportProject(scm, inputHelper, msg) {
+    // Get a URL for the repository to import this project into. The developer may
+    // want to use the default Grails plugin source repository, which requires the
+    // Subversion plugin. Alternatively, it could be another host such as GitHub or
+    // Google Code. Finally, no URL may be given at all. This can make sense for
+    // distributed version control systems in which you have a local copy of the
+    // repository.
+    def hostUrl = null
+    if (!scmHost && pluginManager.hasGrailsPlugin("svn")) {
+        def answer = inputHelper.userInput("Would you like to add this plugin's source to the Grails plugin source repository? (Y,n) ")
+        if (answer?.equalsIgnoreCase("y")) {
+            hostUrl = "https://svn.codehaus.org/grails-plugins/grails-${pluginInfo.name}"
+        }
+    }
+
+    if (!hostUrl) {
+        hostUrl = inputHelper.userInput("Please enter the URL of the remote SCM repository: ")
+    }
+
+    scmProvider.importIntoRepo hostUrl, "Initial import of plugin source code for the release of version ${pluginInfo.version}.${msg}"
+}

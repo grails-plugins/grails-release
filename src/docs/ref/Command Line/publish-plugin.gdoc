@@ -9,7 +9,7 @@ h2. Options
 {code}
 grails publish-plugin [--dryRun] [--snapshot] [--repository=repoId]
                       [--protocol=protocol] [--portal=portal] [--pingOnly]
-                      [--binary] [--no-overwrite] [--allow-overwrite]
+                      [--scm] [--noScm] [--binary] [--no-overwrite] [--allow-overwrite]
 {code}
 
 * @dryRun@ will simply print out what files will be deployed. It won't actually perform the deployment, so it's a good way to see whether the command will do what you expect.
@@ -18,6 +18,8 @@ grails publish-plugin [--dryRun] [--snapshot] [--repository=repoId]
 * @protocol@ specifies the protocol to use when deploying the plugin to a Maven-compatible repository. Can be one of 'http', 'scp', 'scpexe', 'ftp', or 'webdav'. The default is 'http'.
 * @portal@ specifies the ID of the portal to notify. For this to work, a portal must be configured for that ID in BuildConfig.groovy.
 * @pingOnly@ forces the command to only notify the configured portal - the plugin is not published to a repository.
+* @scm@ enables source control management for this release. It is on by default unless disabled via the @grails.release.scm.enabled@ configuration setting.
+* @noScm@ disables source control management for this release.
 * @binary@ packages the plugin in binary form before publishing it. This overrides the default packaging for the plugin.
 * @no-overwrite@ ensures the script exits with a status of 0 if this plugin has already been published.  This is useful if this plugin is being published from a continuous integration server and you don't want the command to exit with failure.
 * @allow-overwrite@ writes over any existing plugin with the same name and version number
@@ -41,7 +43,7 @@ grails publish-plugin --repository=acme --portal=comp --snapshot
 
 h2. Description
 
-In order for Grails to use plugins declaratively via the dependency DSL, they must be published to a repository. This command allows you to publish to Maven-compatible repositories while also optionally notifying a plugin portal (like the one on grails.org) of the plugin releases.
+In order for Grails to use plugins declaratively via the dependency DSL, they must be published to a repository. This command allows you to publish to both Maven-compatible and old-style Subversion repositories while also optionally notifying a plugin portal (like the one on grails.org) of the plugin releases.
 
 When publishing a public plugin, i.e. one that is hosted on the Grails Central Plugin Repository and the grails.org plugin portal, this command is typically run as:
 
