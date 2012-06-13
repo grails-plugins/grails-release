@@ -38,12 +38,25 @@ class GrailsCentralDeployer implements PluginDeployer {
             xml = pluginXmlFile
         }
 
-        if (resp.status == 200) {
+        switch (resp.status) {
+        case 200:
             println "Plugin successfully published."
-            return
+            break
+
+        case 401:
+            throw new RuntimeException("Repository authentication failed. Do you have an account " +
+                    "and are your username and password correct?")
+            break
+
+        case 403:
+            throw new RuntimeException(resp.text)
+            break
+
+        default:
+            throw new RuntimeException("Server error deploying to Grails central repository " +
+                    "(status ${resp.status}):\n${resp.text}")
         }
 
-        throw new RuntimeException("Server returned error deploying to Grails central repository: ${resp.status}")
     }
 
     /**

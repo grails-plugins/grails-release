@@ -164,11 +164,12 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
                     repoName,
                     new URI(url),
                     defaultPortal ?: null)
-            println "Publishing to ${type == 'svn' ? 'Subversion' : 'Maven'} repository '$repoName'"
+            def repoNames = [svn: "Subversion", maven: "Maven", grailsCentral: "Grails"]
+            println "Publishing to ${repoNames[type]} repository '$repoName'"
         }
         else {
             println "No configuration found for repository '$repoName'"
-            exit(1)
+            exit 1
         }
     }
     else {
@@ -292,7 +293,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         else if (repo.uri) {
             if (!repo.uri.scheme) {
                 println "Invalid URL for repository '${repo.name}': ${repo.uri}"
-                exit(1)
+                exit 1
                 return 1
             }
 
@@ -308,7 +309,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
     }
     else {
         println "Unknown type '$type' defined for repository '$repoName'"
-        exit(1)
+        exit 1
     }
 
     if (!argsMap["ping-only"]) {
@@ -343,7 +344,13 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
             }
         }
 
-        deployer.deployPlugin(pluginZip as File, new File(basedir, "plugin.xml"), new File(pomFileLocation), isRelease)
+        try {
+            deployer.deployPlugin(pluginZip as File, new File(basedir, "plugin.xml"), new File(pomFileLocation), isRelease)
+        }
+        catch (Exception ex) {
+            event "StatusError", ["Failed to publish plugin: ${ex.message}"]
+            exit 1
+        }
 
         event "DeployPluginEnd", [ pluginInfo, pluginZip, pomFileLocation ]
     }
