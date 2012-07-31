@@ -211,7 +211,13 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                 if (getOptionalProperty(pluginInstance, "description")) delegate.description pluginInstance.description
                 if (getOptionalProperty(pluginInstance, "documentation")) delegate.url pluginInstance.documentation
                 if (getOptionalProperty(pluginInstance, "license")) {
-                    def l = globalLicenses[pluginInstance.license]
+                    def l = null
+                    if (pluginInstance.license instanceof Map) {
+                        l = pluginInstance.license
+                    } 
+                    else {
+                        l = globalLicenses[pluginInstance.license]
+                    }
                     if (l) {
                         licenses {
                             license {
