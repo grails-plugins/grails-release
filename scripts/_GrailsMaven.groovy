@@ -29,9 +29,21 @@ includeTargets << grailsScript("_GrailsPackage")
 
 // Open source licences.
 globalLicenses = [
-        APACHE: [ name: "Apache License 2.0", url: "http://www.apache.org/licenses/LICENSE-2.0.txt" ],
-        GPL2: [ name: "GNU General Public License 2", url: "http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt"],
-        GPL3: [ name: "GNU General Public License 3", url: "http://www.gnu.org/licenses/gpl.txt"] ]
+        // General, permissive "copyfree" licenses
+        APACHE:    [ name: "Apache License 2.0", url: "http://www.apache.org/licenses/LICENSE-2.0.txt" ],
+        BSD2:      [ name: "Simplified BSD License (2 Clause)", url: "http://opensource.org/licenses/BSD-2-Clause"],
+        BSD3:      [ name: "New BSD License (3 Clause)", url: "http://opensource.org/licenses/BSD-3-Clause"],
+        MIT:       [ name: "MIT License", url: "http://opensource.org/licenses/MIT"],
+        //GNU Family
+        GPL2:      [ name: "GNU General Public License 2", url: "http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt"],
+        GPL3:      [ name: "GNU General Public License 3", url: "http://www.gnu.org/licenses/gpl.txt"],
+        AGPL3:     [ name: "GNU Affero General Public License 3", url: "http://www.gnu.org/licenses/agpl-3.0.html"],
+        'LGPL2.1': [ name: "GNU Lesser General Public License 2.1", url: "http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"],
+        LGPL3:     [ name: "GNU Lesser General Public License 3", url: "http://www.gnu.org/licenses/lgpl.html"],
+        // Other
+        EPL1:       [ name: "Eclipse Public License v1.0", url: "http://opensource.org/licenses/EPL-1.0"],
+        MPL2:       [ name: "Mozilla Public License v2.0", url: "http://opensource.org/licenses/MPL-2.0"],
+    ]
 
 artifact = groovy.xml.NamespaceBuilder.newInstance(ant, 'antlib:org.apache.maven.artifact.ant')
 
