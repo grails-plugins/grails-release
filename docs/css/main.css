@@ -1,4 +1,3 @@
-@import "custom.css";
 @import "tools.css";
 @import "skin.css";
 
@@ -635,10 +634,6 @@ ol.HEBREW {
     list-style-type: hebrew;
 }
 
-li {
-    margin-top: 0.7em;
-}
-
 /************************************************/
 /* index formatting                             */
 .index-top {
@@ -687,6 +682,11 @@ li {
 
 .calendar .today {
     border: 3px solid #cccccc;
+}
+
+li {
+    margin-bottom: 2px;
+    margin-top: 2px;
 }
 
 /*
