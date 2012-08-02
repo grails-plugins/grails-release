@@ -96,7 +96,7 @@ class PublishPluginTests extends AbstractCliTestCase {
 
         // Make sure SCM is enabled.
         assertTrue "SCM is not enabled.",
-                output.contains("Project is not under source control. Do you want to import it now?")
+                output.contains("WARN: No SCM provider installed.")
 
         // Make sure it's reporting the repository it's publishing to.
         assertTrue "Command is not reporting the correct repository.", output.contains("Publishing to Maven repository 'maven1'")
