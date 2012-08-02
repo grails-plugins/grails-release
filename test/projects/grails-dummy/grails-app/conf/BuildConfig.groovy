@@ -40,6 +40,6 @@ grails.project.dependency.resolution = {
     plugins {
         compile ":debug:[1.0,)"
         compile ":geb:[0.5.0,0.6.0]"
-        compile ":shiro:1.1-SNAPSHOT"
+        compile ":shiro:1.2.0-SNAPSHOT"
     }
 }
