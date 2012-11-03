@@ -22,8 +22,8 @@ grails.project.dependency.resolution = {
 
     dependencies {
         provided "org.apache.ivy:ivy:2.2.0"
-        provided("org.apache.maven:maven-ant-tasks:2.1.0",
-                 "org.codehaus.groovy.modules.http-builder:http-builder:0.5.0") {
+        provided("org.apache.maven:maven-ant-tasks:2.1.3",
+                 "org.codehaus.groovy.modules.http-builder:http-builder:0.6") {
             excludes "commons-logging", "xml-apis", "groovy"
         }
         test("org.gmock:gmock:0.8.0") {
