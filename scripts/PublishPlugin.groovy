@@ -119,7 +119,9 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
     def repo = repoClass.grailsCentral
 
     // Add the Grails Central portal to the distribution info under the
-    // ID 'grailsCentral'.
+    // ID 'grailsCentral'. 'distributionInfo' is created by the processDefinitions
+    // target and contains the configuration for all the declared repositories
+    // and portals.
     def grailsCentralPortal = distributionInfo.portals["grailsCentral"]
     if (!grailsCentralPortal) {
         grailsCentralPortal = [ url: repoClass.GRAILS_CENTRAL_PORTAL_URL ]
@@ -258,11 +260,11 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
 
         if (retval) return retval
         def uri = repo?.uri?.toString()
-        if(uri) {
+        if (uri) {
             deployer.portalUrl = uri
         }
     }
-    else if (type == "maven"){
+    else if (type == "maven") {
         // Work out the protocol to use. This may be provided as a
         // '--protocol' argument on the command line or inferred from
         // the repository URL.

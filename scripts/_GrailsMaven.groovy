@@ -174,7 +174,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
         includeTargets << grailsScript("_GrailsPluginDev")
         packagePlugin()
 
-        // This script variable doesn't exist pre-Grails 1.4.
+        // This script variable doesn't exist pre-Grails 2.0
         if (!binding.variables.containsKey("pluginInfo")) {
             pluginInfo = pluginSettings.getPluginInfo(basedir)
         }
