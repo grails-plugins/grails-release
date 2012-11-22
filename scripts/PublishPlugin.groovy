@@ -231,8 +231,17 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
                     msg,
                     "SvnDeployer requires an answer to \"${msg}\", but you are running in non-interactive mode.")
         }
-    } else if(type == "grailsCentral") {
-        deployer = classLoader.loadClass("grails.plugins.publish.portal.GrailsCentralDeployer").newInstance()
+    }
+    else if (type == "grailsCentral") {
+        deployer = classLoader.loadClass("grails.plugins.publish.portal.GrailsCentralDeployer").newInstance() { msg ->
+            // This closure is executed whenever the deployer needs to
+            // ask for user input.
+            return userInput(
+                    new CommandLineHelper(),
+                    msg,
+                    "GrailsCentralDeployer requires an answer to \"${msg}\", but you are running in non-interactive mode.")
+        }
+
         def retval = processAuthConfig.call(repo.name) { username, password ->
             if (username) {
                 deployer.username = username

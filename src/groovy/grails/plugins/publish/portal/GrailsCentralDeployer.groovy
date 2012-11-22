@@ -16,6 +16,11 @@ class GrailsCentralDeployer implements PluginDeployer {
     String portalUrl = "http://grails.org/plugins"
     String username
     String password
+    def askUser
+
+    GrailsCentralDeployer(askUser = null) {
+        this.askUser = askUser
+    }
 
     boolean isVersionAlreadyPublished(File pomFile) {
         def (pluginName, pluginVersion) = parsePom(pomFile)
@@ -29,13 +34,16 @@ class GrailsCentralDeployer implements PluginDeployer {
         base = base.port > -1 ? "http://$base.host:$base.port" : "http://$base.host"
         def url = "$base/api/v1.0/publish/$pluginName/$pluginVersion"
         println "Publishing to $url"
-        def resp = rest.post(url) {
-            auth username, password
-            contentType "multipart/form-data"
-            accept "text/plain"
-            zip = pluginPackage
-            pom = pomFile
-            xml = pluginXmlFile
+
+        def resp = handleAuthentication {
+            return rest.post(url) {
+                auth username, password
+                contentType "multipart/form-data"
+                accept "text/plain"
+                zip = pluginPackage
+                pom = pomFile
+                xml = pluginXmlFile
+            }
         }
 
         switch (resp.status) {
@@ -66,5 +74,24 @@ class GrailsCentralDeployer implements PluginDeployer {
     protected final parsePom(pomFile) {
         def pom = new XmlSlurper().parseText(pomFile.text)
         return [pom.artifactId.text(), pom.version.text()]
+    }
+
+    /**
+     * @param c The closure to execute within the try/catch.
+     */
+    private handleAuthentication(c, authCount = 0) {
+        def resp = c()
+        if (resp.status == 401 && authCount < 3 && askUser) {
+            // Only allow three authentication attempts.
+            if (username || authCount > 0) {
+                System.out.println "Authentication failed - please try again."
+            }
+
+            username = askUser("Enter your username: ")
+            password = askUser("Enter your password: ")
+            resp = handleAuthentication(c, ++authCount)
+        }
+
+        return resp
     }
 }
