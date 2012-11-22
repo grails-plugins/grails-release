@@ -24,15 +24,13 @@ class GrailsCentralDeployer implements PluginDeployer {
 
     boolean isVersionAlreadyPublished(File pomFile) {
         def (pluginName, pluginVersion) = parsePom(pomFile)
-        def resp = rest.get("$portalUrl/api/v1.0/plugin/$pluginName/$pluginVersion")   
+        def resp = rest.get("$baseUrl/api/v1.0/plugin/$pluginName/$pluginVersion")   
         return resp?.status == 200
     }
 
     void deployPlugin(File pluginPackage, File pluginXmlFile, File pomFile, boolean isRelease) {
         def (pluginName, pluginVersion) = parsePom(pomFile)
-        def base = new URL(portalUrl)
-        base = base.port > -1 ? "http://$base.host:$base.port" : "http://$base.host"
-        def url = "$base/api/v1.0/publish/$pluginName/$pluginVersion"
+        def url = "$baseUrl/api/v1.0/publish/$pluginName/$pluginVersion"
         println "Publishing to $url"
 
         def resp = handleAuthentication {
@@ -48,7 +46,6 @@ class GrailsCentralDeployer implements PluginDeployer {
 
         switch (resp.status) {
         case 200:
-            println "Plugin successfully published."
             break
 
         case 401:
@@ -65,6 +62,34 @@ class GrailsCentralDeployer implements PluginDeployer {
                     "(status ${resp.status}):\n${resp.text}")
         }
 
+        waitForDeploymentStatus pluginName, pluginVersion
+    }
+
+    protected waitForDeploymentStatus(String name, String version) {
+        for (int i in 0..<20) {
+            def resp = rest.get("$baseUrl/api/v1.0/plugin/status/$name/$version").text
+            if (resp == "COMPLETED") {
+                println "Plugin successfully published."
+                return
+            }
+            else if (resp == "FAILED") {
+                throw new RuntimeException("Server error deploying to Grails central repository. " +
+                        "Please try publishing again. If that doesn't work, contact us on dev@grails.codehaus.org.")
+            }
+
+            Thread.sleep 1000
+        }
+        
+        // Still don't know the status of the plugin...
+        throw new RuntimeException("We cannot determine whether the plugin has been published or not. " +
+                "Please wait and try publishing with the --ping-only option. If that doesn't work, " +
+                "perform a full publish again. If you experience continued problems, please contact us " +
+                "on dev@grails.codehaus.org.")
+    }
+
+    protected getBaseUrl() {
+        def base = new URI(portalUrl)
+        return base.port > -1 ? "http://$base.host:$base.port" : "http://$base.host"
     }
 
     /**
