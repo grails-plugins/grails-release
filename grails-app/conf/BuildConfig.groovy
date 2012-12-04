@@ -17,13 +17,12 @@ grails.project.dependency.resolution = {
     }
 
     plugins {
-        compile ":rest-client-builder:1.0.2"
+        compile ":rest-client-builder:1.0.3"
     }
 
     dependencies {
         provided "org.apache.ivy:ivy:2.2.0"
-        provided("org.apache.maven:maven-ant-tasks:2.1.3",
-                 "org.codehaus.groovy.modules.http-builder:http-builder:0.6") {
+        provided("org.apache.maven:maven-ant-tasks:2.1.3") {
             excludes "commons-logging", "xml-apis", "groovy"
         }
         test("org.gmock:gmock:0.8.0") {

@@ -1,10 +1,9 @@
-import groovyx.net.http.HTTPBuilder
+
 
 import org.apache.commons.codec.digest.DigestUtils
 import org.codehaus.groovy.grails.cli.CommandLineHelper
 
-import static groovyx.net.http.Method.PUT
-import static groovyx.net.http.ContentType.JSON
+import grails.plugins.rest.client.*
 
 includeTargets << grailsScript("_GrailsPluginDev")
 includeTargets << new File(releasePluginDir, "scripts/_GrailsMaven.groovy")
@@ -418,26 +417,27 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
                     "You haven't configured the plugin portal password - required in non-interactive mode")
         }
 
-        def http = new HTTPBuilder(portalUrl)
-        http.auth.basic username, password
-        http.request(PUT, JSON) { req ->
-            body = pluginInfo + [ url : repo.uri.toString() ]
+        def converterConfig = new org.codehaus.groovy.grails.web.converters.configuration.ConvertersConfigurationInitializer()
+        converterConfig.initialize(grailsApp)
+        def rest = classLoader.loadClass("grails.plugins.rest.client.RestBuilder").newInstance()
+        def resp = rest.put(portalUrl.toString()) {
+            auth username, password
+            json( pluginInfo + [ url : repo.uri.toString() ] )
+        }
+        switch(resp.status) {
+            case 401:
+                println "ERROR: Portal authentication failed. Are your username and password correct?"; break
+            case 403:
+                println "ERROR: You do not have permission to update the plugin portal."; break
 
-            response.success = { resp ->
-                println "Notification successful"
-            }
+            default:
 
-            response.'401' = { resp ->
-                println "ERROR: Portal authentication failed. Are your username and password correct?"
-            }
-
-            response.'403' = { resp ->
-                println "ERROR: You do not have permission to update the plugin portal."
-            }
-
-            response.failure = { resp, json ->
-                println "ERROR: Notification failed - status ${resp.status} - ${json.message}"
-            }
+                if(resp.class.name == "grails.plugins.rest.client.ErrorResponse") {
+                    println "ERROR: Notification failed - status ${resp.status} - ${resp.json.message}"
+                }
+                else {
+                    println "Notification successful"    
+                }
         }
 
         event "PingPortalEnd", [ pluginInfo, portalUrl, repo.uri.toString() ]
