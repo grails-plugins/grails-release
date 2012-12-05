@@ -6,7 +6,7 @@ package grails.plugins.publish
  */
 class Repository {
     /** URL for 'grailsCentral' portal */
-    static final String GRAILS_CENTRAL_PORTAL_URL = "http://grails.org/plugin/"
+    static final String GRAILS_CENTRAL_PORTAL_URL = "http://grails.org/plugins/"
 
     /** The standard Grails Central repository. */
     static final Repository grailsCentral = new Repository(

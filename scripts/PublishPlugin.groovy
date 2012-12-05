@@ -420,9 +420,10 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         def converterConfig = new org.codehaus.groovy.grails.web.converters.configuration.ConvertersConfigurationInitializer()
         converterConfig.initialize(grailsApp)
         def rest = classLoader.loadClass("grails.plugins.rest.client.RestBuilder").newInstance()
+		def jsonParams = pluginInfo + [ url : repo.uri.toString() ] 
         def resp = rest.put(portalUrl.toString()) {
             auth username, password
-            json( pluginInfo + [ url : repo.uri.toString() ] )
+            json({ jsonParams })
         }
         switch(resp.status) {
             case 401:
