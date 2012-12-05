@@ -12,7 +12,7 @@ import grails.plugins.rest.client.RestBuilder
 class GrailsCentralDeployer implements PluginDeployer {
 
     //private proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("localhost", 8888))
-    RestBuilder rest = new RestBuilder(connectTimeout: 10000, readTimeout: 100000, proxy: null)
+    RestBuilder rest = new RestBuilder(connectTimeout: 1000, readTimeout: 10000, proxy: null)
     String portalUrl = "http://grails.org/plugins"
     String username
     String password
