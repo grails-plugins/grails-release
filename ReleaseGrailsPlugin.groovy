@@ -15,7 +15,7 @@
  */
 
 class ReleaseGrailsPlugin {
-    def version = "2.2.0"
+    def version = "2.2.1"
     def grailsVersion = "2.0 > *"
     def author = "Graeme Rocher"
     def authorEmail = "grocher@vmware.com"
