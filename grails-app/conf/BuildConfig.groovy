@@ -2,6 +2,7 @@ grails.project.work.dir = 'target'
 grails.project.docs.output.dir = "docs"
 grails.project.source.level = 1.6
 
+grails.project.dependency.resolver = "maven"
 grails.project.dependency.resolution = {
 
     inherits "global"
@@ -21,7 +22,6 @@ grails.project.dependency.resolution = {
     }
 
     dependencies {
-        compile "org.apache.ivy:ivy:2.2.0"
         compile("org.apache.maven:maven-ant-tasks:2.1.3") {
             excludes "commons-logging", "xml-apis", "groovy"
         }

@@ -16,8 +16,6 @@
 
 import grails.util.*
 import org.apache.commons.codec.binary.Hex
-import org.apache.ivy.core.module.id.*
-import org.apache.ivy.util.ChecksumHelper
 import org.codehaus.groovy.grails.cli.CommandLineHelper
 import org.codehaus.groovy.grails.plugins.*
 import org.codehaus.groovy.grails.resolve.*
@@ -302,45 +300,44 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                 name grailsAppName
             }
 
-            def excludeResolver = classLoader.loadClass("grails.plugins.publish.ExcludeResolver").newInstance(grailsSettings.dependencyManager)
 
+            def excludeResolver = grailsSettings.dependencyManager.excludeResolver
             def excludeInfo = excludeResolver.resolveExcludes()
 
             if(plugin) {
                 dependencies {
-                    def excludeHandler = {dep, moduleId ->
+                    def excludeHandler = {dep ->
                         if(dep.transitive == false) {
-                            def excludes = excludeInfo[moduleId]
+                            def excludes = excludeInfo[dep]
                             if(excludes != null) {
                                 exclusions {
-                                    for(eId in excludes) {
+                                    for(exc in excludes) {
                                         exclusion {
-                                            groupId eId.organisation
-                                            artifactId eId.name
+                                            groupId exc.group
+                                            artifactId exc.name
                                         }
                                     }
                                 }
                             }
                         }
-                        else if(dep.allExcludeRules) {
+                        else if(dep.excludes) {
                             exclusions {
-                                for(er in dep.allExcludeRules) {
+                                for(er in dep.excludes) {
                                     exclusion {
-                                        def exclusionId = er.id.mid
-                                        if(exclusionId.organisation != '*') {
-                                            groupId exclusionId.organisation
+                                        if(er.group != '*') {
+                                            groupId er.group
                                         }
                                         else {
-                                            def excludes = excludeInfo[moduleId]
+                                            def excludes = excludeInfo[dep]
                                             if(excludes != null) {
-                                                def resolvedExclude = excludes.find { it.name == exclusionId.name }
+                                                def resolvedExclude = excludes.find { it.name == er.name }
                                                 if(resolvedExclude != null) {
-                                                    groupId resolvedExclude.organisation
+                                                    groupId resolvedExclude.group
                                                 }
                                             }
 
                                         }
-                                        artifactId exclusionId.name
+                                        artifactId er.name
                                     }
                                 }
                             }
@@ -349,88 +346,23 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                     corePlugins = pluginManager.allPlugins.findAll { it.pluginClass.name.startsWith("org.codehaus.groovy.grails.plugins") }*.name
 
                     def dependencyManager = grailsSettings.dependencyManager
-                    def appDeps = dependencyManager.getApplicationDependencyDescriptors()
+                    
                     def allowedScopes = ['runtime','compile', 'provided']
-
-                    for(dep in appDeps) {
-                        if(dep.scope in allowedScopes && dep.exported) {
-                            def moduleId = dep.getDependencyRevisionId()
-                            dependency {
-                                groupId moduleId.organisation
-                                artifactId moduleId.name
-                                version moduleId.revision
-                                scope dep.scope
-
-                                excludeHandler(dep, moduleId)
-                            }
-                        }
-                    }
-
-                    // Use the 1.4 method to get only non-transitive plugin deps if possible
-                    def pluginDeps = dependencyManager.hasProperty('declaredPluginDependencyDescriptors') ?
-                                        dependencyManager.declaredPluginDependencyDescriptors :
-                                        dependencyManager.getPluginDependencyDescriptors()
-
-                    def pluginsInstalledViaInstallPlugin = grails.util.Metadata.current.getInstalledPlugins()
-                    def processedPluginModuleIds = []
-                    for(dep in pluginDeps) {
-                        def moduleId = dep.getDependencyRevisionId()
-                        processedPluginModuleIds << moduleId.moduleId
-                        if(dep.scope in allowedScopes && dep.exported && !pluginsInstalledViaInstallPlugin.containsKey(moduleId.name) ) {
-
-                            dependency {
-                                groupId moduleId.organisation
-                                artifactId moduleId.name
-                                version moduleId.revision
-                                type "zip"
-                                scope dep.scope
-
-                                excludeHandler(dep, moduleId)
-                            }
-                        }
-                    }
-
-                    if(pluginInstance != null && pluginInstance.hasProperty('dependsOn')) {
-                        for(dep in pluginInstance.dependsOn) {
-                            String depName = dep.key
-                            if(!corePlugins.contains(dep.key)) {
-                                // Note: specifying group in dependsOn is a Grails 1.3 feature
-                                // 1.2 users don't have this capability
-                                String depGroup = "org.grails.plugins"
-                                if(depName.contains(":")) {
-                                    def i = depName.split(":")
-                                    depGroup = i[0]
-                                    depName = i[1]
-                                }
-                                String depVersion = dep.value
-                                def upper = GrailsPluginUtils.getUpperVersion(depVersion)
-                                def lower = GrailsPluginUtils.getLowerVersion(depVersion)
-                                if(upper == lower) depVersion = upper
-                                else {
-                                    upper = upper == '*' ? ')' : upper + ']'
-                                    lower = lower == '*' ? '(' : '[' + lower
-
-                                    depVersion = "$lower,$upper".toString()
-                                }
-
-                                def convertedPluginName = GrailsNameUtils.getScriptName(depName)
-                                String stringVersion = depVersion.toString()
-                                ModuleRevisionId depMrid = ModuleRevisionId.newInstance(depGroup.toString(), convertedPluginName.toString(), stringVersion)
-
-                                if(processedPluginModuleIds.contains(depMrid.moduleId)) continue;
-
+                    for(scope in allowedScopes) {
+                        def appDeps = dependencyManager.getApplicationDependencies(scope)    
+                        for(dep in appDeps) {
+                            if(scope in allowedScopes && dep.exported) {
+                                
                                 dependency {
+                                    groupId dep.group
+                                    artifactId dep.name
+                                    version dep.version
+                                    delegate.scope( scope )
 
-                                    groupId depGroup
-                                    artifactId convertedPluginName
-                                    version depVersion
-                                    type "zip"
-
-                                    excludeHandler(new EnhancedDefaultDependencyDescriptor(depMrid, false, "compile"),
-                                                    depMrid)
+                                    excludeHandler(dep)
                                 }
                             }
-                        }
+                        }                        
                     }
                 }
             }
