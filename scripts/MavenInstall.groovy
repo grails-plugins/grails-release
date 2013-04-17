@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-includeTargets << new File("${releasePluginDir}/scripts/_GrailsMaven.groovy")
+includeTargets << new File(releasePluginDir, "scripts/_GrailsMaven.groovy")
 
 target(main:"Installs a Grails plugin as a Maven artefact") {
     depends(parseArguments, mavenInstall)

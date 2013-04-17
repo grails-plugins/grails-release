@@ -24,7 +24,7 @@ class GrailsCentralDeployer implements PluginDeployer {
 
     boolean isVersionAlreadyPublished(File pomFile) {
         def (pluginName, pluginVersion) = parsePom(pomFile)
-        def resp = rest.get("$baseUrl/api/v1.0/plugin/$pluginName/$pluginVersion")   
+        def resp = rest.get("$baseUrl/api/v1.0/plugin/$pluginName/$pluginVersion")
         return resp?.status == 200
     }
 
@@ -72,14 +72,14 @@ class GrailsCentralDeployer implements PluginDeployer {
                 println "Plugin successfully published."
                 return
             }
-            else if (resp == "FAILED") {
+            if (resp == "FAILED") {
                 throw new RuntimeException("Server error deploying to Grails central repository. " +
                         "Please try publishing again. If that doesn't work, contact us on dev@grails.codehaus.org.")
             }
 
             Thread.sleep 1000
         }
-        
+
         // Still don't know the status of the plugin...
         throw new RuntimeException("We cannot determine whether the plugin has been published or not. " +
                 "Please wait and try publishing with the --ping-only option. If that doesn't work, " +
@@ -87,7 +87,7 @@ class GrailsCentralDeployer implements PluginDeployer {
                 "on dev@grails.codehaus.org.")
     }
 
-    protected getBaseUrl() {
+    protected String getBaseUrl() {
         def base = new URI(portalUrl)
         return base.port > -1 ? "http://$base.host:$base.port" : "http://$base.host"
     }
@@ -96,7 +96,7 @@ class GrailsCentralDeployer implements PluginDeployer {
      * Parses the given POM file (must have a 'text' property) and returns
      * a tuple of the plugin name and version (in that order).
      */
-    protected final parsePom(pomFile) {
+    protected parsePom(pomFile) {
         def pom = new XmlSlurper().parseText(pomFile.text)
         return [pom.artifactId.text(), pom.version.text()]
     }
@@ -104,7 +104,7 @@ class GrailsCentralDeployer implements PluginDeployer {
     /**
      * @param c The closure to execute within the try/catch.
      */
-    private handleAuthentication(c, authCount = 0) {
+    private handleAuthentication(c, int authCount = 0) {
         def resp = c()
         if (resp.status == 401 && authCount < 3 && askUser) {
             // Only allow three authentication attempts.

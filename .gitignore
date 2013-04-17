@@ -4,4 +4,4 @@ grails-*.zip*
 plugin.xml
 pom.xml
 target
-web-app/WEB-INF/classes
+web-app

@@ -5,8 +5,6 @@ import grails.plugins.publish.PluginDeployer
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
-import org.codehaus.groovy.grails.plugins.publishing.DefaultPluginPublisher
-import org.springframework.core.io.FileSystemResource
 
 /**
  * Implementation of {@link PluginDeployer} that deploys plugin packages

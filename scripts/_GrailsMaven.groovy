@@ -14,36 +14,37 @@
  * limitations under the License.
  */
 
-import grails.util.*
-import org.apache.commons.codec.binary.Hex
-import org.codehaus.groovy.grails.cli.CommandLineHelper
-import org.codehaus.groovy.grails.plugins.*
-import org.codehaus.groovy.grails.resolve.*
+import grails.util.BuildScope
+import groovy.xml.NamespaceBuilder
+import groovy.xml.MarkupBuilder
 
-scriptScope = grails.util.BuildScope.WAR
+import org.apache.ivy.util.ChecksumHelper
+import org.codehaus.groovy.grails.cli.CommandLineHelper
+
+scriptScope = BuildScope.WAR
 scriptEnv = "production"
 
 includeTargets << grailsScript("_GrailsPackage")
 
 // Open source licences.
 globalLicenses = [
-        // General, permissive "copyfree" licenses
-        APACHE:    [ name: "Apache License 2.0", url: "http://www.apache.org/licenses/LICENSE-2.0.txt" ],
-        BSD2:      [ name: "Simplified BSD License (2 Clause)", url: "http://opensource.org/licenses/BSD-2-Clause"],
-        BSD3:      [ name: "New BSD License (3 Clause)", url: "http://opensource.org/licenses/BSD-3-Clause"],
-        MIT:       [ name: "MIT License", url: "http://opensource.org/licenses/MIT"],
-        //GNU Family
-        GPL2:      [ name: "GNU General Public License 2", url: "http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt"],
-        GPL3:      [ name: "GNU General Public License 3", url: "http://www.gnu.org/licenses/gpl.txt"],
-        AGPL3:     [ name: "GNU Affero General Public License 3", url: "http://www.gnu.org/licenses/agpl-3.0.html"],
-        'LGPL2.1': [ name: "GNU Lesser General Public License 2.1", url: "http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"],
-        LGPL3:     [ name: "GNU Lesser General Public License 3", url: "http://www.gnu.org/licenses/lgpl.html"],
-        // Other
-        EPL1:       [ name: "Eclipse Public License v1.0", url: "http://opensource.org/licenses/EPL-1.0"],
-        MPL2:       [ name: "Mozilla Public License v2.0", url: "http://opensource.org/licenses/MPL-2.0"],
-    ]
+    // General, permissive "copyfree" licenses
+    APACHE:    [ name: "Apache License 2.0", url: "http://www.apache.org/licenses/LICENSE-2.0.txt" ],
+    BSD2:      [ name: "Simplified BSD License (2 Clause)", url: "http://opensource.org/licenses/BSD-2-Clause"],
+    BSD3:      [ name: "New BSD License (3 Clause)", url: "http://opensource.org/licenses/BSD-3-Clause"],
+    MIT:       [ name: "MIT License", url: "http://opensource.org/licenses/MIT"],
+    //GNU Family
+    GPL2:      [ name: "GNU General Public License 2", url: "http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt"],
+    GPL3:      [ name: "GNU General Public License 3", url: "http://www.gnu.org/licenses/gpl.txt"],
+    AGPL3:     [ name: "GNU Affero General Public License 3", url: "http://www.gnu.org/licenses/agpl-3.0.html"],
+    'LGPL2.1': [ name: "GNU Lesser General Public License 2.1", url: "http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"],
+    LGPL3:     [ name: "GNU Lesser General Public License 3", url: "http://www.gnu.org/licenses/lgpl.html"],
+    // Other
+    EPL1:       [ name: "Eclipse Public License v1.0", url: "http://opensource.org/licenses/EPL-1.0"],
+    MPL2:       [ name: "Mozilla Public License v2.0", url: "http://opensource.org/licenses/MPL-2.0"],
+]
 
-artifact = groovy.xml.NamespaceBuilder.newInstance(ant, 'antlib:org.apache.maven.artifact.ant')
+artifact = NamespaceBuilder.newInstance(ant, 'antlib:org.apache.maven.artifact.ant')
 
 target(mavenInstall:"Installs a plugin or application into your local Maven cache") {
     depends(init)
@@ -63,12 +64,12 @@ target(mavenDeploy:"Deploys the plugin to a Maven repository") {
     def protocol = protocols.http
     def repoName = argsMap.repository ?: grailsSettings.config.grails.project.repos.default
     def repo = repoName ? distributionInfo.remoteRepos[repoName] : null
-    if(argsMap.protocol) {
+    if (argsMap.protocol) {
         protocol = protocols[argsMap.protocol]
     }
-    else if(repo) {
+    else if (repo) {
         def url = repo?.args?.url
-        if(url) {
+        if (url) {
             def i = url.indexOf('://')
             def urlProt = url[0..i-1]
             protocol = protocols[urlProt] ?: protocol
@@ -184,7 +185,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
     }
 
     pomFileLocation = "${grailsSettings.projectTargetDir}/pom.xml"
-    basePom = new File("${basedir}/pom.xml")
+    basePom = new File(basedir, "pom.xml")
 
     if (basePom.exists()) {
         pomFileLocation = basePom.absolutePath
@@ -194,7 +195,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
 
     event("StatusUpdate", ["Generating POM file..."])
     new File(pomFileLocation).withWriter('UTF-8') { w ->
-        def xml = new groovy.xml.MarkupBuilder(w)
+        def xml = new MarkupBuilder(w)
 
         xml.mkp.pi xml: [version: "1.0", encoding: "UTF-8"]
         xml.project(xmlns: "http://maven.apache.org/POM/4.0.0",
@@ -224,7 +225,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                     def l = null
                     if (pluginInstance.license instanceof Map) {
                         l = pluginInstance.license
-                    } 
+                    }
                     else {
                         l = globalLicenses[pluginInstance.license]
                     }
@@ -300,16 +301,15 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                 name grailsAppName
             }
 
-
             def excludeResolver = grailsSettings.dependencyManager.excludeResolver
             def excludeInfo = excludeResolver.resolveExcludes()
 
-            if(plugin) {
+            if (plugin) {
                 dependencies {
-                    def excludeHandler = {dep ->
-                        if(dep.transitive == false) {
+                    def excludeHandler = { dep ->
+                        if (dep.transitive == false) {
                             def excludes = excludeInfo[dep]
-                            if(excludes != null) {
+                            if (excludes != null) {
                                 exclusions {
                                     for(exc in excludes) {
                                         exclusion {
@@ -320,18 +320,18 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                                 }
                             }
                         }
-                        else if(dep.excludes) {
+                        else if (dep.excludes) {
                             exclusions {
                                 for(er in dep.excludes) {
                                     exclusion {
-                                        if(er.group != '*') {
+                                        if (er.group != '*') {
                                             groupId er.group
                                         }
                                         else {
                                             def excludes = excludeInfo[dep]
-                                            if(excludes != null) {
+                                            if (excludes != null) {
                                                 def resolvedExclude = excludes.find { it.name == er.name }
-                                                if(resolvedExclude != null) {
+                                                if (resolvedExclude != null) {
                                                     groupId resolvedExclude.group
                                                 }
                                             }
@@ -346,23 +346,22 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                     corePlugins = pluginManager.allPlugins.findAll { it.pluginClass.name.startsWith("org.codehaus.groovy.grails.plugins") }*.name
 
                     def dependencyManager = grailsSettings.dependencyManager
-                    
+
                     def allowedScopes = ['runtime','compile', 'provided']
-                    for(scope in allowedScopes) {
-                        def appDeps = dependencyManager.getApplicationDependencies(scope)    
+                    for (scope in allowedScopes) {
+                        def appDeps = dependencyManager.getApplicationDependencies(scope)
                         for(dep in appDeps) {
-                            if(scope in allowedScopes && dep.exported) {
-                                
+                            if (scope in allowedScopes && dep.exported) {
                                 dependency {
                                     groupId dep.group
                                     artifactId dep.name
                                     version dep.version
-                                    delegate.scope( scope )
+                                    delegate.scope(scope)
 
                                     excludeHandler(dep)
                                 }
                             }
-                        }                        
+                        }
                     }
                 }
             }
@@ -406,8 +405,8 @@ processAuthConfig = { repoName, c ->
 
 private installOrDeploy(File file, ext, boolean deploy, repos = [:]) {
     if (!deploy) {
-            ant.checksum file:pomFileLocation, algorithm:"sha1", todir:projectTargetDir
-            ant.checksum file:file, algorithm:"sha1", todir:projectTargetDir
+        ant.checksum file:pomFileLocation, algorithm:"sha1", todir:projectTargetDir
+        ant.checksum file:file, algorithm:"sha1", todir:projectTargetDir
     }
 
     def pomCheck = generateChecksum(new File(pomFileLocation))
@@ -424,24 +423,23 @@ private installOrDeploy(File file, ext, boolean deploy, repos = [:]) {
         }
 
         pom(file: pomFileLocation)
-        if(repos.remote) {
+        if (repos.remote) {
             def repo = repos.remote
-            if(repo.configurer) {
+            if (repo.configurer) {
                 remoteRepository(repo.args, repo.configurer)
             }
             else {
                 remoteRepository(repo.args)
             }
         }
-        if(repos.local) {
+        if (repos.local) {
             localRepository(path:repos.local)
         }
-
     }
 }
 
 private generateChecksum(File file) {
-    def checksum = new File("${file.parentFile.absolutePath}/${file.name}.sha1")
+    def checksum = new File(file.parentFile.absolutePath, "${file.name}.sha1")
     checksum.write ChecksumHelper.computeAsString(file, "sha1")
     return checksum
 }
