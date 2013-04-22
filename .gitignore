@@ -1,0 +1,7 @@
+.settings/
+/docs/
+grails-*.zip*
+plugin.xml
+pom.xml
+target
+web-app
