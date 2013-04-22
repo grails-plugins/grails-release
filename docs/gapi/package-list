@@ -1,6 +1,0 @@
-DefaultPackage
-grails.plugins.publish
-grails.plugins.publish.maven
-grails.plugins.publish.portal
-grails.plugins.publish.print
-grails.plugins.publish.svn
