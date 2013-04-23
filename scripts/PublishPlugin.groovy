@@ -62,6 +62,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
     if (argsMap["pingOnly"]) { argsMap["ping-only"] = true }
     if (argsMap["noOverwrite"]) { argsMap["no-overwrite"] = true }
     if (argsMap["allowOverwrite"]) { argsMap["allow-overwrite"] = true }
+    if (argsMap["promptAuth"]) { argsMap["prompt-auth"] = true }
 
     // Read the plugin information from the POM.
     pluginInfo = new XmlSlurper().parse(new File(pomFileLocation))
@@ -308,6 +309,20 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
             else {
                 println "WARNING: unknown protocol '${repo.uri.scheme}' for repository '${repo.name}'"
             }
+        }
+
+        if (argsMap["prompt-auth"]) {
+            def inputHelper = new CommandLineHelper()
+            username = usernput(
+                    inputHelper,
+                    "Username for repository: ",
+                    "You haven't configured the plugin repository username - required in non-interactive mode")
+            password = userInput(
+                    inputHelper,
+                    "Password for repository: ",
+                    "You haven't configured the plugin repository password - required in non-interactive mode")
+
+            repoDfn.configurer = { authentication username: username, password: password }
         }
 
         deployer = classLoader.loadClass("grails.plugins.publish.maven.MavenDeployer").newInstance(ant, repoDefn, protocol)
