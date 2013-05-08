@@ -39,7 +39,7 @@ class GeneratePomTests extends AbstractCliTestCase {
         assertEquals 5, pom.dependencies.dependency.size()
 
         verifyDependency pom, "org.grails.plugins", "debug", "[1.0,)"
-        verifyDependency pom, "org.grails.plugins", "shiro", "1.1-SNAPSHOT"
+        verifyDependency pom, "org.grails.plugins", "shiro", "1.2.0-SNAPSHOT"
         verifyDependency pom, "org.grails.plugins", "geb", "[0.5.0,0.6.0]"
         verifyDependency pom, "org.apache.maven", "maven-ant-tasks", "2.1.0"
         verifyDependency pom, "org.apache.ivy", "ivy", "2.2.0", "provided"

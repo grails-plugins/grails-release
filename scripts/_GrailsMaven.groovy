@@ -14,26 +14,37 @@
  * limitations under the License.
  */
 
-import grails.util.*
-import org.apache.commons.codec.binary.Hex
-import org.apache.ivy.core.module.id.*
+import grails.util.BuildScope
+import groovy.xml.NamespaceBuilder
+import groovy.xml.MarkupBuilder
+
 import org.apache.ivy.util.ChecksumHelper
 import org.codehaus.groovy.grails.cli.CommandLineHelper
-import org.codehaus.groovy.grails.plugins.*
-import org.codehaus.groovy.grails.resolve.*
 
-scriptScope = grails.util.BuildScope.WAR
+scriptScope = BuildScope.WAR
 scriptEnv = "production"
 
 includeTargets << grailsScript("_GrailsPackage")
 
 // Open source licences.
 globalLicenses = [
-        APACHE: [ name: "Apache License 2.0", url: "http://www.apache.org/licenses/LICENSE-2.0.txt" ],
-        GPL2: [ name: "GNU General Public License 2", url: "http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt"],
-        GPL3: [ name: "GNU General Public License 3", url: "http://www.gnu.org/licenses/gpl.txt"] ]
+    // General, permissive "copyfree" licenses
+    APACHE:    [ name: "Apache License 2.0", url: "http://www.apache.org/licenses/LICENSE-2.0.txt" ],
+    BSD2:      [ name: "Simplified BSD License (2 Clause)", url: "http://opensource.org/licenses/BSD-2-Clause"],
+    BSD3:      [ name: "New BSD License (3 Clause)", url: "http://opensource.org/licenses/BSD-3-Clause"],
+    MIT:       [ name: "MIT License", url: "http://opensource.org/licenses/MIT"],
+    //GNU Family
+    GPL2:      [ name: "GNU General Public License 2", url: "http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt"],
+    GPL3:      [ name: "GNU General Public License 3", url: "http://www.gnu.org/licenses/gpl.txt"],
+    AGPL3:     [ name: "GNU Affero General Public License 3", url: "http://www.gnu.org/licenses/agpl-3.0.html"],
+    'LGPL2.1': [ name: "GNU Lesser General Public License 2.1", url: "http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"],
+    LGPL3:     [ name: "GNU Lesser General Public License 3", url: "http://www.gnu.org/licenses/lgpl.html"],
+    // Other
+    EPL1:       [ name: "Eclipse Public License v1.0", url: "http://opensource.org/licenses/EPL-1.0"],
+    MPL2:       [ name: "Mozilla Public License v2.0", url: "http://opensource.org/licenses/MPL-2.0"],
+]
 
-artifact = groovy.xml.NamespaceBuilder.newInstance(ant, 'antlib:org.apache.maven.artifact.ant')
+artifact = NamespaceBuilder.newInstance(ant, 'antlib:org.apache.maven.artifact.ant')
 
 target(mavenInstall:"Installs a plugin or application into your local Maven cache") {
     depends(init)
@@ -53,12 +64,12 @@ target(mavenDeploy:"Deploys the plugin to a Maven repository") {
     def protocol = protocols.http
     def repoName = argsMap.repository ?: grailsSettings.config.grails.project.repos.default
     def repo = repoName ? distributionInfo.remoteRepos[repoName] : null
-    if(argsMap.protocol) {
+    if (argsMap.protocol) {
         protocol = protocols[argsMap.protocol]
     }
-    else if(repo) {
+    else if (repo) {
         def url = repo?.args?.url
-        if(url) {
+        if (url) {
             def i = url.indexOf('://')
             def urlProt = url[0..i-1]
             protocol = protocols[urlProt] ?: protocol
@@ -162,7 +173,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
         includeTargets << grailsScript("_GrailsPluginDev")
         packagePlugin()
 
-        // This script variable doesn't exist pre-Grails 1.4.
+        // This script variable doesn't exist pre-Grails 2.0
         if (!binding.variables.containsKey("pluginInfo")) {
             pluginInfo = pluginSettings.getPluginInfo(basedir)
         }
@@ -174,7 +185,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
     }
 
     pomFileLocation = "${grailsSettings.projectTargetDir}/pom.xml"
-    basePom = new File("${basedir}/pom.xml")
+    basePom = new File(basedir, "pom.xml")
 
 	if (basePom.exists()) {
 		// ignore base pom unless BuildConfig has explicitly set 'pom true'
@@ -189,7 +200,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
 
     event("StatusUpdate", ["Generating POM file..."])
     new File(pomFileLocation).withWriter('UTF-8') { w ->
-        def xml = new groovy.xml.MarkupBuilder(w)
+        def xml = new MarkupBuilder(w)
 
         xml.mkp.pi xml: [version: "1.0", encoding: "UTF-8"]
         xml.project(xmlns: "http://maven.apache.org/POM/4.0.0",
@@ -216,7 +227,13 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                 if (getOptionalProperty(pluginInstance, "description")) delegate.description pluginInstance.description
                 if (getOptionalProperty(pluginInstance, "documentation")) delegate.url pluginInstance.documentation
                 if (getOptionalProperty(pluginInstance, "license")) {
-                    def l = globalLicenses[pluginInstance.license]
+                    def l = null
+                    if (pluginInstance.license instanceof Map) {
+                        l = pluginInstance.license
+                    }
+                    else {
+                        l = globalLicenses[pluginInstance.license]
+                    }
                     if (l) {
                         licenses {
                             license {
@@ -289,45 +306,43 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                 name grailsAppName
             }
 
-            def excludeResolver = classLoader.loadClass("grails.plugins.publish.ExcludeResolver").newInstance(grailsSettings.dependencyManager)
-
+            def excludeResolver = grailsSettings.dependencyManager.excludeResolver
             def excludeInfo = excludeResolver.resolveExcludes()
 
-            if(plugin) {
+            if (plugin) {
                 dependencies {
-                    def excludeHandler = {dep, moduleId ->
-                        if(dep.transitive == false) {
-                            def excludes = excludeInfo[moduleId]
-                            if(excludes != null) {
+                    def excludeHandler = { dep ->
+                        if (dep.transitive == false) {
+                            def excludes = excludeInfo[dep]
+                            if (excludes != null) {
                                 exclusions {
-                                    for(eId in excludes) {
+                                    for(exc in excludes) {
                                         exclusion {
-                                            groupId eId.organisation
-                                            artifactId eId.name
+                                            groupId exc.group
+                                            artifactId exc.name
                                         }
                                     }
                                 }
                             }
                         }
-                        else if(dep.allExcludeRules) {
+                        else if (dep.excludes) {
                             exclusions {
-                                for(er in dep.allExcludeRules) {
+                                for(er in dep.excludes) {
                                     exclusion {
-                                        def exclusionId = er.id.mid
-                                        if(exclusionId.organisation != '*') {
-                                            groupId exclusionId.organisation
+                                        if (er.group != '*') {
+                                            groupId er.group
                                         }
                                         else {
-                                            def excludes = excludeInfo[moduleId]
-                                            if(excludes != null) {
-                                                def resolvedExclude = excludes.find { it.name == exclusionId.name }
-                                                if(resolvedExclude != null) {
-                                                    groupId resolvedExclude.organisation
+                                            def excludes = excludeInfo[dep]
+                                            if (excludes != null) {
+                                                def resolvedExclude = excludes.find { it.name == er.name }
+                                                if (resolvedExclude != null) {
+                                                    groupId resolvedExclude.group
                                                 }
                                             }
 
                                         }
-                                        artifactId exclusionId.name
+                                        artifactId er.name
                                     }
                                 }
                             }
@@ -336,85 +351,19 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                     corePlugins = pluginManager.allPlugins.findAll { it.pluginClass.name.startsWith("org.codehaus.groovy.grails.plugins") }*.name
 
                     def dependencyManager = grailsSettings.dependencyManager
-                    def appDeps = dependencyManager.getApplicationDependencyDescriptors()
+
                     def allowedScopes = ['runtime','compile', 'provided']
-
-                    for(dep in appDeps) {
-                        if(dep.scope in allowedScopes && dep.exported) {
-                            def moduleId = dep.getDependencyRevisionId()
-                            dependency {
-                                groupId moduleId.organisation
-                                artifactId moduleId.name
-                                version moduleId.revision
-                                scope dep.scope
-
-                                excludeHandler(dep, moduleId)
-                            }
-                        }
-                    }
-
-                    // Use the 1.4 method to get only non-transitive plugin deps if possible
-                    def pluginDeps = dependencyManager.hasProperty('declaredPluginDependencyDescriptors') ?
-                                        dependencyManager.declaredPluginDependencyDescriptors :
-                                        dependencyManager.getPluginDependencyDescriptors()
-
-                    def pluginsInstalledViaInstallPlugin = grails.util.Metadata.current.getInstalledPlugins()
-                    def processedPluginModuleIds = []
-                    for(dep in pluginDeps) {
-                        def moduleId = dep.getDependencyRevisionId()
-                        processedPluginModuleIds << moduleId.moduleId
-                        if(dep.scope in allowedScopes && dep.exported && !pluginsInstalledViaInstallPlugin.containsKey(moduleId.name) ) {
-
-                            dependency {
-                                groupId moduleId.organisation
-                                artifactId moduleId.name
-                                version moduleId.revision
-                                type "zip"
-                                scope dep.scope
-
-                                excludeHandler(dep, moduleId)
-                            }
-                        }
-                    }
-
-                    if(pluginInstance != null && pluginInstance.hasProperty('dependsOn')) {
-                        for(dep in pluginInstance.dependsOn) {
-                            String depName = dep.key
-                            if(!corePlugins.contains(dep.key)) {
-                                // Note: specifying group in dependsOn is a Grails 1.3 feature
-                                // 1.2 users don't have this capability
-                                String depGroup = "org.grails.plugins"
-                                if(depName.contains(":")) {
-                                    def i = depName.split(":")
-                                    depGroup = i[0]
-                                    depName = i[1]
-                                }
-                                String depVersion = dep.value
-                                def upper = GrailsPluginUtils.getUpperVersion(depVersion)
-                                def lower = GrailsPluginUtils.getLowerVersion(depVersion)
-                                if(upper == lower) depVersion = upper
-                                else {
-                                    upper = upper == '*' ? ')' : upper + ']'
-                                    lower = lower == '*' ? '(' : '[' + lower
-
-                                    depVersion = "$lower,$upper".toString()
-                                }
-
-                                def convertedPluginName = GrailsNameUtils.getScriptName(depName)
-                                String stringVersion = depVersion.toString()
-                                ModuleRevisionId depMrid = ModuleRevisionId.newInstance(depGroup.toString(), convertedPluginName.toString(), stringVersion)
-
-                                if(processedPluginModuleIds.contains(depMrid.moduleId)) continue;
-
+                    for (scope in allowedScopes) {
+                        def appDeps = dependencyManager.getApplicationDependencies(scope)
+                        for(dep in appDeps) {
+                            if (scope in allowedScopes && dep.exported) {
                                 dependency {
+                                    groupId dep.group
+                                    artifactId dep.name
+                                    version dep.version
+                                    delegate.scope(scope)
 
-                                    groupId depGroup
-                                    artifactId convertedPluginName
-                                    version depVersion
-                                    type "zip"
-
-                                    excludeHandler(new EnhancedDefaultDependencyDescriptor(depMrid, false, "compile"),
-                                                    depMrid)
+                                    excludeHandler(dep)
                                 }
                             }
                         }
@@ -461,8 +410,8 @@ processAuthConfig = { repoName, c ->
 
 private installOrDeploy(File file, ext, boolean deploy, repos = [:]) {
     if (!deploy) {
-            ant.checksum file:pomFileLocation, algorithm:"sha1", todir:projectTargetDir
-            ant.checksum file:file, algorithm:"sha1", todir:projectTargetDir
+        ant.checksum file:pomFileLocation, algorithm:"sha1", todir:projectTargetDir
+        ant.checksum file:file, algorithm:"sha1", todir:projectTargetDir
     }
 
     def pomCheck = generateChecksum(new File(pomFileLocation))
@@ -479,24 +428,23 @@ private installOrDeploy(File file, ext, boolean deploy, repos = [:]) {
         }
 
         pom(file: pomFileLocation)
-        if(repos.remote) {
+        if (repos.remote) {
             def repo = repos.remote
-            if(repo.configurer) {
+            if (repo.configurer) {
                 remoteRepository(repo.args, repo.configurer)
             }
             else {
                 remoteRepository(repo.args)
             }
         }
-        if(repos.local) {
+        if (repos.local) {
             localRepository(path:repos.local)
         }
-
     }
 }
 
 private generateChecksum(File file) {
-    def checksum = new File("${file.parentFile.absolutePath}/${file.name}.sha1")
+    def checksum = new File(file.parentFile.absolutePath, "${file.name}.sha1")
     checksum.write ChecksumHelper.computeAsString(file, "sha1")
     return checksum
 }

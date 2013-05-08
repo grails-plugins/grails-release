@@ -1,6 +1,7 @@
 package grails.plugins.publish.maven
 
 import grails.plugins.publish.PluginDeployer
+import groovy.xml.NamespaceBuilder
 
 /**
  * Implementation of {@link PluginDeployer} that deploys plugin packages
@@ -14,13 +15,13 @@ class MavenDeployer implements PluginDeployer {
 
     MavenDeployer(ant, repoDefinition, protocol) {
         this.ant = ant
-        this.mavenTasks = groovy.xml.NamespaceBuilder.newInstance(ant, 'antlib:org.apache.maven.artifact.ant')
+        this.mavenTasks = NamespaceBuilder.newInstance(ant, 'antlib:org.apache.maven.artifact.ant')
         this.repoDefn = repoDefinition
         this.protocol = protocol
 
         // The Ant Maven tasks don't recognise the 'type' argument in
         // the definition of remote repositories.
-        this.repoDefn.args.remove("type")
+        repoDefn.args.remove("type")
     }
 
     /**

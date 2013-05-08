@@ -27,3 +27,10 @@ def scm = [ url: "http://svn.grails-plugins.codehaus.org/browse/grails-plugins/"
 {code}
 
 Note that the @developers@ property should only include additional entries over and above the @author@. In other words, the primary author should still be declared in the @author@ and @authorEmail@ properties with only additional people going into the @developers@ list.
+
+The plugin currently supports the licenses [listed in the source](https://github.com/nwwells/grails-release/blob/master/scripts/_GrailsMaven.groovy#L31), but you can also specify a custom license via an explicit name and URL:
+
+{code}
+def license = [name: "MYLICENSE", url: "http://my.company.com/licenses/opensource.txt"]
+{code}
+

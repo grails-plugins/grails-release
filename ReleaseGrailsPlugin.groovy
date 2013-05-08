@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors
+ * Copyright 2011-2013 the original author or authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 class ReleaseGrailsPlugin {
-    def version = "2.0.0"
-    def grailsVersion = "1.2 > *"
+    def version = "3.0.0"
+    def grailsVersion = "2.3 > *"
     def author = "Graeme Rocher"
     def authorEmail = "grocher@vmware.com"
     def title = "Release Plugin"

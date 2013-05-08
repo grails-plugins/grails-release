@@ -14,7 +14,7 @@ class DistributionManagementInfo {
     }
 
     void portal(Map args) {
-        def options = new HashMap(args)
+        def options = [:] + args
         options.remove("id")
 
         portals[args.id] = options

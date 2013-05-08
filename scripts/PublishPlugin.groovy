@@ -1,10 +1,4 @@
-import groovyx.net.http.HTTPBuilder
-
-import org.apache.commons.codec.digest.DigestUtils
 import org.codehaus.groovy.grails.cli.CommandLineHelper
-
-import static groovyx.net.http.Method.PUT
-import static groovyx.net.http.ContentType.JSON
 
 includeTargets << grailsScript("_GrailsPluginDev")
 includeTargets << new File(releasePluginDir, "scripts/_GrailsMaven.groovy")
@@ -41,8 +35,8 @@ where
     --no-message   = Commit using just the default message.
 
     --no-overwrite = Don't fail if this plugin has already been published.
-                     This is useful if this plugin is being published from a 
-                     continuous integration server and you don't want the 
+                     This is useful if this plugin is being published from a
+                     continuous integration server and you don't want the
                      command to exit with failure.
 
     --allow-overwrite = Allow any existing plugin to be overwritten.
@@ -68,6 +62,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
     if (argsMap["pingOnly"]) { argsMap["ping-only"] = true }
     if (argsMap["noOverwrite"]) { argsMap["no-overwrite"] = true }
     if (argsMap["allowOverwrite"]) { argsMap["allow-overwrite"] = true }
+    if (argsMap["promptAuth"]) { argsMap["prompt-auth"] = true }
 
     // Read the plugin information from the POM.
     pluginInfo = new XmlSlurper().parse(new File(pomFileLocation))
@@ -119,7 +114,9 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
     def repo = repoClass.grailsCentral
 
     // Add the Grails Central portal to the distribution info under the
-    // ID 'grailsCentral'.
+    // ID 'grailsCentral'. 'distributionInfo' is created by the processDefinitions
+    // target and contains the configuration for all the declared repositories
+    // and portals.
     def grailsCentralPortal = distributionInfo.portals["grailsCentral"]
     if (!grailsCentralPortal) {
         grailsCentralPortal = [ url: repoClass.GRAILS_CENTRAL_PORTAL_URL ]
@@ -164,11 +161,12 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
                     repoName,
                     new URI(url),
                     defaultPortal ?: null)
-            println "Publishing to ${type == 'svn' ? 'Subversion' : 'Maven'} repository '$repoName'"
+            def repoNames = [svn: "Subversion", maven: "Maven", grailsCentral: "Grails"]
+            println "Publishing to ${repoNames[type]} repository '$repoName'"
         }
         else {
             println "No configuration found for repository '$repoName'"
-            exit(1)
+            exit 1
         }
     }
     else {
@@ -230,8 +228,17 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
                     msg,
                     "SvnDeployer requires an answer to \"${msg}\", but you are running in non-interactive mode.")
         }
-    } else if(type == "grailsCentral") {
-        deployer = classLoader.loadClass("grails.plugins.publish.portal.GrailsCentralDeployer").newInstance()
+    }
+    else if (type == "grailsCentral") {
+        deployer = classLoader.loadClass("grails.plugins.publish.portal.GrailsCentralDeployer").newInstance() { msg ->
+            // This closure is executed whenever the deployer needs to
+            // ask for user input.
+            return userInput(
+                    new CommandLineHelper(),
+                    msg,
+                    "GrailsCentralDeployer requires an answer to \"${msg}\", but you are running in non-interactive mode.")
+        }
+
         def retval = processAuthConfig.call(repo.name) { username, password ->
             if (username) {
                 deployer.username = username
@@ -248,11 +255,11 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
 
         if (retval) return retval
         def uri = repo?.uri?.toString()
-        if(uri) {
+        if (uri) {
             deployer.portalUrl = uri
         }
     }
-    else if (type == "maven"){
+    else if (type == "maven") {
         // Work out the protocol to use. This may be provided as a
         // '--protocol' argument on the command line or inferred from
         // the repository URL.
@@ -292,7 +299,7 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
         else if (repo.uri) {
             if (!repo.uri.scheme) {
                 println "Invalid URL for repository '${repo.name}': ${repo.uri}"
-                exit(1)
+                exit 1
                 return 1
             }
 
@@ -304,11 +311,25 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
             }
         }
 
+        if (argsMap["prompt-auth"]) {
+            def inputHelper = new CommandLineHelper()
+            username = usernput(
+                    inputHelper,
+                    "Username for repository: ",
+                    "You haven't configured the plugin repository username - required in non-interactive mode")
+            password = userInput(
+                    inputHelper,
+                    "Password for repository: ",
+                    "You haven't configured the plugin repository password - required in non-interactive mode")
+
+            repoDfn.configurer = { authentication username: username, password: password }
+        }
+
         deployer = classLoader.loadClass("grails.plugins.publish.maven.MavenDeployer").newInstance(ant, repoDefn, protocol)
     }
     else {
         println "Unknown type '$type' defined for repository '$repoName'"
-        exit(1)
+        exit 1
     }
 
     if (!argsMap["ping-only"]) {
@@ -343,7 +364,13 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
             }
         }
 
-        deployer.deployPlugin(pluginZip as File, new File(basedir, "plugin.xml"), new File(pomFileLocation), isRelease)
+        try {
+            deployer.deployPlugin(pluginZip as File, new File(basedir, "plugin.xml"), new File(pomFileLocation), isRelease)
+        }
+        catch (Exception ex) {
+            event "StatusError", ["Failed to publish plugin: ${ex.message}"]
+            exit 1
+        }
 
         event "DeployPluginEnd", [ pluginInfo, pluginZip, pomFileLocation ]
     }
@@ -400,26 +427,28 @@ target(default: "Publishes a plugin to either a Subversion or Maven repository."
                     "You haven't configured the plugin portal password - required in non-interactive mode")
         }
 
-        def http = new HTTPBuilder(portalUrl)
-        http.auth.basic username, password
-        http.request(PUT, JSON) { req ->
-            body = pluginInfo + [ url : repo.uri.toString() ]
+        def converterConfig = new org.codehaus.groovy.grails.web.converters.configuration.ConvertersConfigurationInitializer()
+        converterConfig.initialize(grailsApp)
+        def rest = classLoader.loadClass("grails.plugins.rest.client.RestBuilder").newInstance()
+		def jsonParams = pluginInfo + [ url : repo.uri.toString() ]
+        def resp = rest.put(portalUrl.toString()) {
+            auth username, password
+            json({ jsonParams })
+        }
+        switch(resp.status) {
+            case 401:
+                println "ERROR: Portal authentication failed. Are your username and password correct?"; break
+            case 403:
+                println "ERROR: You do not have permission to update the plugin portal."; break
 
-            response.success = { resp ->
-                println "Notification successful"
-            }
+            default:
 
-            response.'401' = { resp ->
-                println "ERROR: Portal authentication failed. Are your username and password correct?"
-            }
-
-            response.'403' = { resp ->
-                println "ERROR: You do not have permission to update the plugin portal."
-            }
-
-            response.failure = { resp, json ->
-                println "ERROR: Notification failed - status ${resp.status} - ${json.message}"
-            }
+                if(resp.class.name == "grails.plugins.rest.client.ErrorResponse") {
+                    println "ERROR: Notification failed - status ${resp.status} - ${resp.json.message}"
+                }
+                else {
+                    println "Notification successful"
+                }
         }
 
         event "PingPortalEnd", [ pluginInfo, portalUrl, repo.uri.toString() ]

@@ -18,6 +18,8 @@ class WithConfigGrailsPlugin {
 Brief description of the plugin.
 '''
 
+    def license = [ name: "Bumblebee", url: "http://www.bmblbee.org/licenses/LICENSE.txt" ]
+
     // URL to the plugin's documentation
     def documentation = "http://grails.org/plugin/with-config"
 

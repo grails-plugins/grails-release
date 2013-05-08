@@ -4,7 +4,7 @@ class DummyGrailsPlugin {
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "1.2.3 > *"
     // the other plugins this plugin depends on
-    def dependsOn = [ debug: '1.0 > *', shiro: '1.1-SNAPSHOT', geb: '0.5.0 > 0.6.0' ]
+    def dependsOn = [ debug: '1.0 > *', shiro: '1.2.0-SNAPSHOT', geb: '0.5.0 > 0.6.0' ]
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
             "grails-app/views/error.gsp"
