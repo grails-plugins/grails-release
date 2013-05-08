@@ -187,16 +187,16 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
     pomFileLocation = "${grailsSettings.projectTargetDir}/pom.xml"
     basePom = new File(basedir, "pom.xml")
 
-	if (basePom.exists()) {
-		// ignore base pom unless BuildConfig has explicitly set 'pom true'
-		if (grailsSettings.dependencyManager.readPom) {
-	        pomFileLocation = basePom.absolutePath
-	        event("StatusUpdate", ["Skipping POM generation, using existing 'pom.xml' from the root of the project."])
-	        return 0
-		} else {
-	    	event("StatusUpdate", ["Ignoring existing 'pom.xml' from the root of the project. Set 'pom true' to force use of existing pom.xml."])			
-		}
-	}
+    if (basePom.exists()) {
+		forcePomGeneration = argsMap.forcePomGeneration ?: false
+        if (forcePomGeneration) {
+            event("StatusUpdate", ["Forcing POM generation, ignoring 'pom.xml' in the root of the project."])
+        } else {
+            pomFileLocation = basePom.absolutePath
+            event("StatusUpdate", ["Skipping POM generation because 'pom.xml' exists in the root of the project."])
+            return 1
+        }
+    }
 
     event("StatusUpdate", ["Generating POM file..."])
     new File(pomFileLocation).withWriter('UTF-8') { w ->
