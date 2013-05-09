@@ -188,9 +188,14 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
     basePom = new File(basedir, "pom.xml")
 
     if (basePom.exists()) {
-        pomFileLocation = basePom.absolutePath
-        event("StatusUpdate", ["Skipping POM generation because 'pom.xml' exists in the root of the project."])
-        return 1
+        def forcePomGeneration = argsMap.forcePomGeneration ?: false
+        if (forcePomGeneration) {
+            event("StatusUpdate", ["Forcing POM generation, ignoring 'pom.xml' in the root of the project."])
+        } else {
+            pomFileLocation = basePom.absolutePath
+            event("StatusUpdate", ["Skipping POM generation because 'pom.xml' exists in the root of the project."])
+            return 1
+        }
     }
 
     event("StatusUpdate", ["Generating POM file..."])
