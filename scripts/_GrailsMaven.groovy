@@ -355,6 +355,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                     def allowedScopes = ['runtime','compile', 'provided']
                     for (scope in allowedScopes) {
                         def appDeps = dependencyManager.getApplicationDependencies(scope)
+                        def pluginDeps = dependencyManager.getPluginDependencies(scope)
                         for(dep in appDeps) {
                             if (scope in allowedScopes && dep.exported) {
                                 dependency {
@@ -367,6 +368,19 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                                 }
                             }
                         }
+                        for(dep in pluginDeps) {
+                            if (scope in allowedScopes && dep.exported) {
+                                dependency {
+                                    groupId dep.group
+                                    artifactId dep.name
+                                    version dep.version
+                                    type "zip"
+                                    delegate.scope(scope)
+
+                                    excludeHandler(dep)
+                                }
+                            }
+                        }                        
                     }
                 }
             }
