@@ -52,7 +52,7 @@ where
 scmProvider = null
 scmHost = null
 
-target(default: "Publishes a plugin to either a Subversion or Maven repository.") {
+target(publishPlugin: "Publishes a plugin to either a Subversion or Maven repository.") {
     depends(parseArguments, checkGrailsVersion, packagePlugin, processDefinitions, generatePom)
 
     // Handle old names for options. Trying to be consistent with Grails 2.0 conventions.
@@ -572,3 +572,5 @@ private scmImportProject(scm, inputHelper, msg) {
 
     scmProvider.importIntoRepo hostUrl, "Initial import of plugin source code for the release of version ${pluginInfo.version}.${msg}"
 }
+
+setDefaultTarget(publishPlugin)
