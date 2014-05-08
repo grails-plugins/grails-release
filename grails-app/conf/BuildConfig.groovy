@@ -24,7 +24,7 @@ grails.project.dependency.resolution = {
         compile("org.apache.maven:maven-ant-tasks:2.1.3") {
             excludes "commons-logging", "xml-apis", "groovy"
         }
-        test("org.gmock:gmock:0.8.0") {
+        test("org.gmock:gmock:0.8.3") {
             export = false
         }
     }
