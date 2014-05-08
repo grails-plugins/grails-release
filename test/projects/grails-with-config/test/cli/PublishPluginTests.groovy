@@ -135,49 +135,6 @@ class PublishPluginTests extends AbstractCliTestCase {
         verifyUploadFiles()
     }
 
-    void testWithSubversionRepo() {
-        execute([ "publish-plugin", "--dry-run", "--repository=svn1" ])
-        enterInput ""
-        enterInput "n"
-
-        assertEquals 0, waitForProcess()
-        verifyHeader()
-
-        // Make sure that the script was found.
-        assertFalse "PublishPlugin script not found.", output.contains("Script not found:")
-
-        // Make sure it's reporting the repository it's publishing to.
-        assertTrue "Command is not reporting the correct repository.", output.contains("Publishing to Subversion repository 'svn1'")
-
-        // Make sure it's not publishing to Grails central.
-        assertFalse "Command is publishing to Grails central when it shouldn't be.", output.contains("Publishing to Grails Central")
-
-        // Make sure the main public plugin portal is notified.
-        assertTrue "Command is not notifying grailsCentral plugin portal.", output.contains("Notifying plugin portal 'http://grails.org/plugin/with-config' of release")
-
-        verifyUploadFiles()
-    }
-
-    void testLegacySubversionConfig() {
-        execute([ "publish-plugin", "--dry-run", "--repository=myRepo" ])
-        enterInput ""
-        enterInput "n"
-
-        assertEquals 0, waitForProcess()
-        verifyHeader()
-
-        // Make sure that the script was found.
-        assertFalse "PublishPlugin script not found.", output.contains("Script not found:")
-
-        // Make sure it's reporting the repository it's publishing to.
-        assertTrue "Command is not reporting the correct repository.", output.contains("Publishing to Subversion repository 'myRepo'")
-
-        // Make sure it's not publishing to Grails central.
-        assertFalse "Command is publishing to Grails central when it shouldn't be.", output.contains("Publishing to Grails Central")
-
-        verifyUploadFiles()
-    }
-
     void testUnknownRepository() {
         execute([ "publish-plugin", "--dry-run", "--repository=dummy" ])
         enterInput ""
@@ -210,9 +167,6 @@ class PublishPluginTests extends AbstractCliTestCase {
 
         // Make sure it's not publishing to Grails central.
         assertFalse "Command is publishing to Grails central when it shouldn't be.", output.contains("Publishing to Grails Central")
-
-        // Make sure it's reporting the repository it's publishing to.
-        assertTrue "Command is not reporting the correct repository.", output.contains("Publishing to Subversion repository 'bad'")
 
         // Check that it warns the user that he or she must declare the
         // username *and* password, or neither.

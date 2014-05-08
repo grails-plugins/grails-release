@@ -2,8 +2,7 @@ Release Plugin
 ==============
 
 This plugin enables you to publish application WAR files and plugin packages (zip files) to
-Maven-compatible repositories. It can also install them to your local Maven cache. Plugins
-can be published to both Maven-compatible and Subversion repositories.
+Maven-compatible repositories. It can also install them to your local Maven cache.
 
 Installation
 ------------

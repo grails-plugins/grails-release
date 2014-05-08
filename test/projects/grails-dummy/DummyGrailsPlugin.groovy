@@ -26,7 +26,7 @@ class DummyGrailsPlugin {
             [ name: "Peter Ledbrook", email: "pledbrook@somewhere.net" ],
             [ name: "Graeme Rocher", email: "grocher@somewhere.net" ] ]
     def issueManagement = [ system: "JIRA", url: "http://jira.codehaus.org/browse/GRAILSPLUGINS" ]
-    def scm = [ url: "http://svn.grails-plugins.codehaus.org/browse/grails-plugins/" ]
+    def scm = [ url: "http://github.com/grails/grails-plugins/dummy" ]
 
     def doWithWebDescriptor = { xml ->
         // TODO Implement additions to web.xml (optional), this event occurs before

@@ -10,7 +10,7 @@ h2. Options
 grails maven-deploy [--repository=repoId] [--binary]
 {code}
 
-* @repository@ specifies which Subversion or Maven-compatible repository the plugin should be deployed to. A remote repository must first be defined with that ID in BuildConfig.groovy.
+* @repository@ specifies which Maven-compatible repository the plugin should be deployed to. A remote repository must first be defined with that ID in BuildConfig.groovy.
 * @binary@ packages the plugin in binary form before installing it. This overrides the default packaging for the plugin.
 
 h2. Examples

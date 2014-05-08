@@ -7,8 +7,7 @@ USAGE = """
     publish-plugin [--repository=REPO] [--protocol=PROTOCOL] [--portal=PORTAL] [--dry-run] [--snapshot] [--scm] [--no-scm] [--message=MESSAGE] [--no-message] [--ping-only]
 
 where
-    REPO     = The name of a configured repository to deploy the plugin to. Can be
-               a Subversion repository or a Maven-compatible one.
+    REPO     = The name of a configured maven compatible repository to deploy the plugin to.
                (default: Grails Central Plugin Repository).
 
     PROTOCOL = The protocol to use when deploying to a Maven-compatible
@@ -52,7 +51,7 @@ where
 scmProvider = null
 scmHost = null
 
-target(publishPlugin: "Publishes a plugin to either a Subversion or Maven repository.") {
+target(publishPlugin: "Publishes a plugin to a Maven repository.") {
     depends(parseArguments, checkGrailsVersion, packagePlugin, processDefinitions, generatePom)
 
     // Handle old names for options. Trying to be consistent with Grails 2.0 conventions.
@@ -135,9 +134,7 @@ target(publishPlugin: "Publishes a plugin to either a Subversion or Maven reposi
     def type = "grailsCentral"
 
     if (repoName && repoName != "grailsCentral") {
-        // First look for the repository definition for this name. This
-        // could either be from the newer Maven-based definitions or the
-        // legacy Subversion-based ones.
+        // First look for the repository definition for this name.
         def repoDefn = distributionInfo.remoteRepos[repoName]
         def defaultPortal = null
         def url
@@ -149,11 +146,6 @@ target(publishPlugin: "Publishes a plugin to either a Subversion or Maven reposi
             // ahead of the public Grails plugin portal.
             defaultPortal = repoDefn.args["portal"]
         }
-        else {
-            // Handle legacy Subversion repository definitions.
-            type = "svn"
-            url = grailsSettings.config.grails.plugin.repos.distribution."$repoName"
-        }
 
         // Check that the repository is defined.
         if (url) {
@@ -161,7 +153,7 @@ target(publishPlugin: "Publishes a plugin to either a Subversion or Maven reposi
                     repoName,
                     new URI(url),
                     defaultPortal ?: null)
-            def repoNames = [svn: "Subversion", maven: "Maven", grailsCentral: "Grails"]
+            def repoNames = [maven: "Maven", grailsCentral: "Grails"]
             println "Publishing to ${repoNames[type]} repository '$repoName'"
         }
         else {
@@ -184,50 +176,6 @@ target(publishPlugin: "Publishes a plugin to either a Subversion or Maven reposi
         if (retval) return retval
 
         deployer = classLoader.loadClass("grails.plugins.publish.print.DryRunDeployer").newInstance()
-    }
-    else if (type == "svn") {
-        // Helper class for getting user input from the command line.
-        def inputHelper = new CommandLineHelper()
-
-        // If the username and password are declared in the standard configuration,
-        // grails.project.repos.<repo>.username/password, then pick them out now
-        // and set them on the SvnClient instance.
-        def uri = repo.uri
-        def svnClient = classLoader.loadClass("grails.plugin.svn.SvnClient").newInstance(uri.toString())
-        def retval = processAuthConfig.call(repo.name) { username, password ->
-            if (username) {
-                if (uri.userInfo) {
-                    println "WARN: username and password defined in config and in repository URI - using the credentials from the URI."
-                }
-                else {
-                    svnClient.setCredentials(username, password)
-                }
-            }
-        }
-
-        if (retval) return retval
-
-        // Create a deployer for Subversion
-        def masterPluginList = classLoader.loadClass("grails.plugins.publish.svn.MasterPluginList").newInstance(
-                svnClient,
-                repo.name,
-                new File(grailsSettings.projectWorkDir, ".plugin-meta"),
-                System.out,
-                false)
-
-        deployer = classLoader.loadClass("grails.plugins.publish.svn.SvnDeployer").newInstance(
-                svnClient,
-                grailsSettings.projectWorkDir,
-                repo.name,
-                masterPluginList,
-                System.out) { msg ->
-            // This closure is executed whenever the deployer needs to
-            // ask for user input.
-            return userInput(
-                    inputHelper,
-                    msg,
-                    "SvnDeployer requires an answer to \"${msg}\", but you are running in non-interactive mode.")
-        }
     }
     else if (type == "grailsCentral") {
         deployer = classLoader.loadClass("grails.plugins.publish.portal.GrailsCentralDeployer").newInstance() { msg ->
@@ -552,19 +500,11 @@ private processScm(scm) {
 }
 
 private scmImportProject(scm, inputHelper, msg) {
-    // Get a URL for the repository to import this project into. The developer may
-    // want to use the default Grails plugin source repository, which requires the
-    // Subversion plugin. Alternatively, it could be another host such as GitHub or
+    // Get a URL for the repository to import this project into. it could be another host such as GitHub or
     // Google Code. Finally, no URL may be given at all. This can make sense for
     // distributed version control systems in which you have a local copy of the
     // repository.
     def hostUrl = null
-    if (!scmHost && pluginManager.hasGrailsPlugin("svn")) {
-        def answer = inputHelper.userInput("Would you like to add this plugin's source to the Grails plugin source repository? (Y,n) ")
-        if (answer?.equalsIgnoreCase("y")) {
-            hostUrl = "https://svn.codehaus.org/grails-plugins/grails-${pluginInfo.name}"
-        }
-    }
 
     if (!hostUrl) {
         hostUrl = inputHelper.userInput("Please enter the URL of the remote SCM repository: ")

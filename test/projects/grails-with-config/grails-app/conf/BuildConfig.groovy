@@ -60,12 +60,6 @@ grails {
                 portal = "my-portal"
             }
 
-            svn1 {
-                type = "svn"
-                url = "http://peter:password@svn.codehaus.org/grails-plugins"
-                portal = "grailsCentral"
-            }
-
             bad {
                 type = "svn"
                 url = "svn+ssh://svn.codehaus.org/grails-plugins"

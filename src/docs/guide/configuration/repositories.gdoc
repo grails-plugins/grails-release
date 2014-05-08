@@ -32,12 +32,10 @@ grails.project.repos.myRepo.portal = "grailsCentral"
 
 As you can see, even a complete explicit configuration is pretty short. So what do the various entries mean?
 
-* @url@ - the URL to use when connecting to the remote repository. Typically this is HTTP-based, but "svn+ssh" is not uncommon for old-style Subversion plugin repositories.
-* @type@ - can be either "maven" or "svn", but the former is the default value so it's rare to explicitly declare a value of "maven" for this option.
+* @url@ - the URL to use when connecting to the remote repository.
+* @type@ - currently only "maven" is supported ("svn" support has been dropped)
 * @username@ - the username for connecting to the repository.
 * @password@ - the password for connecting to the repository.
 * @portal@ - the ID of the plugin portal to notify when publishing a plugin to this repository. Only affects the @publish-plugin@ command.
-
-These settings are common to both Maven-compatible and Subversion repositories - it's only the values that typically differ between them. It's also worth bearing in mind that Subversion repositories can only be used for plugins.
 
 The last option, @portal@, raises the question of how to declare plugin portals. What exactly is meant by a portal ID? The answer lies with portal configuration.
