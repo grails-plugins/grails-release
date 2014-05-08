@@ -25,6 +25,7 @@ grails.project.dependency.resolution = {
             excludes "commons-logging", "xml-apis", "groovy"
         }
         test("org.gmock:gmock:0.8.3") {
+            excludes "org.codehaus.groovy:groovy-all", "groovy-all", "groovy"
             export = false
         }
     }
