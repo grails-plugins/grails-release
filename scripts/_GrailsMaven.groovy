@@ -124,6 +124,8 @@ target(processDefinitions: "Reads the repository definition configuration.") {
     def projectConfig = grailsSettings.config.grails.project
     distributionInfo = classLoader.loadClass("grails.plugins.publish.DistributionManagementInfo").newInstance()
 
+    distributionInfo.localRepo = projectConfig.mavenCache ?: null
+
     if (projectConfig.dependency.distribution instanceof Closure) {
         // Deal with the DSL form of configuration, which is the old approach.
         def callable = grailsSettings.config.grails.project.dependency.distribution?.clone()
@@ -157,7 +159,6 @@ target(processDefinitions: "Reads the repository definition configuration.") {
             distributionInfo.remoteRepos[entry.key] = new Expando(args: props, configurer: c)
         }
 
-        distributionInfo.localRepo = projectConfig.mavenCache ?: null
     }
 }
 
