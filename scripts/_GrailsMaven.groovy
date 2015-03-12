@@ -312,7 +312,6 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
 
             if (plugin) {
                 dependencies {
-
                     def excludeHandler = { dep ->
                         if (dep.transitive == false) {
                             def excludes = excludeInfo[dep]
@@ -335,7 +334,10 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                                             groupId er.group
                                         }
                                         else {
-                                            groupId excludeInfo[dep]?.find { it.name == er.name }?.group?:'*'
+                                            def excludes = excludeInfo[dep] ?: excludeInfo.find { k, v ->  k.name == dep.name && (!dep.group || k.group == dep.group) }?.value
+                                            def resolvedGroupId = excludes?.find { it.name == er.name }?.group?:'*'
+                                            groupId resolvedGroupId
+
                                         }
                                         artifactId er.name
                                     }
