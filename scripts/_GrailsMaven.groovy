@@ -335,7 +335,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                                             groupId er.group
                                         }
                                         else {
-                                            groupId (excludeInfo[dep]?.find { it.name == er.name }?.group)?:'*'
+                                            groupId excludeInfo[dep]?.find { it.name == er.name }?.group?:'*'
                                         }
                                         artifactId er.name
                                     }
