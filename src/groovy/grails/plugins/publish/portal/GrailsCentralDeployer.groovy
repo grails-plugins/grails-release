@@ -20,6 +20,11 @@ class GrailsCentralDeployer implements PluginDeployer {
 
     GrailsCentralDeployer(askUser = null) {
         this.askUser = askUser
+
+        def springGsonMessageConverter = rest.restTemplate.messageConverters.find { it.class.name == 'org.springframework.http.converter.json.GsonHttpMessageConverter' }
+        if (springGsonMessageConverter) {
+            rest.restTemplate.messageConverters.remove springGsonMessageConverter
+        }
     }
 
     boolean isVersionAlreadyPublished(File pomFile) {
