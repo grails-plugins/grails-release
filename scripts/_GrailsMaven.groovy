@@ -334,13 +334,9 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                                             groupId er.group
                                         }
                                         else {
-                                            def excludes = excludeInfo[dep]
-                                            if (excludes != null) {
-                                                def resolvedExclude = excludes.find { it.name == er.name }
-                                                if (resolvedExclude != null) {
-                                                    groupId resolvedExclude.group
-                                                }
-                                            }
+                                            def excludes = excludeInfo[dep] ?: excludeInfo.find { k, v ->  k.name == dep.name && (!dep.group || k.group == dep.group) }?.value
+                                            def resolvedGroupId = excludes?.find { it.name == er.name }?.group?:'*'
+                                            groupId resolvedGroupId
 
                                         }
                                         artifactId er.name

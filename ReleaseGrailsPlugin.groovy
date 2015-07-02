@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 class ReleaseGrailsPlugin {
-    def version = "3.1.0-SNAPSHOT"
+    def version = "3.1.2-SNAPSHOT"
     def grailsVersion = "2.3 > *"
     def author = "Graeme Rocher"
     def authorEmail = "grocher@gopivotal.com"
@@ -22,7 +22,7 @@ class ReleaseGrailsPlugin {
     def description = 'Allows you to publish Grails plugins, either to a public or private repository. It also supports deploying Grails applications and plugins to Maven repositories without the need to use Maven directly.'
     def license = "APACHE"
     def organization = [ name: "Pivotal", url: "http://www.gopivotal.com/oss" ]
-    def developers = [ 
+    def developers = [
         [ name: "Graeme Rocher", email: "grocher@gopivotal.com" ],
         [ name: "Lari Hotari", email: "lhotari@gopivotal.com" ]
     ]

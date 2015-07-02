@@ -67,7 +67,9 @@ class GrailsCentralDeployer implements PluginDeployer {
 
     protected waitForDeploymentStatus(String name, String version) {
         for (int i in 0..<20) {
-            def resp = rest.get("$baseUrl/api/v1.0/plugin/status/$name/$version").text
+            def resp = rest.get("$baseUrl/api/v1.0/plugin/status/$name/$version") {
+                accept 'text/plain'
+            }.text
             if (resp == "COMPLETED") {
                 println "Plugin successfully published."
                 return
