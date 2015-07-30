@@ -359,6 +359,9 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                                     groupId dep.group
                                     artifactId dep.name
                                     version dep.version
+				    if(dep.classifier){
+					classifier dep.classifier
+				    }	
                                     delegate.scope(scope)
 
                                     excludeHandler(dep)
