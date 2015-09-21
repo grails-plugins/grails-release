@@ -378,7 +378,13 @@ target(publishPlugin: "Publishes a plugin to a Maven repository.") {
         def converterConfig = new org.codehaus.groovy.grails.web.converters.configuration.ConvertersConfigurationInitializer()
         converterConfig.initialize(grailsApp)
         def rest = classLoader.loadClass("grails.plugins.rest.client.RestBuilder").newInstance()
-		def jsonParams = pluginInfo + [ url : repo.uri.toString() ]
+	def springGsonMessageConverter = rest.restTemplate.messageConverters.find {
+		it.class.name == 'org.springframework.http.converter.json.GsonHttpMessageConverter'
+	}
+        if (springGsonMessageConverter) {
+            rest.restTemplate.messageConverters.remove springGsonMessageConverter
+        }
+	def jsonParams = pluginInfo + [ url : repo.uri.toString() ]
         def resp = rest.put(portalUrl.toString()) {
             auth username, password
             json({ jsonParams })
