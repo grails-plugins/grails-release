@@ -378,18 +378,24 @@ target(publishPlugin: "Publishes a plugin to a Maven repository.") {
         def converterConfig = new org.codehaus.groovy.grails.web.converters.configuration.ConvertersConfigurationInitializer()
         converterConfig.initialize(grailsApp)
         def rest = classLoader.loadClass("grails.plugins.rest.client.RestBuilder").newInstance()
-	def springGsonMessageConverter = rest.restTemplate.messageConverters.find {
-		it.class.name == 'org.springframework.http.converter.json.GsonHttpMessageConverter'
-	}
+    	def springGsonMessageConverter = rest.restTemplate.messageConverters.find {
+    		it.class.name == 'org.springframework.http.converter.json.GsonHttpMessageConverter'
+    	}
         if (springGsonMessageConverter) {
             rest.restTemplate.messageConverters.remove springGsonMessageConverter
         }
-	def jsonParams = pluginInfo + [ url : repo.uri.toString() ]
+	   def jsonParams = pluginInfo + [ url : repo.uri.toString() ]
         def resp = rest.put(portalUrl.toString()) {
             auth username, password
             json({ jsonParams })
         }
+        if(grailsConsole.verbose) {
+            grailsConsole.log("Updating plugin with JSON: ${portalUrl}")
+            grailsConsole.log(jsonParams.toString())
+        }
         switch(resp.status) {
+            case 400:
+                println "ERROR: Plugin update failed: ${resp.json?.message}"; break            
             case 401:
                 println "ERROR: Portal authentication failed. Are your username and password correct?"; break
             case 403:
