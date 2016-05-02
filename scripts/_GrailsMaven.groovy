@@ -15,8 +15,8 @@
  */
 
 import grails.util.BuildScope
-import groovy.xml.NamespaceBuilder
 import groovy.xml.MarkupBuilder
+import groovy.xml.NamespaceBuilder
 
 import org.apache.ivy.util.ChecksumHelper
 import org.codehaus.groovy.grails.cli.CommandLineHelper
@@ -317,7 +317,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                             def excludes = excludeInfo[dep]
                             if (excludes != null) {
                                 exclusions {
-                                    for(exc in excludes) {
+                                    for (exc in excludes) {
                                         exclusion {
                                             groupId exc.group
                                             artifactId exc.name
@@ -328,7 +328,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                         }
                         else if (dep.excludes) {
                             exclusions {
-                                for(er in dep.excludes) {
+                                for (er in dep.excludes) {
                                     exclusion {
                                         if (er.group != '*') {
                                             groupId er.group
@@ -353,22 +353,22 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                     for (scope in allowedScopes) {
                         def appDeps = dependencyManager.getApplicationDependencies(scope)
                         def pluginDeps = dependencyManager.getPluginDependencies(scope)
-                        for(dep in appDeps) {
+                        for (dep in appDeps) {
                             if (scope in allowedScopes && dep.exported) {
                                 dependency {
                                     groupId dep.group
                                     artifactId dep.name
                                     version dep.version
-				    if(dep.classifier){
-					classifier dep.classifier
-				    }	
+                                    if (dep.classifier) {
+                                        classifier dep.classifier
+                                    }
                                     delegate.scope(scope)
 
                                     excludeHandler(dep)
                                 }
                             }
                         }
-                        for(dep in pluginDeps) {
+                        for (dep in pluginDeps) {
                             if (scope in allowedScopes && dep.exported) {
                                 dependency {
                                     groupId dep.group
@@ -380,7 +380,7 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                                     excludeHandler(dep)
                                 }
                             }
-                        }                        
+                        }
                     }
                 }
             }
@@ -462,7 +462,6 @@ private generateChecksum(File file) {
     checksum.write ChecksumHelper.computeAsString(file, "sha1")
     return checksum
 }
-
 
 private getOptionalProperty(obj, prop) {
     return obj.hasProperty(prop) ? obj."$prop" : null

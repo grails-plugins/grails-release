@@ -4,7 +4,7 @@ includeTargets << grailsScript("_GrailsPluginDev")
 includeTargets << new File(releasePluginDir, "scripts/_GrailsMaven.groovy")
 
 USAGE = """
-    publish-plugin [--repository=REPO] [--protocol=PROTOCOL] [--portal=PORTAL] [--dry-run] [--snapshot] [--scm] [--no-scm] [--message=MESSAGE] [--no-message] [--ping-only]
+    publish-plugin [--repository=REPO] [--protocol=PROTOCOL] [--portal=PORTAL] [--dry-run] [--snapshot] [--ping-only]
 
 where
     REPO     = The name of a configured maven compatible repository to deploy the plugin to.
@@ -17,21 +17,11 @@ where
     PORTAL   = The portal to inform of the plugin's release.
                (default: Grails Plugin Portal).
 
-    MESSAGE  = Commit message to use when committing source changes using your
-               SCM provider.
-
     --dry-run      = Shows you what will happen when you publish the plugin,
                      but doesn't actually publish it.
 
     --snapshot     = Force this release to be a snapshot version, i.e. it isn't
                      automatically made the latest available release.
-
-    --scm          = Enables source control management for this release.
-
-    --no-scm       = Disables source control management for this release.
-
-
-    --no-message   = Commit using just the default message.
 
     --no-overwrite = Don't fail if this plugin has already been published.
                      This is useful if this plugin is being published from a
@@ -48,16 +38,11 @@ where
     --binary       = Release as a binary plugin.
 """
 
-scmProvider = null
-scmHost = null
-
 target(publishPlugin: "Publishes a plugin to a Maven repository.") {
     depends(parseArguments, checkGrailsVersion, packagePlugin, processDefinitions, generatePom)
 
     // Handle old names for options. Trying to be consistent with Grails 2.0 conventions.
     if (argsMap["dryRun"]) { argsMap["dry-run"] = true }
-    if (argsMap["noScm"]) { argsMap["no-scm"] = true }
-    if (argsMap["noMessage"]) { argsMap["no-message"] = true }
     if (argsMap["pingOnly"]) { argsMap["ping-only"] = true }
     if (argsMap["noOverwrite"]) { argsMap["no-overwrite"] = true }
     if (argsMap["allowOverwrite"]) { argsMap["allow-overwrite"] = true }
@@ -74,39 +59,6 @@ target(publishPlugin: "Publishes a plugin to a Maven repository.") {
             version : pluginInfo.version.text(),
             isSnapshot : !isRelease ]
     event "PublishPluginStart", [ pluginInfo ]
-
-    // Is source control management enabled for this run?
-    boolean scmEnabled = Boolean.valueOf(getPropertyValue("grails.release.scm.enabled", true))
-    if (argsMap["scm"]) scmEnabled = true
-    if (argsMap["no-scm"]) scmEnabled = false
-
-    if (scmEnabled) {
-        final inputHelper = new CommandLineHelper()
-        final interactive = new Expando(
-                out: System.out,
-                askUser: { msg ->
-                    // This closure is executed whenever the SCM needs to
-                    // ask for user input.
-                    return userInput(
-                            inputHelper,
-                            msg,
-                            "SCM requires an answer to \"${msg}\", but you are running in non-interactive mode.")
-                })
-
-        // Load any SCM provider that may be installed.
-        event "InitScm", [grailsSettings.baseDir, interactive]
-
-        if (!scmProvider) {
-            println "WARN: No SCM provider installed."
-        }
-    }
-
-    // If SCM is enabled and a provider available, make sure the plugin
-    // source is under source control and that the latest code is committed
-    // and tagged.
-    if (scmProvider) {
-        processScm scmProvider
-    }
 
     // Use the Grails Central Plugin repository as the default.
     def repoClass = classLoader.loadClass("grails.plugins.publish.Repository")
@@ -136,7 +88,7 @@ target(publishPlugin: "Publishes a plugin to a Maven repository.") {
     if (repoName && repoName != "grailsCentral") {
         // First look for the repository definition for this name.
         def repoDefn = distributionInfo.remoteRepos[repoName]
-        def defaultPortal = null
+        def defaultPortal
         def url
         if (repoDefn) {
             type = repoDefn.args["type"] ?: "maven"
@@ -193,7 +145,7 @@ target(publishPlugin: "Publishes a plugin to a Maven repository.") {
                 deployer.password = password
 
                 def gcp = distributionInfo.portals["grailsCentral"]
-                if(gcp && !gcp?.username) {
+                if (gcp && !gcp?.username) {
                     gcp.username = username
                     gcp.password = password
 
@@ -285,30 +237,30 @@ target(publishPlugin: "Publishes a plugin to a Maven repository.") {
 
         def pomFile = pomFileLocation as File
         if (deployer.isVersionAlreadyPublished(pomFile)) {
-			if (argsMap["no-overwrite"]) {
-				println "This version of the plugin has already been published."
-				event "StatusFinal", ["Plugin publication cancelled with clean exit."]
-				exit(0)
-			} else {
-				if (argsMap["allow-overwrite"]) {
-					println "This version of the plugin has already been published, it will be overwritten."
-				} else if (isInteractive) {
-					def inputHelper = new CommandLineHelper()
-					def answer = userInput(
-							inputHelper,
-							"This version has already been published. Do you want to replace it " +
-								"(not recommended except for snapshots)? (y,N) ",
-							"This version of the plugin has already been published.")
-					if (!answer?.equalsIgnoreCase("y")) {
-						event "StatusFinal", ["Plugin publication cancelled."]
-						exit(1)
-					}
-				} else {
-					println "This version of the plugin has already been published"
-					println "Use the --allow-overwrite option to publish the plugin."
-					event "StatusFinal", ["Plugin publication cancelled."]
-					exit(1)
-				}
+            if (argsMap["no-overwrite"]) {
+                println "This version of the plugin has already been published."
+                event "StatusFinal", ["Plugin publication cancelled with clean exit."]
+                exit(0)
+            } else {
+                if (argsMap["allow-overwrite"]) {
+                    println "This version of the plugin has already been published, it will be overwritten."
+                } else if (isInteractive) {
+                    def inputHelper = new CommandLineHelper()
+                    def answer = userInput(
+                            inputHelper,
+                            "This version has already been published. Do you want to replace it " +
+                                "(not recommended except for snapshots)? (y,N) ",
+                            "This version of the plugin has already been published.")
+                    if (!answer?.equalsIgnoreCase("y")) {
+                        event "StatusFinal", ["Plugin publication cancelled."]
+                        exit(1)
+                    }
+                } else {
+                    println "This version of the plugin has already been published"
+                    println "Use the --allow-overwrite option to publish the plugin."
+                    event "StatusFinal", ["Plugin publication cancelled."]
+                    exit(1)
+                }
             }
         }
 
@@ -378,32 +330,31 @@ target(publishPlugin: "Publishes a plugin to a Maven repository.") {
         def converterConfig = new org.codehaus.groovy.grails.web.converters.configuration.ConvertersConfigurationInitializer()
         converterConfig.initialize(grailsApp)
         def rest = classLoader.loadClass("grails.plugins.rest.client.RestBuilder").newInstance()
-    	def springGsonMessageConverter = rest.restTemplate.messageConverters.find {
-    		it.class.name == 'org.springframework.http.converter.json.GsonHttpMessageConverter'
-    	}
+        def springGsonMessageConverter = rest.restTemplate.messageConverters.find {
+            it.class.name == 'org.springframework.http.converter.json.GsonHttpMessageConverter'
+        }
         if (springGsonMessageConverter) {
             rest.restTemplate.messageConverters.remove springGsonMessageConverter
         }
-	   def jsonParams = pluginInfo + [ url : repo.uri.toString() ]
+        def jsonParams = pluginInfo + [ url : repo.uri.toString() ]
         def resp = rest.put(portalUrl.toString()) {
             auth username, password
             json({ jsonParams })
         }
-        if(grailsConsole.verbose) {
+        if (grailsConsole.verbose) {
             grailsConsole.log("Updating plugin with JSON: ${portalUrl}")
             grailsConsole.log(jsonParams.toString())
         }
         switch(resp.status) {
             case 400:
-                println "ERROR: Plugin update failed: ${resp.json?.message}"; break            
+                println "ERROR: Plugin update failed: ${resp.json?.message}"; break
             case 401:
                 println "ERROR: Portal authentication failed. Are your username and password correct?"; break
             case 403:
                 println "ERROR: You do not have permission to update the plugin portal."; break
 
             default:
-
-                if(resp.class.name == "grails.plugins.rest.client.ErrorResponse") {
+                if (resp.class.name == "grails.plugins.rest.client.ErrorResponse") {
                     println "ERROR: Notification failed - status ${resp.status} - ${resp.json.message}"
                 }
                 else {
@@ -449,80 +400,5 @@ private secureUserInput(inputHelper, msg) {
 }
 
 private requiresSecureInput(msg) { msg.toLowerCase().contains("password") }
-
-private processScm(scm) {
-    // Configure authentication for the SCM provider if credentials provided
-    // in build settings.
-    def scmConfig = grailsSettings.config.grails.project.scm
-    if (scmConfig.username) {
-        scm.auth scmConfig.username, scmConfig.password
-    }
-
-    // Find out if the user wants to add any extra text to the standard
-    // commit message.
-    def inputHelper = new CommandLineHelper()
-    def msg = argsMap["message"] ?: (argsMap["no-message"] || !isInteractive || argsMap["ping-only"] ?
-            "" : inputHelper.userInput("Enter extra commit message text for this release (optional): "))
-    if (msg) msg = "\n\n" + msg
-
-    if (!scm.managed) {
-        // Ignore SCM import if in non-interactive mode.
-        if (!isInteractive) return
-
-        // The project isn't under source control, so import it into the user's
-        // preferred SCM system - unless the user explicitly doesn't want it added
-        // to source control.
-        def answer = inputHelper.userInput("Project is not under source control. Do you want to import it now? (Y,n) ")
-        if (answer?.equalsIgnoreCase("n")) {
-            return
-        }
-
-        scmImportProject(scm, inputHelper, msg)
-    }
-    else {
-        // First check for any untracked files in the project. We don't want any
-        // files accidentally missed from the commit! If there are some, we won't
-        // allow a commit unless they are tracked or added to the project's ignores.
-        //
-        // TODO Allow the user to add each file to source control or ignores and
-        // then continue with the commit. The user should also have the option of
-        // cancelling without making any changes.
-        if (scm.unmanagedFiles) {
-            event "StatusError", ["You have untracked files. Please add them to source control or the ignore list before publishing the plugin."]
-            event "StatusFinal", ["Plugin publication cancelled."]
-            exit 1
-            return
-        }
-
-        // Is the current code up to date? If not, we shouldn't commit and release.
-        // TODO Support doing an update right here, right now.
-        if (!scm.upToDate()) {
-            event "StatusError", ["Your local source is not up to date. Please update it before publishing the plugin."]
-            event "StatusFinal", ["Plugin publication cancelled."]
-            exit 1
-            return
-        }
-
-        def version = pluginInfo.version
-
-        scm.commit "Releasing version ${version} of ${pluginInfo.name} plugin.${msg}"
-        if (isRelease) scm.tag "v${version}", "Tagging the ${version} version of the plugin source."
-        scm.synchronize()
-    }
-}
-
-private scmImportProject(scm, inputHelper, msg) {
-    // Get a URL for the repository to import this project into. it could be another host such as GitHub or
-    // Google Code. Finally, no URL may be given at all. This can make sense for
-    // distributed version control systems in which you have a local copy of the
-    // repository.
-    def hostUrl = null
-
-    if (!hostUrl) {
-        hostUrl = inputHelper.userInput("Please enter the URL of the remote SCM repository: ")
-    }
-
-    scmProvider.importIntoRepo hostUrl, "Initial import of plugin source code for the release of version ${pluginInfo.version}.${msg}"
-}
 
 setDefaultTarget(publishPlugin)

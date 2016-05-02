@@ -1,20 +1,16 @@
-# Eclipse
-.classpath
-.project
-.settings/
-target-eclipse/
-
-# Intellij
-.idea/
 *.iml
-*.iws
 *.ipr
-
-/docs/
+*.iws
+*.log
+*.sha1
+.classpath
+.idea
+.project
+.settings
+/docs
 grails-*.zip*
 plugin.xml
 pom.xml
 target
+target-eclipse
 web-app
-*.log
-*.sha1

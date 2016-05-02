@@ -1,12 +1,11 @@
-introduction: 
+introduction:
   title: Introduction
   migrating: Migrating from release-plugin
-configuration: 
+configuration:
   title: Configuration
   repositories: Repositories
   pluginPortals: Plugin portals
-  scm: Source control management
-maven: 
+maven:
   title: Maven integration
   mavenCache: The local Maven cache
   deployment: Deployment to remote repositories

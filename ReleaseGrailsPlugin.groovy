@@ -21,12 +21,12 @@ class ReleaseGrailsPlugin {
     def title = "Release Plugin"
     def description = 'Allows you to publish Grails plugins, either to a public or private repository. It also supports deploying Grails applications and plugins to Maven repositories without the need to use Maven directly.'
     def license = "APACHE"
-    def organization = [ name: "Pivotal", url: "http://www.gopivotal.com/oss" ]
+    def organization = [name: "Grails", url: "https://grails.org"]
     def developers = [
-        [ name: "Graeme Rocher", email: "grocher@gopivotal.com" ],
-        [ name: "Lari Hotari", email: "lhotari@gopivotal.com" ]
+        [name: "Graeme Rocher", email: "rocherg@ociweb.com"],
+        [name: "Lari Hotari", email: "lhotari@gopivotal.com"]
     ]
-    def issueManagement = [ system: "JIRA", url: "http://jira.grails.org/browse/GPRELEASE" ]
-    def scm = [ url: "https://github.com/grails-plugins/grails-release/" ]
+    def issueManagement = [url: "https://github.com/grails-plugins/grails-release/issues"]
+    def scm = [url: "https://github.com/grails-plugins/grails-release/"]
     def documentation = "http://grails-plugins.github.com/grails-release/"
 }

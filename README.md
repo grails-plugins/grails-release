@@ -7,11 +7,7 @@ Maven-compatible repositories. It can also install them to your local Maven cach
 Installation
 ------------
 
-Use either the command:
-
-    grails install-plugin release
-
-or add this dependency to `BuildConfig.groovy` (Grails 1.3+ only):
+Add this dependency to `BuildConfig.groovy`:
 
     build ":release:<pluginVersion>"
 

@@ -2,9 +2,9 @@ Not all plugins should be publicly available: some are too specific to certain p
 
 h3. Repository types and configuration
 
-Grails supports maven repositories. 
+Grails supports maven repositories.
 
-Maven-compatible repositories can be easily set up with either [Artifactory|http://www.jfrog.com/products.php] or [Nexus|http://nexus.sonatype.org/]. 
+Maven-compatible repositories can be easily set up with either [Artifactory|http://www.jfrog.com/products.php] or [Nexus|http://nexus.sonatype.org/].
 
 Whichever type of repository you go for, the [configuration settings|guide:repositories] are mostly the same. The key options are the repository URL and the username and password for deploying to the repository. All of these can be configured in either @~/.grails/settings.groovy@ or @BuildConfig.groovy@. Typically, a single repository hosts many plugins, so it's usually a good idea to put the configuration in @settings.groovy@ and then specify in @grails-app/conf/BuildConfig.groovy@ which repository a plugin should be published to by default:
 

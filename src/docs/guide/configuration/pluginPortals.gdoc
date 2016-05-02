@@ -3,9 +3,9 @@ When a Grails plugin is published to a repository, a plugin portal can optionall
 Like repositories, portals have very few configuration options:
 
 {code}
-grails.project.portal.<portalId>.url = "http://beta.grails.org/plugin/" 
-grails.project.portal.<portalId>.username = "joe" 
-grails.project.portal.<portalId>.password = "ht56jU&B" 
+grails.project.portal.<portalId>.url = "http://beta.grails.org/plugin/"
+grails.project.portal.<portalId>.username = "joe"
+grails.project.portal.<portalId>.password = "ht56jU&B"
 {code}
 
 * @url@ - the URL of the plugin portal.
