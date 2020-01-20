@@ -93,7 +93,9 @@ target(mavenDeploy:"Deploys the plugin to a Maven repository") {
 
     if (retval) exit retval
 
-    artifact.'install-provider'(artifactId:protocol, version:"1.0-beta-2")
+    artifact.'install-provider'(artifactId:protocol, version:"1.0-beta-2") {
+        remoteRepository(url: "https://repo1.maven.org/maven2")
+    }
 
     def deployFile = isPlugin ? new File(pluginZip) : grailsSettings.projectWarFile
     def ext = isPlugin ? deployFile.name[-3..-1] : "war"
