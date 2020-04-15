@@ -222,7 +222,7 @@ target(publishPlugin: "Publishes a plugin to a Maven repository.") {
                     "Password for repository: ",
                     "You haven't configured the plugin repository password - required in non-interactive mode")
 
-            repoDfn.configurer = { authentication username: username, password: password }
+            repoDefn.configurer = { authentication username: username, password: password }
         }
 
         deployer = classLoader.loadClass("grails.plugins.publish.maven.MavenDeployer").newInstance(ant, repoDefn, protocol)
