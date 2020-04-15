@@ -213,7 +213,7 @@ target(publishPlugin: "Publishes a plugin to a Maven repository.") {
 
         if (argsMap["prompt-auth"]) {
             def inputHelper = new CommandLineHelper()
-            username = usernput(
+            username = userInput(
                     inputHelper,
                     "Username for repository: ",
                     "You haven't configured the plugin repository username - required in non-interactive mode")
