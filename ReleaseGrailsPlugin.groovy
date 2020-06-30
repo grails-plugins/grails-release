@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 class ReleaseGrailsPlugin {
-    def version = "3.1.3-SNAPSHOT"
+    def version = "3.1.3"
     def grailsVersion = "2.3 > *"
     def author = "Graeme Rocher"
     def authorEmail = "grocher@gopivotal.com"
