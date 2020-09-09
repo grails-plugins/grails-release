@@ -309,10 +309,10 @@ target(generatePom: "Generates a pom.xml file for the current project unless './
                 name grailsAppName
             }
 
-            def excludeResolver = grailsSettings.dependencyManager.excludeResolver
-            def excludeInfo = excludeResolver.resolveExcludes()
-
             if (plugin) {
+                def excludeResolver = grailsSettings.dependencyManager.excludeResolver
+                def excludeInfo = excludeResolver.resolveExcludes()
+
                 dependencies {
                     def excludeHandler = { dep ->
                         if (dep.transitive == false) {
